@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>If you can see this, the server is working</h1>
+    <script>
+        // Test if JavaScript works
+        console.log('JavaScript is working');
+        document.body.style.backgroundColor = '#111827';
+        document.body.style.color = 'white';
+
+        // Try to fetch the main page
+        fetch('/')
+            .then(r => r.text())
+            .then(html => {
+                console.log('Main page HTML length:', html.length);
+                console.log('Root div present:', html.includes('id="root"'));
+            })
+            .catch(e => console.error('Error fetching main page:', e));
+    </script>
+</body>
+</html>
