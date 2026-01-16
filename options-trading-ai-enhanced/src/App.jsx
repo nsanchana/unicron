@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, Save, RefreshCw } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
 import SettingsPanel from './components/SettingsPanel'
+import UnicronIcon from './components/UnicronIcon'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV } from './utils/storage'
 
 function App() {
@@ -51,24 +52,29 @@ function App() {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'research', label: 'Company Research', icon: BarChart3 },
-    { id: 'trades', label: 'Trade Review', icon: TrendingUp },
+    { id: 'trades', label: 'Trades', icon: TrendingUp },
     { id: 'settings', label: 'Settings', icon: Settings }
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-blue-900/20 text-white">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-800">
+      <header className="border-b border-gray-700/50 bg-gray-800/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-primary-400">Options Trading Analysis Tool</h1>
+            <div className="flex items-center space-x-3">
+              <UnicronIcon className="h-10 w-10" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Unicron
+              </h1>
+            </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-400">
                 Last refresh: {lastRefresh.toLocaleTimeString()}
               </div>
               <button
                 onClick={() => setLastRefresh(new Date())}
-                className="p-2 rounded-lg hover:bg-gray-700"
+                className="p-2 rounded-lg hover:bg-gray-700/50 transition-all duration-200"
                 title="Refresh data"
               >
                 <RefreshCw className="h-5 w-5" />
@@ -97,7 +103,7 @@ function App() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="border-b border-gray-700 bg-gray-800">
+      <nav className="border-b border-gray-700/50 bg-gray-800/50 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             {tabs.map((tab) => {
@@ -106,10 +112,10 @@ function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                     activeTab === tab.id
-                      ? 'border-primary-500 text-primary-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                      ? 'border-blue-500 text-blue-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -127,6 +133,7 @@ function App() {
           <Dashboard
             researchData={researchData}
             tradeData={tradeData}
+            setTradeData={setTradeData}
             settings={settings}
           />
         )}

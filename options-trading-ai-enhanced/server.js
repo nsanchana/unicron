@@ -2,6 +2,11 @@ import express from 'express'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 import cors from 'cors'
+import Anthropic from '@anthropic-ai/sdk'
+import dotenv from 'dotenv'
+
+// Load environment variables
+dotenv.config()
 
 const app = express()
 const PORT = 3001
@@ -16,14 +21,107 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 // User agent to avoid blocking
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 
-// Helper function to generate AI insights
-function generateInsight(symbol, dataType, scrapedData = {}) {
+// Initialize Anthropic client (API key should be in environment variable)
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || ''
+})
+
+// Helper function to generate AI insights using Claude
+async function generateAIInsight(symbol, dataType, scrapedData = {}) {
+  // If no API key, fall back to template insights
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return generateFallbackInsight(symbol, dataType, scrapedData)
+  }
+
+  try {
+    const prompts = {
+      companyAnalysis: `Analyze this company data for ${symbol} and provide actionable insights for options trading:
+
+Company Description: ${scrapedData.description || 'Not available'}
+Sector: ${scrapedData.sector || 'Not available'}
+Industry: ${scrapedData.industry || 'Not available'}
+Market Cap: ${scrapedData.marketCap || 'Not available'}
+
+Provide a 2-3 sentence analysis focused on:
+1. Company's competitive position and business model strength
+2. Key factors that would make this a good or poor candidate for selling options (cash-secured puts or covered calls)
+3. Any sector-specific risks or opportunities
+
+Be concise, actionable, and specific to options trading strategy.`,
+
+      financialHealth: `Analyze this financial data for ${symbol} for options trading purposes:
+
+${JSON.stringify(scrapedData.metrics || [], null, 2)}
+
+Provide a 2-3 sentence analysis focused on:
+1. Financial strength and stability for supporting options strategies
+2. Revenue/profit trends that suggest bullish or bearish positioning
+3. Specific recommendation on whether the financial health supports selling puts (betting on stability/growth) or covered calls (generating income on owned shares)
+
+Be concise and actionable for options traders.`,
+
+      technicalAnalysis: `Analyze this technical data for ${symbol}:
+
+Current Price: ${scrapedData.currentPrice || 'Not available'}
+Additional Metrics: ${JSON.stringify(scrapedData.metrics || [], null, 2)}
+
+Provide a 2-3 sentence analysis focused on:
+1. Current price momentum and trend direction
+2. Whether current technical setup favors selling out-of-the-money puts (bullish/neutral) or covered calls (neutral/mildly bearish)
+3. Suggested technical levels to watch for strike price selection
+
+Be specific and actionable for options traders.`,
+
+      optionsData: `Analyze this options market data for ${symbol}:
+
+${JSON.stringify(scrapedData.metrics || [], null, 2)}
+
+Provide a 2-3 sentence analysis focused on:
+1. Implied volatility environment (high IV = better premiums for sellers)
+2. Liquidity and open interest insights
+3. Specific recommendation on optimal options strategy given current market conditions
+
+Be actionable for options income traders.`,
+
+      recentDevelopments: `Analyze recent news and sentiment for ${symbol}:
+
+News Items: ${JSON.stringify(scrapedData.newsItems || [], null, 2)}
+Sentiment Counts: ${JSON.stringify(scrapedData.sentimentCounts || {}, null, 2)}
+
+Provide a 2-3 sentence analysis focused on:
+1. Overall sentiment and how it impacts near-term stock movement
+2. Specific news catalysts that could affect options positions
+3. Recommendation on whether current news environment supports entering new options positions or staying on sidelines
+
+Be concise and actionable.`
+    }
+
+    const prompt = prompts[dataType] || `Analyze ${dataType} for ${symbol} with data: ${JSON.stringify(scrapedData)}`
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: prompt
+      }]
+    })
+
+    return message.content[0].text
+  } catch (error) {
+    console.error('AI insight generation failed:', error.message)
+    return generateFallbackInsight(symbol, dataType, scrapedData)
+  }
+}
+
+// Fallback function for when AI is not available
+function generateFallbackInsight(symbol, dataType, scrapedData = {}) {
   const insights = {
-    companyAnalysis: `${symbol} is a publicly traded company${scrapedData.sector ? ` in the ${scrapedData.sector} sector` : ''}. This analysis examines the company's business model, competitive positioning, and strategic direction. Key factors to consider include market share, brand strength, management quality, and long-term growth potential.`,
+    companyAnalysis: `${symbol} is a publicly traded company${scrapedData.sector ? ` in the ${scrapedData.sector} sector` : ''}. ${scrapedData.description || 'This analysis examines the company\'s business model, competitive positioning, and strategic direction. Key factors to consider include market share, brand strength, management quality, and long-term growth potential.'}`,
 
     financialHealth: `Financial analysis for ${symbol} evaluates the company's profitability, liquidity, and solvency. Strong financials typically show consistent revenue growth, healthy profit margins, manageable debt levels, and positive cash flow. These metrics are essential for assessing the company's ability to sustain operations and return value to shareholders.`,
 
-    technicalAnalysis: `Technical analysis of ${symbol} examines price trends, trading volume, and market momentum. Key indicators include support and resistance levels, moving averages, and relative strength. This helps identify potential entry and exit points for options strategies based on price action and market sentiment.`,
+    technicalAnalysis: `Technical analysis of ${symbol} examines price trends, trading volume, and market momentum. ${scrapedData.currentPrice ? `Currently trading at ${scrapedData.currentPrice}.` : ''} Key indicators include support and resistance levels, moving averages, and relative strength. This helps identify potential entry and exit points for options strategies based on price action and market sentiment.`,
 
     optionsData: `Options market analysis for ${symbol} provides insights into market expectations for volatility and directional bias. Implied volatility levels, put/call ratios, and open interest patterns can reveal institutional sentiment and help identify optimal strike prices and expiration dates for options strategies.`,
 
@@ -100,7 +198,7 @@ async function scrapeCompanyAnalysis(symbol) {
 
   return {
     rating: Math.min(rating, 10),
-    analysis: scrapedInfo.description || generateInsight(symbol, 'companyAnalysis', scrapedInfo),
+    analysis: await generateAIInsight(symbol, 'companyAnalysis', scrapedInfo),
     metrics: metrics.length > 0 ? metrics : [{ label: 'Symbol', value: symbol }],
     signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Company analysis completed' }]
   }
@@ -141,9 +239,7 @@ async function scrapeFinancialHealth(symbol) {
   }
 
   // Always provide value analysis
-  const analysis = metrics.length > 0
-    ? `Financial health review for ${symbol} based on available data. Key metrics include revenue trends, profitability measures, and balance sheet strength.`
-    : generateInsight(symbol, 'financialHealth')
+  const analysis = await generateAIInsight(symbol, 'financialHealth', { metrics })
 
   // Add default signals if none were scraped
   if (signals.length === 0) {
@@ -194,7 +290,7 @@ async function scrapeTechnicalAnalysis(symbol) {
   }
 
   // Always provide meaningful analysis
-  const analysis = generateInsight(symbol, 'technicalAnalysis')
+  const analysis = await generateAIInsight(symbol, 'technicalAnalysis', { currentPrice, metrics })
 
   // Add guidance metrics if we couldn't scrape
   if (metrics.length === 0) {
@@ -247,7 +343,7 @@ async function scrapeOptionsData(symbol) {
   }
 
   // Always provide meaningful analysis
-  const analysis = generateInsight(symbol, 'optionsData')
+  const analysis = await generateAIInsight(symbol, 'optionsData', { metrics })
 
   // Add guidance metrics if we couldn't scrape
   if (metrics.length === 0) {
@@ -330,9 +426,8 @@ async function scrapeRecentDevelopments(symbol) {
   }
 
   // Always provide meaningful analysis
-  const analysis = newsItems.length > 0
-    ? `Recent news analysis for ${symbol}. ${newsItems.length} items reviewed with sentiment analysis.`
-    : generateInsight(symbol, 'recentDevelopments')
+  const sentimentCounts = { positive: positiveCount, negative: negativeCount }
+  const analysis = await generateAIInsight(symbol, 'recentDevelopments', { newsItems, sentimentCounts, metrics })
 
   // Add guidance metrics if we couldn't scrape
   if (metrics.length === 0) {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Search, Loader, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Search, Loader, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
+import { saveToLocalStorage } from '../utils/storage'
 
 function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   const [symbol, setSymbol] = useState('')
@@ -9,10 +10,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   const [error, setError] = useState('')
   const [expandedSections, setExpandedSections] = useState({
     companyAnalysis: true,
-    financialHealth: false,
-    technicalAnalysis: false,
-    optionsData: false,
-    recentDevelopments: false
+    financialHealth: true,
+    technicalAnalysis: true,
+    optionsData: true,
+    recentDevelopments: true
   })
 
   const toggleSection = (section) => {
@@ -69,14 +70,121 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         date: new Date().toISOString(),
         ...results,
         overallRating,
-        lastRefresh: lastRefresh.toISOString()
+        lastRefresh: lastRefresh.toISOString(),
+        saved: false // Mark as not saved initially
       }
 
       setCompanyData(researchEntry)
-      setResearchData(prev => [researchEntry, ...prev])
+      // Don't add to researchData yet - only add when saved
     } catch (err) {
       setError('Failed to analyze company. Please check the symbol and try again.')
       console.error('Research error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveResearch = () => {
+    if (!companyData) return
+
+    // Mark as saved
+    const savedResearch = { ...companyData, saved: true }
+
+    // Add to research data array
+    const updatedResearchData = [savedResearch, ...researchData]
+    setResearchData(updatedResearchData)
+
+    // Persist to localStorage
+    saveToLocalStorage('researchData', updatedResearchData)
+
+    // Update current display
+    setCompanyData(savedResearch)
+
+    // Show success message
+    alert(`Research for ${companyData.symbol} saved successfully!`)
+  }
+
+  const handleViewResearch = (research) => {
+    // Display the saved research
+    setCompanyData(research)
+    setSymbol(research.symbol)
+    // Expand all sections when viewing saved research
+    setExpandedSections({
+      companyAnalysis: true,
+      financialHealth: true,
+      technicalAnalysis: true,
+      optionsData: true,
+      recentDevelopments: true
+    })
+    // Scroll to top to show the research
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleRerunResearch = async (oldSymbol) => {
+    // Set the symbol and run a fresh analysis
+    setSymbol(oldSymbol)
+    setLoading(true)
+    setError('')
+    setCompanyData(null)
+
+    try {
+      const sections = [
+        'companyAnalysis',
+        'financialHealth',
+        'technicalAnalysis',
+        'optionsData',
+        'recentDevelopments'
+      ]
+
+      const results = {}
+
+      for (const section of sections) {
+        console.log(`Scraping ${section} for ${oldSymbol}...`)
+        const sectionData = await scrapeCompanyData(oldSymbol, section)
+        results[section] = sectionData
+
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+
+      // Calculate overall rating
+      const sectionRatings = [
+        results.companyAnalysis?.rating || 0,
+        results.financialHealth?.rating || 0,
+        results.technicalAnalysis?.rating || 0,
+        results.optionsData?.rating || 0,
+        results.recentDevelopments?.rating || 0
+      ].filter(rating => rating > 0)
+
+      const overallRating = sectionRatings.length > 0
+        ? Math.round(sectionRatings.reduce((sum, rating) => sum + rating, 0) / sectionRatings.length)
+        : 0
+
+      const researchEntry = {
+        symbol: oldSymbol,
+        date: new Date().toISOString(),
+        ...results,
+        overallRating,
+        lastRefresh: new Date().toISOString(),
+        saved: false
+      }
+
+      setCompanyData(researchEntry)
+
+      // Expand all sections
+      setExpandedSections({
+        companyAnalysis: true,
+        financialHealth: true,
+        technicalAnalysis: true,
+        optionsData: true,
+        recentDevelopments: true
+      })
+
+      // Scroll to top to show results
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      setError('Failed to rerun analysis. Please try again.')
+      console.error('Rerun research error:', err)
     } finally {
       setLoading(false)
     }
@@ -221,11 +329,28 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 <h2 className="text-xl font-bold">{companyData.symbol} Analysis</h2>
                 <p className="text-gray-400">Comprehensive company research and rating</p>
               </div>
-              <div className="text-center">
-                <div className={`text-4xl font-bold ${getRatingColor(companyData.overallRating)}`}>
-                  {companyData.overallRating}/10
+              <div className="flex items-center space-x-4">
+                <div className="text-center">
+                  <div className={`text-4xl font-bold ${getRatingColor(companyData.overallRating)}`}>
+                    {companyData.overallRating}/10
+                  </div>
+                  <div className="text-sm text-gray-400">Overall Rating</div>
                 </div>
-                <div className="text-sm text-gray-400">Overall Rating</div>
+                {!companyData.saved && (
+                  <button
+                    onClick={handleSaveResearch}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Save Research</span>
+                  </button>
+                )}
+                {companyData.saved && (
+                  <div className="flex items-center space-x-2 text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="text-sm font-medium">Saved</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -245,18 +370,30 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <h3 className="text-lg font-semibold mb-4">Research History</h3>
           <div className="space-y-4">
             {researchData.slice(0, 10).map((item, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
-                <div>
+              <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                <div className="flex-1 cursor-pointer" onClick={() => handleViewResearch(item)}>
                   <h4 className="font-semibold">{item.symbol}</h4>
                   <p className="text-sm text-gray-400">
                     {new Date(item.date).toLocaleDateString()} • {new Date(item.lastRefresh).toLocaleTimeString()}
                   </p>
                 </div>
-                <div className="text-right">
-                  <div className={`text-2xl font-bold ${getRatingColor(item.overallRating)}`}>
-                    {item.overallRating}/10
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold ${getRatingColor(item.overallRating)}`}>
+                      {item.overallRating}/10
+                    </div>
+                    <p className="text-xs text-gray-400">Overall Rating</p>
                   </div>
-                  <p className="text-xs text-gray-400">Overall Rating</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRerunResearch(item.symbol)
+                    }}
+                    className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                    title="Rerun research to get latest data"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}

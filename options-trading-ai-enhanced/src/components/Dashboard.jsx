@@ -1,8 +1,45 @@
 import { useMemo } from 'react'
-import { DollarSign, TrendingUp, Target, Calendar, AlertCircle, CheckCircle } from 'lucide-react'
+import { DollarSign, TrendingUp, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit } from 'lucide-react'
 import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns'
+import { saveToLocalStorage } from '../utils/storage'
 
-function Dashboard({ researchData, tradeData, settings }) {
+function Dashboard({ researchData, tradeData, setTradeData, settings }) {
+  const handleDeleteTrade = (tradeId) => {
+    if (!confirm('Are you sure you want to delete this trade?')) return
+
+    const updatedTradeData = tradeData.filter(trade => trade.id !== tradeId)
+    setTradeData(updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
+  }
+
+  const handleEditTrade = () => {
+    // Store the trade to edit and redirect to Trade Review tab
+    // We'll need to communicate this to the parent App component
+    alert('To edit this trade, please go to the Trade Review tab where it will be loaded for editing.')
+  }
+
+  const handleConvertToExecuted = (trade) => {
+    if (!confirm('Convert this planned trade to executed? This will update the execution date to today and count toward your weekly goals.')) return
+
+    // Update the trade to executed status with new timestamp
+    const executedTrade = {
+      ...trade,
+      executed: true,
+      planned: false,
+      status: 'executed',
+      timestamp: new Date().toISOString(), // Update to current date/time
+      executionDate: new Date().toISOString() // Add execution date
+    }
+
+    // Update tradeData array
+    const updatedTradeData = tradeData.map(t =>
+      t.id === trade.id ? executedTrade : t
+    )
+    setTradeData(updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
+
+    alert(`Trade for ${trade.symbol} converted to EXECUTED! Execution date set to ${new Date().toLocaleDateString()}.`)
+  }
   const dashboardStats = useMemo(() => {
     const now = new Date()
     const weekStart = startOfWeek(now)
@@ -11,19 +48,20 @@ function Dashboard({ researchData, tradeData, settings }) {
     // Calculate weekly premium from executed trades (saved trades)
     const weeklyTrades = tradeData.filter(trade => {
       const tradeDate = new Date(trade.timestamp)
-      return isWithinInterval(tradeDate, { start: weekStart, end: weekEnd })
+      // Only include executed trades
+      return trade.executed && isWithinInterval(tradeDate, { start: weekStart, end: weekEnd })
     })
 
     const weeklyPremium = weeklyTrades.reduce((sum, trade) => {
-      // Only count premium from saved trades (executed)
+      // Only count premium from executed trades
       return sum + (trade.premium * trade.quantity * 100)
     }, 0)
 
     const premiumProgress = (weeklyPremium / settings.weeklyPremiumTarget.min) * 100
     const premiumProgressMax = (weeklyPremium / settings.weeklyPremiumTarget.max) * 100
 
-    // Portfolio allocation
-    const activeTrades = tradeData.filter(trade => !trade.closed)
+    // Portfolio allocation - only count executed trades
+    const activeTrades = tradeData.filter(trade => trade.executed && !trade.closed)
     const totalAllocated = activeTrades.reduce((sum, trade) => {
       return sum + (trade.premium * trade.quantity * 100)
     }, 0)
@@ -33,9 +71,9 @@ function Dashboard({ researchData, tradeData, settings }) {
     // Recent research
     const recentResearch = researchData.slice(0, 5)
 
-    // Risk metrics
+    // Risk metrics - only check executed trades
     const highRiskTrades = tradeData.filter(trade =>
-      trade.riskMetrics?.allocationPercentage > settings.maxTradePercentage
+      trade.executed && trade.riskMetrics?.allocationPercentage > settings.maxTradePercentage
     )
 
     return {
@@ -53,12 +91,6 @@ function Dashboard({ researchData, tradeData, settings }) {
       totalTrades: tradeData.length
     }
   }, [researchData, tradeData, settings])
-
-  const getProgressColor = (progress) => {
-    if (progress >= 100) return 'bg-green-500'
-    if (progress >= 75) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
 
   const getAllocationColor = (percentage) => {
     if (percentage > settings.maxTradePercentage) return 'text-red-400'
@@ -123,34 +155,100 @@ function Dashboard({ researchData, tradeData, settings }) {
       </div>
 
       {/* Weekly Premium Progress */}
-      <div className="card">
+      <div className="card bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700/50">
         <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
-          <Target className="h-5 w-5 text-primary-400" />
+          <Target className="h-5 w-5 text-blue-400" />
           <span>Weekly Premium Progress</span>
         </h3>
         <div className="space-y-4">
           <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span>Current: ${dashboardStats.weeklyPremium.toFixed(0)}</span>
-              <span>Target: ${settings.weeklyPremiumTarget.min} - ${settings.weeklyPremiumTarget.max}</span>
+            <div className="flex justify-between text-sm mb-3">
+              <span className="font-medium text-blue-400">Current: ${dashboardStats.weeklyPremium.toFixed(0)}</span>
+              <span className="text-gray-400">Target: ${settings.weeklyPremiumTarget.min} - ${settings.weeklyPremiumTarget.max}</span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
+
+            {/* Progress bar with markers */}
+            <div className="relative">
+              {/* Background bar */}
+              <div className="w-full bg-gray-700 rounded-full h-4 overflow-visible">
+                {/* Progress fill */}
+                <div
+                  className={`h-4 rounded-full transition-all duration-500 relative ${
+                    dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.max
+                      ? 'bg-gradient-to-r from-green-500 via-green-400 to-emerald-400'
+                      : dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.min
+                      ? 'bg-gradient-to-r from-yellow-500 via-green-500 to-green-400'
+                      : 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(Math.max(dashboardStats.premiumProgress, 2), 100)}%`,
+                  }}
+                >
+                  {/* Animated shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
+
+              {/* Min target marker */}
               <div
-                className={`h-3 rounded-full transition-all duration-500 ${getProgressColor(dashboardStats.premiumProgress)}`}
-                style={{ width: `${Math.max(dashboardStats.premiumProgress, 5)}%` }}
-              ></div>
+                className="absolute top-0 h-4 w-0.5 bg-yellow-400 shadow-lg shadow-yellow-500/50"
+                style={{ left: '100%' }}
+                title={`Min Target: $${settings.weeklyPremiumTarget.min}`}
+              >
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-yellow-400 whitespace-nowrap font-medium">
+                  Min
+                </div>
+              </div>
+
+              {/* Max target marker */}
+              <div
+                className="absolute top-0 h-4 w-0.5 bg-green-400 shadow-lg shadow-green-500/50"
+                style={{
+                  left: `${Math.min((settings.weeklyPremiumTarget.max / settings.weeklyPremiumTarget.min) * 100, 100)}%`
+                }}
+                title={`Max Target: $${settings.weeklyPremiumTarget.max}`}
+              >
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-green-400 whitespace-nowrap font-medium">
+                  Max
+                </div>
+              </div>
+
+              {/* Current position indicator (if exceeds 100%) */}
+              {dashboardStats.premiumProgress > 100 && (
+                <div className="absolute -top-1 w-2 h-2 bg-emerald-400 rounded-full shadow-lg shadow-emerald-500/50" style={{ right: '-4px', top: '6px' }}>
+                  <div className="absolute w-4 h-4 bg-emerald-400/30 rounded-full -inset-1 animate-ping"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Progress percentage text */}
+            <div className="flex justify-between text-xs text-gray-400 mt-2">
+              <span>0%</span>
+              <span className="font-medium text-blue-400">
+                {dashboardStats.premiumProgress > 100
+                  ? `${dashboardStats.premiumProgress.toFixed(0)}% (${((dashboardStats.weeklyPremium / settings.weeklyPremiumTarget.max) * 100).toFixed(0)}% of max)`
+                  : `${dashboardStats.premiumProgress.toFixed(0)}%`
+                }
+              </span>
             </div>
           </div>
 
           {dashboardStats.premiumProgress >= 100 && (
-            <div className="flex items-center space-x-2 text-green-400">
+            <div className="flex items-center space-x-2 text-green-400 bg-green-900/20 p-3 rounded-lg border border-green-500/30">
               <CheckCircle className="h-5 w-5" />
-              <span className="text-sm">Weekly target achieved! 🎉</span>
+              <span className="text-sm font-medium">Weekly minimum target achieved! 🎉</span>
             </div>
           )}
 
-          {dashboardStats.premiumProgress < 75 && (
-            <div className="flex items-center space-x-2 text-yellow-400">
+          {dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.max && (
+            <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-900/20 p-3 rounded-lg border border-emerald-500/30">
+              <CheckCircle className="h-5 w-5" />
+              <span className="text-sm font-medium">Maximum target exceeded! Outstanding performance! 🚀</span>
+            </div>
+          )}
+
+          {dashboardStats.premiumProgress < 75 && dashboardStats.premiumProgress > 0 && (
+            <div className="flex items-center space-x-2 text-yellow-400 bg-yellow-900/20 p-3 rounded-lg border border-yellow-500/30">
               <AlertCircle className="h-5 w-5" />
               <span className="text-sm">Consider increasing trade frequency to meet weekly target</span>
             </div>
@@ -212,21 +310,73 @@ function Dashboard({ researchData, tradeData, settings }) {
           {tradeData.length > 0 ? (
             <div className="space-y-3">
               {tradeData.slice(0, 5).map((item, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                  <div>
-                    <p className="font-semibold">{item.symbol} {item.type.toUpperCase()}</p>
+                <div key={index} className={`flex justify-between items-center p-3 rounded-lg ${
+                  item.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                  item.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                  'bg-gray-700'
+                }`}>
+                  <div className="flex-1">
+                    <p className="font-semibold">
+                      {item.symbol} {item.type?.toUpperCase() || item.tradeType?.toUpperCase()}
+                      {item.status === 'executed' && (
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-green-600 text-green-100 rounded">
+                          EXECUTED
+                        </span>
+                      )}
+                      {item.status === 'planned' && (
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-blue-600 text-blue-100 rounded">
+                          PLANNED
+                        </span>
+                      )}
+                      {!item.status && (
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-gray-600 text-gray-300 rounded">
+                          RESEARCH
+                        </span>
+                      )}
+                    </p>
                     <p className="text-sm text-gray-400">
                       {format(new Date(item.timestamp), 'MMM dd, yyyy')}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm">${item.premium} premium</p>
-                    <p className={`text-xs ${
-                      item.rating >= 7 ? 'text-green-400' :
-                      item.rating >= 5 ? 'text-yellow-400' : 'text-red-400'
-                    }`}>
-                      Rating: {item.rating}/10
-                    </p>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm">${item.premium} premium</p>
+                      <p className={`text-xs ${
+                        item.rating >= 7 ? 'text-green-400' :
+                        item.rating >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        Rating: {item.rating}/10
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {item.status === 'planned' && (
+                        <>
+                          <button
+                            onClick={() => handleEditTrade(item)}
+                            className="p-2 hover:bg-blue-900/50 rounded-lg transition-colors"
+                            title="Edit planned trade (opens in Trade Review)"
+                          >
+                            <Edit className="h-3 w-3 text-blue-400" />
+                          </button>
+                          <button
+                            onClick={() => handleConvertToExecuted(item)}
+                            className="p-2 hover:bg-green-900/50 rounded-lg transition-colors"
+                            title="Convert to executed trade"
+                          >
+                            <CheckCircle className="h-3 w-3 text-green-400" />
+                          </button>
+                        </>
+                      )}
+                      {(item.status === 'planned' || item.status === 'executed') && (
+                        <button
+                          onClick={() => handleDeleteTrade(item.id)}
+                          className="p-2 hover:bg-red-900/50 rounded-lg transition-colors"
+                          title="Delete trade"
+                        >
+                          <Trash2 className="h-3 w-3 text-red-400" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

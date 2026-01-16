@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign } from 'lucide-react'
+import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
+import { saveToLocalStorage } from '../utils/storage'
 
 function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData }) {
   const [selectedSymbol, setSelectedSymbol] = useState('')
@@ -60,6 +61,71 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       setCurrentPrice('')
       setPriceError('')
     }
+  }
+
+  const handleQuickSave = (tradeStatus) => {
+    if (!selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium) {
+      alert('Please fill in all required fields before saving.')
+      return
+    }
+
+    // Create a minimal trade record without full analysis
+    const quickTrade = {
+      id: Date.now(),
+      symbol: selectedSymbol.toUpperCase(),
+      tradeType,
+      type: tradeType,
+      optionType,
+      strikePrice: parseFloat(strikePrice),
+      expirationDate,
+      stockPrice: parseFloat(currentPrice),
+      premium: parseFloat(premium),
+      quantity: 1,
+      closed: false,
+      executed: tradeStatus === 'executed',
+      planned: tradeStatus === 'planned',
+      status: tradeStatus,
+      timestamp: new Date().toISOString(),
+      executionDate: tradeStatus === 'executed' ? new Date().toISOString() : null,
+      // Minimal data for quick save (no full analysis)
+      rating: 5, // Neutral rating
+      riskAssessment: {
+        overallRisk: 'Medium',
+        maxLoss: parseFloat(strikePrice) * 100,
+        factors: []
+      },
+      riskMetrics: {
+        overallRisk: 'Medium',
+        maxLoss: parseFloat(strikePrice) * 100,
+        factors: []
+      },
+      recommendation: {
+        action: 'Quick Save',
+        confidence: 0,
+        rationale: 'This trade was saved without full analysis.',
+        rating: 5
+      },
+      hasResearchData: false,
+      quickSave: true // Flag to indicate this was a quick save
+    }
+
+    // Add to trade data
+    setTradeData(prev => [quickTrade, ...prev])
+    saveToLocalStorage('tradeData', [quickTrade, ...tradeData])
+
+    // Show success message
+    const message = tradeStatus === 'executed'
+      ? `${selectedSymbol} trade saved as EXECUTED! This will count toward your weekly premium goal.`
+      : `${selectedSymbol} trade saved as PLANNED! This is tracked but won't count toward your goals until executed.`
+    alert(message)
+
+    // Clear the form
+    setSelectedSymbol('')
+    setStrikePrice('')
+    setExpirationDate('')
+    setCurrentPrice('')
+    setPremium('')
+    setPriceError('')
   }
 
   const handleAnalyze = async () => {
@@ -137,12 +203,18 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
         id: Date.now(),
         symbol: selectedSymbol.toUpperCase(),
         tradeType,
+        type: tradeType, // Dashboard expects this
         optionType,
         strikePrice: parseFloat(strikePrice),
         expirationDate,
         stockPrice,
         premium: premiumAmount,
+        quantity: 1, // Default to 1 contract
+        closed: false, // Dashboard expects this for active trades
+        executed: false, // To distinguish from saved/executed trades
+        rating: recommendation.rating, // Dashboard expects this at top level
         riskAssessment,
+        riskMetrics: riskAssessment, // Dashboard expects this property name
         recommendation,
         earningsAndEvents,
         timestamp: new Date().toISOString(),
@@ -183,6 +255,93 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       case 'High': return <AlertTriangle className="h-5 w-5 text-red-400" />
       default: return <AlertTriangle className="h-5 w-5 text-gray-400" />
     }
+  }
+
+  const handleSaveTrade = (tradeStatus) => {
+    if (!analysis) return
+
+    // Mark the trade with appropriate status
+    const savedTrade = {
+      ...analysis,
+      executed: tradeStatus === 'executed',
+      planned: tradeStatus === 'planned',
+      status: tradeStatus
+    }
+
+    // Update the current analysis
+    setAnalysis(savedTrade)
+
+    // Update tradeData array - replace the current analysis with saved version
+    const updatedTradeData = tradeData.map(trade =>
+      trade.id === analysis.id ? savedTrade : trade
+    )
+    setTradeData(updatedTradeData)
+
+    // Persist to localStorage
+    saveToLocalStorage('tradeData', updatedTradeData)
+
+    // Show success message
+    const message = tradeStatus === 'executed'
+      ? `Trade for ${analysis.symbol} saved as EXECUTED! This will count toward your weekly premium goal and capital utilization.`
+      : `Trade for ${analysis.symbol} saved as PLANNED! This is tracked but won't count toward your goals until executed.`
+    alert(message)
+  }
+
+  const handleDeleteTrade = (tradeId) => {
+    if (!confirm('Are you sure you want to delete this trade?')) return
+
+    const updatedTradeData = tradeData.filter(trade => trade.id !== tradeId)
+    setTradeData(updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
+
+    // If we deleted the current analysis, clear it
+    if (analysis && analysis.id === tradeId) {
+      setAnalysis(null)
+    }
+  }
+
+  const handleEditTrade = (trade) => {
+    // Load the trade data into the form for editing
+    setSelectedSymbol(trade.symbol)
+    setStrikePrice(trade.strikePrice.toString())
+    setExpirationDate(trade.expirationDate)
+    setTradeType(trade.tradeType)
+    setCurrentPrice(trade.stockPrice.toString())
+    setPremium(trade.premium.toString())
+
+    // Set the analysis to the trade so it can be updated
+    setAnalysis(trade)
+
+    // Scroll to top of page
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleConvertToExecuted = (trade) => {
+    if (!confirm('Convert this planned trade to executed? This will update the execution date to today and count toward your weekly goals.')) return
+
+    // Update the trade to executed status with new timestamp
+    const executedTrade = {
+      ...trade,
+      executed: true,
+      planned: false,
+      status: 'executed',
+      timestamp: new Date().toISOString(), // Update to current date/time
+      executionDate: new Date().toISOString() // Add execution date
+    }
+
+    // Update tradeData array
+    const updatedTradeData = tradeData.map(t =>
+      t.id === trade.id ? executedTrade : t
+    )
+    setTradeData(updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
+
+    // If this is the current analysis, update it
+    if (analysis && analysis.id === trade.id) {
+      setAnalysis(executedTrade)
+    }
+
+    alert(`Trade for ${trade.symbol} converted to EXECUTED! Execution date set to ${new Date().toLocaleDateString()}.`)
   }
 
   const getRecommendationColor = (action) => {
@@ -267,6 +426,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             )}
           </div>
 
+          {/* Strike Price */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Strike Price</label>
+            <input
+              type="number"
+              step="0.01"
+              value={strikePrice}
+              onChange={(e) => setStrikePrice(e.target.value)}
+              placeholder="150.00"
+              className="input-primary w-full"
+            />
+          </div>
+
           {/* Premium */}
           <div>
             <label className="block text-sm font-medium mb-2">Premium (per contract)</label>
@@ -281,19 +453,6 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             <p className="text-xs text-gray-400 mt-1">Premium earned per share</p>
           </div>
 
-          {/* Strike Price */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Strike Price</label>
-            <input
-              type="number"
-              step="0.01"
-              value={strikePrice}
-              onChange={(e) => setStrikePrice(e.target.value)}
-              placeholder="150.00"
-              className="input-primary w-full"
-            />
-          </div>
-
           {/* Expiration Date */}
           <div>
             <label className="block text-sm font-medium mb-2">Expiration Date</label>
@@ -304,27 +463,45 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               className="input-primary w-full"
             />
           </div>
+        </div>
 
-          {/* Analyze Button */}
-          <div className="flex items-end">
-            <button
-              onClick={handleAnalyze}
-              disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Analyzing...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2">
-                  <Calculator className="h-4 w-4" />
-                  <span>Analyze Trade</span>
-                </div>
-              )}
-            </button>
-          </div>
+        {/* Action Buttons */}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={handleAnalyze}
+            disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
+            className="btn-primary flex-1 min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Analyzing...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center space-x-2">
+                <Calculator className="h-4 w-4" />
+                <span>Analyze Trade</span>
+              </div>
+            )}
+          </button>
+
+          <button
+            onClick={() => handleQuickSave('planned')}
+            disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
+            className="flex-1 min-w-[180px] flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="h-4 w-4" />
+            <span>Quick Save as Planned</span>
+          </button>
+
+          <button
+            onClick={() => handleQuickSave('executed')}
+            disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
+            className="flex-1 min-w-[180px] flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>Quick Save as Executed</span>
+          </button>
         </div>
       </div>
 
@@ -344,8 +521,40 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   </p>
                 )}
               </div>
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${getRecommendationColor(analysis.recommendation.action)}`}>
-                {analysis.recommendation.action}
+              <div className="flex items-center space-x-4">
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getRecommendationColor(analysis.recommendation.action)}`}>
+                  {analysis.recommendation.action}
+                </div>
+                {!analysis.status && (
+                  <>
+                    <button
+                      onClick={() => handleSaveTrade('planned')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>Save as Planned</span>
+                    </button>
+                    <button
+                      onClick={() => handleSaveTrade('executed')}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Save as Executed</span>
+                    </button>
+                  </>
+                )}
+                {analysis.status === 'planned' && (
+                  <div className="flex items-center space-x-2 text-blue-400">
+                    <Save className="h-5 w-5" />
+                    <span className="text-sm font-medium">Planned Trade</span>
+                  </div>
+                )}
+                {analysis.status === 'executed' && (
+                  <div className="flex items-center space-x-2 text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="text-sm font-medium">Executed Trade</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -533,22 +742,72 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <h3 className="text-lg font-semibold mb-4">Trade Analysis History</h3>
           <div className="space-y-4">
             {tradeData.slice(0, 10).map((trade, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
-                <div>
+              <div key={index} className={`flex justify-between items-center p-4 rounded-lg ${
+                trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                'bg-gray-700'
+              }`}>
+                <div className="flex-1">
                   <h4 className="font-semibold">
                     {trade.symbol} {trade.tradeType === 'cashSecuredPut' ? 'Put' : 'Call'}
+                    {trade.status === 'executed' && (
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-green-600 text-green-100 rounded">
+                        EXECUTED
+                      </span>
+                    )}
+                    {trade.status === 'planned' && (
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-blue-600 text-blue-100 rounded">
+                        PLANNED
+                      </span>
+                    )}
+                    {!trade.status && (
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-gray-600 text-gray-300 rounded">
+                        RESEARCH
+                      </span>
+                    )}
                   </h4>
                   <p className="text-sm text-gray-400">
                     Strike: ${trade.strikePrice} • Exp: {new Date(trade.expirationDate).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="text-right">
-                  <div className={`font-semibold ${getRecommendationColor(trade.recommendation.action)}`}>
-                    {trade.recommendation.action}
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <div className={`font-semibold ${getRecommendationColor(trade.recommendation.action)}`}>
+                      {trade.recommendation.action}
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {new Date(trade.timestamp).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    {new Date(trade.timestamp).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    {trade.status === 'planned' && (
+                      <>
+                        <button
+                          onClick={() => handleEditTrade(trade)}
+                          className="p-2 hover:bg-blue-900/50 rounded-lg transition-colors"
+                          title="Edit planned trade"
+                        >
+                          <Edit className="h-4 w-4 text-blue-400" />
+                        </button>
+                        <button
+                          onClick={() => handleConvertToExecuted(trade)}
+                          className="p-2 hover:bg-green-900/50 rounded-lg transition-colors"
+                          title="Convert to executed trade"
+                        >
+                          <CheckCircle className="h-4 w-4 text-green-400" />
+                        </button>
+                      </>
+                    )}
+                    {(trade.status === 'planned' || trade.status === 'executed') && (
+                      <button
+                        onClick={() => handleDeleteTrade(trade.id)}
+                        className="p-2 hover:bg-red-900/50 rounded-lg transition-colors"
+                        title="Delete trade"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-400" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
