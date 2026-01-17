@@ -28,9 +28,13 @@ function Login({ onLoginSuccess }) {
       }
 
       const data = await response.json()
+      console.log('Login response:', { status: response.status, data })
 
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed')
+        // Show detailed error message from server
+        const errorMsg = data.message || data.error || 'Authentication failed'
+        const debugInfo = data.debug ? ` (Debug: ${JSON.stringify(data.debug)})` : ''
+        throw new Error(errorMsg + debugInfo)
       }
 
       // Store user in localStorage and call parent callback

@@ -18,10 +18,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { username, password } = req.body
+    // Vercel automatically parses JSON body
+    const body = req.body || {}
+    const { username, password } = body
+
+    console.log('Login attempt:', { username, hasPassword: !!password, bodyType: typeof req.body })
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' })
+      return res.status(400).json({
+        error: 'Username and password are required',
+        debug: { receivedUsername: !!username, receivedPassword: !!password }
+      })
     }
 
     // Hardcoded credentials
@@ -39,6 +46,10 @@ module.exports = async function handler(req, res) {
     }
   } catch (error) {
     console.error('Login error:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error.message,
+      stack: error.stack
+    })
   }
 }
