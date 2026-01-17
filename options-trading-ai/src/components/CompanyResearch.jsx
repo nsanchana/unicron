@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Star, TrendingUp, DollarSign, BarChart3, Users, Newspaper } from 'lucide-react';
 import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 function CompanyResearch() {
   const [symbol, setSymbol] = useState('');
@@ -14,7 +15,7 @@ function CompanyResearch() {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(`http://localhost:3002/api/research/${symbol.toUpperCase()}`);
+      const response = await axios.get(getApiUrl(`/api/research/${symbol.toUpperCase()}`));
       setResearch(response.data);
     } catch (err) {
       setError('Failed to fetch company data. Please try again.');

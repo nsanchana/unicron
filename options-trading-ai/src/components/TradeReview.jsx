@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Calculator, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calculator, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { calculateOptionPrice, calculateGreeks } from '../utils/optionsCalculations';
+import axios from 'axios';
+import { getApiUrl } from '../utils/api';
 
 function TradeReview() {
   const [tradeParams, setTradeParams] = useState({
@@ -16,6 +18,47 @@ function TradeReview() {
   });
 
   const [analysis, setAnalysis] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+  const [priceError, setPriceError] = useState('');
+
+  // Debounced fetch for stock price
+  const fetchStockPrice = useCallback(async (symbol) => {
+    if (!symbol || symbol.length < 1) {
+      return;
+    }
+
+    setLoadingPrice(true);
+    setPriceError('');
+
+    try {
+      const response = await axios.get(getApiUrl(`/api/quote/${symbol.toUpperCase()}`));
+      const { price } = response.data;
+
+      if (price) {
+        setTradeParams(prev => ({
+          ...prev,
+          currentPrice: price
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch stock price:', error);
+      setPriceError('Could not fetch price');
+    } finally {
+      setLoadingPrice(false);
+    }
+  }, []);
+
+  // Fetch price when symbol changes (with debounce)
+  useEffect(() => {
+    const symbol = tradeParams.symbol.trim();
+    if (symbol.length >= 1) {
+      const timeoutId = setTimeout(() => {
+        fetchStockPrice(symbol);
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [tradeParams.symbol, fetchStockPrice]);
 
   const handleCalculate = () => {
     try {
@@ -115,14 +158,20 @@ function TradeReview() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Price</label>
-            <input
-              type="number"
-              step="0.01"
-              value={tradeParams.currentPrice}
-              onChange={(e) => setTradeParams({...tradeParams, currentPrice: parseFloat(e.target.value) || 0})}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Current Price
+              {loadingPrice && <Loader2 className="inline w-4 h-4 ml-2 animate-spin text-blue-500" />}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                step="0.01"
+                value={tradeParams.currentPrice}
+                onChange={(e) => setTradeParams({...tradeParams, currentPrice: parseFloat(e.target.value) || 0})}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+              {priceError && <p className="text-xs text-red-500 mt-1">{priceError}</p>}
+            </div>
           </div>
 
           <div>
