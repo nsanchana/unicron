@@ -476,13 +476,24 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' })
     }
 
+    // Check if registration is disabled (any user already exists)
+    const { User } = await import('./auth.js')
+    const userCount = await User.count()
+
+    if (userCount > 0) {
+      return res.status(403).json({
+        error: 'Registration is disabled. This application is private.',
+        code: 'REGISTRATION_DISABLED'
+      })
+    }
+
     // Check if user already exists
     const existingUser = await findUserByUsername(username)
     if (existingUser) {
       return res.status(409).json({ error: 'Username already exists' })
     }
 
-    // Create new user
+    // Create new user (only the first user)
     const user = await createUser(username, password, email)
 
     // Set session

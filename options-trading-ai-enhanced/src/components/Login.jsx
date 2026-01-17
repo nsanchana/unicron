@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LogIn, UserPlus, Lock, User } from 'lucide-react'
 import { API_BASE_URL } from '../config'
 
@@ -9,6 +9,34 @@ function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registrationEnabled, setRegistrationEnabled] = useState(true)
+
+  // Check if registration is enabled on mount
+  useEffect(() => {
+    const checkRegistration = async () => {
+      try {
+        // Try to register with empty credentials to check if registration is enabled
+        const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username: '', password: '' })
+        })
+        const data = await response.json()
+
+        // If we get REGISTRATION_DISABLED code, disable registration UI
+        if (data.code === 'REGISTRATION_DISABLED') {
+          setRegistrationEnabled(false)
+          setIsRegister(false) // Force to login tab
+        }
+      } catch (error) {
+        // If check fails, assume registration is enabled
+        setRegistrationEnabled(true)
+      }
+    }
+
+    checkRegistration()
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,38 +84,47 @@ function Login({ onLoginSuccess }) {
 
         {/* Login/Register Card */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 shadow-2xl">
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex rounded-lg bg-gray-700 p-1">
-              <button
-                onClick={() => {
-                  setIsRegister(false)
-                  setError('')
-                }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  !isRegister
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <LogIn className="inline h-4 w-4 mr-2" />
-                Login
-              </button>
-              <button
-                onClick={() => {
-                  setIsRegister(true)
-                  setError('')
-                }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isRegister
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <UserPlus className="inline h-4 w-4 mr-2" />
-                Register
-              </button>
+          {registrationEnabled && (
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-lg bg-gray-700 p-1">
+                <button
+                  onClick={() => {
+                    setIsRegister(false)
+                    setError('')
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    !isRegister
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  <LogIn className="inline h-4 w-4 mr-2" />
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRegister(true)
+                    setError('')
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isRegister
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  <UserPlus className="inline h-4 w-4 mr-2" />
+                  Register
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {!registrationEnabled && (
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-white">Login</h2>
+              <p className="text-sm text-gray-400 mt-1">Private Application</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
