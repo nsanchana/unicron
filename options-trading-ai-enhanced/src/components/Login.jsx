@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { LogIn, UserPlus, Lock, User } from 'lucide-react'
+import { API_BASE_URL } from '../config'
 
 function Login({ onLoginSuccess }) {
   const [isRegister, setIsRegister] = useState(false)
@@ -20,7 +21,7 @@ function Login({ onLoginSuccess }) {
         ? { username, password, email }
         : { username, password }
 
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

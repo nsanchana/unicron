@@ -924,8 +924,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Options Trading AI Proxy Server running on port ${PORT}`)
-  console.log(`Health check: http://localhost:${PORT}/health`)
-})
+// Start server (only when not in Vercel serverless environment)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Options Trading AI Proxy Server running on port ${PORT}`)
+    console.log(`Health check: http://localhost:${PORT}/health`)
+  })
+}
+
+// Export for Vercel serverless
+export default app

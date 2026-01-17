@@ -7,6 +7,7 @@ import SettingsPanel from './components/SettingsPanel'
 import UnicronIcon from './components/UnicronIcon'
 import Login from './components/Login'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV } from './utils/storage'
+import { API_BASE_URL } from './config'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -25,7 +26,7 @@ function App() {
     // Check authentication status on mount
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/auth/me', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           credentials: 'include'
         })
 
@@ -82,7 +83,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:3001/api/auth/logout', {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       })

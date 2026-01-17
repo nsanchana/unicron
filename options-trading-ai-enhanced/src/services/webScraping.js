@@ -2,7 +2,8 @@ import axios from 'axios'
 import * as cheerio from 'cheerio'
 
 // Base URL for proxy server
-const PROXY_BASE_URL = 'http://localhost:3001/api/scrape'
+const API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001'
+const PROXY_BASE_URL = `${API_BASE_URL}/api/scrape`
 
 // Rate limiting helper
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
