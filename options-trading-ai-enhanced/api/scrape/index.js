@@ -8,7 +8,109 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
 })
 
-// Helper function to generate AI insights
+// Helper function to generate comprehensive company analysis using AI
+async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return generateFallbackCompanyAnalysis(symbol, scrapedData)
+  }
+
+  try {
+    const prompt = `You are a senior equity research analyst. Provide a comprehensive analysis of ${symbol} (${scrapedData.companyName || symbol}).
+
+Available Data:
+- Company Description: ${scrapedData.description || 'Not available'}
+- Sector: ${scrapedData.sector || 'Not available'}
+- Industry: ${scrapedData.industry || 'Not available'}
+- Market Cap: ${scrapedData.marketCap || 'Not available'}
+- Employees: ${scrapedData.employees || 'Not available'}
+- Revenue: ${scrapedData.revenue || 'Not available'}
+- Net Income: ${scrapedData.netIncome || 'Not available'}
+- PE Ratio: ${scrapedData.peRatio || 'Not available'}
+
+Provide a detailed analysis in the following JSON format. For each category, provide substantive analysis (3-5 sentences minimum) and a rating from 0-10:
+
+{
+  "marketPosition": {
+    "analysis": "Detailed analysis of the company's position in the market, competitive advantages, industry dynamics, and market share...",
+    "rating": 7
+  },
+  "businessModel": {
+    "analysis": "Detailed evaluation of how the company generates revenue, key revenue streams, business model sustainability, and recurring revenue potential...",
+    "rating": 7
+  },
+  "industryTrends": {
+    "analysis": "Analysis of industry trends, external factors impacting performance, regulatory environment, technological disruption, and macroeconomic influences...",
+    "rating": 7
+  },
+  "customerBase": {
+    "analysis": "Assessment of customer base composition, concentration risks, customer retention, geographic diversification, and dependency on key customers...",
+    "rating": 7
+  },
+  "growthStrategy": {
+    "analysis": "Investigation of future growth plans, product development pipeline, expansion strategies, M&A activity, and long-term market success potential...",
+    "rating": 7
+  },
+  "economicMoat": {
+    "analysis": "Economic moat analysis covering brand loyalty, barriers to entry, switching costs, network effects, economies of scale, patents/IP, and cost advantages...",
+    "rating": 7
+  },
+  "overallRating": 7,
+  "summary": "2-3 sentence executive summary of the overall investment thesis..."
+}
+
+Be specific, factual, and thorough. Use your knowledge of ${symbol} to provide meaningful insights. Return ONLY valid JSON.`
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 2500,
+      messages: [{ role: 'user', content: prompt }]
+    })
+
+    const responseText = message.content[0].text
+    // Extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0])
+    }
+    throw new Error('Could not parse AI response')
+  } catch (error) {
+    console.error('AI company analysis failed:', error.message)
+    return generateFallbackCompanyAnalysis(symbol, scrapedData)
+  }
+}
+
+function generateFallbackCompanyAnalysis(symbol, scrapedData = {}) {
+  return {
+    marketPosition: {
+      analysis: `${symbol} operates in the ${scrapedData.sector || 'broader'} sector within the ${scrapedData.industry || 'industry'}. Further research is needed to assess the company's competitive position, market share, and industry dynamics. Consider analyzing peer comparisons and market trends.`,
+      rating: 5
+    },
+    businessModel: {
+      analysis: `${symbol}'s business model and revenue generation strategy requires deeper analysis. Key factors to evaluate include revenue diversification, recurring revenue streams, and business sustainability. Review annual reports for detailed segment breakdowns.`,
+      rating: 5
+    },
+    industryTrends: {
+      analysis: `The ${scrapedData.industry || 'industry'} sector is subject to various external factors including regulatory changes, technological disruption, and macroeconomic conditions. Monitor industry reports and analyst coverage for trend analysis.`,
+      rating: 5
+    },
+    customerBase: {
+      analysis: `Customer concentration and diversification analysis for ${symbol} requires review of revenue breakdown by customer segment. Key risks include dependency on major customers and geographic concentration. Check 10-K filings for customer details.`,
+      rating: 5
+    },
+    growthStrategy: {
+      analysis: `${symbol}'s growth strategy and expansion plans should be evaluated through management guidance, investor presentations, and strategic initiatives. Consider product pipeline, market expansion, and M&A activity.`,
+      rating: 5
+    },
+    economicMoat: {
+      analysis: `Economic moat analysis for ${symbol} should consider brand strength, barriers to entry, switching costs, network effects, and scale advantages. Competitive advantages vary by business segment and require detailed evaluation.`,
+      rating: 5
+    },
+    overallRating: 5,
+    summary: `${symbol} is a ${scrapedData.marketCap || ''} company in the ${scrapedData.sector || 'market'}. A comprehensive analysis requires reviewing financial statements, competitive positioning, and growth prospects.`
+  }
+}
+
+// Helper function to generate AI insights for other sections
 async function generateAIInsight(symbol, dataType, scrapedData = {}) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return generateFallbackInsight(symbol, dataType, scrapedData)
@@ -16,19 +118,6 @@ async function generateAIInsight(symbol, dataType, scrapedData = {}) {
 
   try {
     const prompts = {
-      companyAnalysis: `Analyze this company data for ${symbol} and provide actionable insights for options trading:
-
-Company Description: ${scrapedData.description || 'Not available'}
-Sector: ${scrapedData.sector || 'Not available'}
-Industry: ${scrapedData.industry || 'Not available'}
-Market Cap: ${scrapedData.marketCap || 'Not available'}
-
-Provide a 2-3 sentence analysis focused on:
-1. Company's competitive position and business model strength
-2. Key factors that would make this a good or poor candidate for selling options
-3. Any sector-specific risks or opportunities
-
-Be concise, actionable, and specific to options trading strategy.`,
 
       financialHealth: `Analyze this financial data for ${symbol} for options trading purposes:
 
@@ -105,8 +194,19 @@ function generateFallbackInsight(symbol, dataType, scrapedData = {}) {
 
 // Scraping functions
 async function scrapeCompanyAnalysis(symbol) {
-  let scrapedInfo = { description: '', sector: '', industry: '', marketCap: '' }
+  let scrapedInfo = {
+    description: '',
+    sector: '',
+    industry: '',
+    marketCap: '',
+    companyName: symbol,
+    employees: '',
+    revenue: '',
+    netIncome: '',
+    peRatio: ''
+  }
 
+  // Scrape from StockAnalysis
   try {
     const saUrl = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/`
     const saResponse = await axios.get(saUrl, {
@@ -115,13 +215,17 @@ async function scrapeCompanyAnalysis(symbol) {
     })
     const $sa = cheerio.load(saResponse.data)
     scrapedInfo.description = $sa('meta[name="description"]').attr('content') || ''
+    scrapedInfo.companyName = $sa('h1').first().text().trim() || symbol
     scrapedInfo.sector = $sa('[data-test="sector"]').text().trim()
     scrapedInfo.industry = $sa('[data-test="industry"]').text().trim()
     scrapedInfo.marketCap = $sa('[data-test="market-cap"]').text().trim()
+    scrapedInfo.peRatio = $sa('[data-test="pe-ratio"]').text().trim()
+    scrapedInfo.employees = $sa('[data-test="employees"]').text().trim()
   } catch (error) {
     console.log('StockAnalysis scraping failed, trying Yahoo Finance...')
   }
 
+  // Fallback to Yahoo Finance
   if (!scrapedInfo.description || !scrapedInfo.sector) {
     try {
       const yahooUrl = `https://finance.yahoo.com/quote/${symbol}/profile`
@@ -141,26 +245,93 @@ async function scrapeCompanyAnalysis(symbol) {
     }
   }
 
-  let rating = 5
-  if (scrapedInfo.description && scrapedInfo.description.length > 100) rating += 2
-  if (scrapedInfo.sector && scrapedInfo.industry) rating += 2
-  if (scrapedInfo.marketCap) rating += 1
+  // Try to get financial data for context
+  try {
+    const financialsUrl = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/financials/`
+    const finResponse = await axios.get(financialsUrl, {
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 10000
+    })
+    const $fin = cheerio.load(finResponse.data)
+    $fin('table tr').each((_, row) => {
+      const label = $fin(row).find('td').first().text().trim().toLowerCase()
+      const value = $fin(row).find('td').eq(1).text().trim()
+      if (label.includes('revenue') && !scrapedInfo.revenue) scrapedInfo.revenue = value
+      if (label.includes('net income') && !scrapedInfo.netIncome) scrapedInfo.netIncome = value
+    })
+  } catch (error) {
+    console.log('Financial data scraping failed')
+  }
 
+  // Generate comprehensive AI analysis
+  const comprehensiveAnalysis = await generateComprehensiveCompanyAnalysis(symbol, scrapedInfo)
+
+  // Build metrics from scraped data
   const metrics = [
+    { label: 'Company', value: scrapedInfo.companyName || symbol },
     { label: 'Sector', value: scrapedInfo.sector || 'Not Available' },
     { label: 'Industry', value: scrapedInfo.industry || 'Not Available' },
-    { label: 'Market Cap', value: scrapedInfo.marketCap || 'Not Available' }
-  ].filter(m => m.value !== 'Not Available')
+    { label: 'Market Cap', value: scrapedInfo.marketCap || 'Not Available' },
+    { label: 'P/E Ratio', value: scrapedInfo.peRatio || 'Not Available' },
+    { label: 'Employees', value: scrapedInfo.employees || 'Not Available' }
+  ].filter(m => m.value !== 'Not Available' && m.value !== '')
 
+  // Build signals based on analysis
   const signals = []
-  if (scrapedInfo.sector) signals.push({ type: 'positive', message: `${scrapedInfo.sector} sector exposure` })
-  if (!scrapedInfo.description) signals.push({ type: 'warning', message: 'Limited company information available' })
+  if (comprehensiveAnalysis.overallRating >= 7) {
+    signals.push({ type: 'positive', message: 'Strong overall company fundamentals' })
+  } else if (comprehensiveAnalysis.overallRating <= 4) {
+    signals.push({ type: 'negative', message: 'Weak company fundamentals - exercise caution' })
+  }
+  if (comprehensiveAnalysis.economicMoat?.rating >= 7) {
+    signals.push({ type: 'positive', message: 'Strong economic moat identified' })
+  }
+  if (comprehensiveAnalysis.growthStrategy?.rating >= 7) {
+    signals.push({ type: 'positive', message: 'Solid growth strategy in place' })
+  }
+  if (comprehensiveAnalysis.customerBase?.rating <= 4) {
+    signals.push({ type: 'warning', message: 'Customer concentration risk detected' })
+  }
 
+  // Return comprehensive analysis structure
   return {
-    rating: Math.min(rating, 10),
-    analysis: await generateAIInsight(symbol, 'companyAnalysis', scrapedInfo),
-    metrics: metrics.length > 0 ? metrics : [{ label: 'Symbol', value: symbol }],
-    signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Company analysis completed' }]
+    rating: comprehensiveAnalysis.overallRating || 5,
+    analysis: comprehensiveAnalysis.summary || `Analysis for ${symbol}`,
+    metrics,
+    signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Company analysis completed' }],
+    // Detailed analysis sections
+    detailedAnalysis: {
+      marketPosition: {
+        title: 'Market Position & Competitive Advantage',
+        content: comprehensiveAnalysis.marketPosition?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.marketPosition?.rating || 5
+      },
+      businessModel: {
+        title: 'Business Model & Revenue Generation',
+        content: comprehensiveAnalysis.businessModel?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.businessModel?.rating || 5
+      },
+      industryTrends: {
+        title: 'Industry Trends & External Factors',
+        content: comprehensiveAnalysis.industryTrends?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.industryTrends?.rating || 5
+      },
+      customerBase: {
+        title: 'Customer Base & Concentration Risk',
+        content: comprehensiveAnalysis.customerBase?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.customerBase?.rating || 5
+      },
+      growthStrategy: {
+        title: 'Growth Strategy & Future Outlook',
+        content: comprehensiveAnalysis.growthStrategy?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.growthStrategy?.rating || 5
+      },
+      economicMoat: {
+        title: 'Economic Moat Analysis',
+        content: comprehensiveAnalysis.economicMoat?.analysis || 'Analysis not available',
+        rating: comprehensiveAnalysis.economicMoat?.rating || 5
+      }
+    }
   }
 }
 

@@ -203,8 +203,26 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
     return <AlertTriangle className="h-5 w-5 text-red-400" />
   }
 
+  // Render a detailed analysis subsection with rating
+  const renderDetailedSubsection = (subsection) => {
+    if (!subsection) return null
+    return (
+      <div className="bg-gray-700 rounded-lg p-4 mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <h5 className="font-semibold text-primary-400">{subsection.title}</h5>
+          <div className={`flex items-center space-x-1 ${getRatingColor(subsection.rating)}`}>
+            <Star className="h-4 w-4 fill-current" />
+            <span className="font-bold text-sm">{subsection.rating}/10</span>
+          </div>
+        </div>
+        <p className="text-gray-300 text-sm leading-relaxed">{subsection.content}</p>
+      </div>
+    )
+  }
+
   const renderSection = (title, sectionKey, data, rating) => {
     const isExpanded = expandedSections[sectionKey]
+    const isCompanyAnalysis = sectionKey === 'companyAnalysis'
 
     return (
       <div className="card">
@@ -227,19 +245,21 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
         {isExpanded && data && (
           <div className="px-4 pb-4 space-y-3">
+            {/* Summary Analysis */}
             {data.analysis && (
               <div>
-                <h4 className="font-medium mb-2">Analysis</h4>
-                <p className="text-gray-300 text-sm leading-relaxed">{data.analysis}</p>
+                <h4 className="font-medium mb-2">Executive Summary</h4>
+                <p className="text-gray-300 text-sm leading-relaxed bg-gray-800 p-3 rounded-lg">{data.analysis}</p>
               </div>
             )}
 
+            {/* Key Metrics */}
             {data.metrics && data.metrics.length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">Key Metrics</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {data.metrics.map((metric, index) => (
-                    <div key={index} className="flex justify-between text-sm">
+                    <div key={index} className="flex justify-between text-sm bg-gray-800 p-2 rounded">
                       <span className="text-gray-400">{metric.label}:</span>
                       <span className="font-medium">{metric.value}</span>
                     </div>
@@ -248,6 +268,20 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
               </div>
             )}
 
+            {/* Detailed Analysis Sections - Only for Company Analysis */}
+            {isCompanyAnalysis && data.detailedAnalysis && (
+              <div>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Detailed Analysis</h4>
+                {renderDetailedSubsection(data.detailedAnalysis.marketPosition)}
+                {renderDetailedSubsection(data.detailedAnalysis.businessModel)}
+                {renderDetailedSubsection(data.detailedAnalysis.industryTrends)}
+                {renderDetailedSubsection(data.detailedAnalysis.customerBase)}
+                {renderDetailedSubsection(data.detailedAnalysis.growthStrategy)}
+                {renderDetailedSubsection(data.detailedAnalysis.economicMoat)}
+              </div>
+            )}
+
+            {/* Signals */}
             {data.signals && data.signals.length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">Signals</h4>
