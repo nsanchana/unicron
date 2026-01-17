@@ -32,6 +32,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       const response = await fetch(`/api/scrape/stock-price`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ symbol })
       })
 
@@ -160,6 +161,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
         const response = await fetch('/api/scrape/earnings-events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             symbol: selectedSymbol.toUpperCase(),
             expirationDate
