@@ -18,10 +18,12 @@ async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
   }
 
   try {
+    console.log('[CompanyAnalysis] Creating Anthropic client...')
     const anthropic = new Anthropic({
       apiKey: apiKey
     })
 
+    console.log('[CompanyAnalysis] Building prompt...')
     const prompt = `You are a senior equity research analyst. Provide a comprehensive analysis of ${symbol} (${scrapedData.companyName || symbol}).
 
 Available Data:
@@ -67,21 +69,28 @@ Provide a detailed analysis in the following JSON format. For each category, pro
 
 Be specific, factual, and thorough. Use your knowledge of ${symbol} to provide meaningful insights. Return ONLY valid JSON.`
 
+    console.log('[CompanyAnalysis] Calling Anthropic API with model claude-3-5-sonnet-20241022...')
+
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2500,
       messages: [{ role: 'user', content: prompt }]
     })
 
+    console.log('[CompanyAnalysis] Received response from Anthropic')
+    console.log('[CompanyAnalysis] Response content length:', message.content[0]?.text?.length || 0)
+
     const responseText = message.content[0].text
     // Extract JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
+      console.log('[CompanyAnalysis] Successfully parsed JSON response')
       return JSON.parse(jsonMatch[0])
     }
     throw new Error('Could not parse AI response')
   } catch (error) {
-    console.error('AI company analysis failed:', error.message)
+    console.error('[CompanyAnalysis] AI company analysis failed:', error.message)
+    console.error('[CompanyAnalysis] Error stack:', error.stack)
     return generateFallbackCompanyAnalysis(symbol, scrapedData)
   }
 }
