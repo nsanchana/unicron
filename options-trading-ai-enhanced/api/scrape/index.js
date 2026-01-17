@@ -4,17 +4,24 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || ''
-})
-
 // Helper function to generate comprehensive company analysis using AI
 async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+
+  console.log(`[CompanyAnalysis] Starting analysis for ${symbol}`)
+  console.log(`[CompanyAnalysis] API Key present: ${!!apiKey}`)
+  console.log(`[CompanyAnalysis] API Key length: ${apiKey ? apiKey.length : 0}`)
+
+  if (!apiKey || apiKey.trim() === '') {
+    console.log('[CompanyAnalysis] No API key found, using fallback')
     return generateFallbackCompanyAnalysis(symbol, scrapedData)
   }
 
   try {
+    const anthropic = new Anthropic({
+      apiKey: apiKey
+    })
+
     const prompt = `You are a senior equity research analyst. Provide a comprehensive analysis of ${symbol} (${scrapedData.companyName || symbol}).
 
 Available Data:
@@ -112,11 +119,17 @@ function generateFallbackCompanyAnalysis(symbol, scrapedData = {}) {
 
 // Helper function to generate AI insights for other sections
 async function generateAIInsight(symbol, dataType, scrapedData = {}) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+
+  if (!apiKey || apiKey.trim() === '') {
     return generateFallbackInsight(symbol, dataType, scrapedData)
   }
 
   try {
+    const anthropic = new Anthropic({
+      apiKey: apiKey
+    })
+
     const prompts = {
 
       financialHealth: `Analyze this financial data for ${symbol} for options trading purposes:
