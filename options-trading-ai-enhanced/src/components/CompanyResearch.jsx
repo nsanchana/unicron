@@ -320,8 +320,79 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
               </div>
             )}
 
-            {/* Key Metrics */}
-            {data.metrics && data.metrics.length > 0 && (
+            {/* Key Metrics - Special rendering for Technical Analysis */}
+            {data.metrics && data.metrics.length > 0 && isTechnicalAnalysis && (
+              <div>
+                <h4 className="font-medium mb-3">Key Metrics</h4>
+                {/* Current Price - Prominent Display */}
+                {data.metrics.find(m => m.label === 'Current Price') && (
+                  <div className="bg-gradient-to-r from-primary-900 to-primary-800 rounded-lg p-4 mb-4 border border-primary-600">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300 text-sm">Current Price</span>
+                      <span className="text-3xl font-bold text-white">
+                        ${data.metrics.find(m => m.label === 'Current Price')?.value}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Support & Resistance Visual Display */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Support Levels */}
+                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                    <h5 className="text-green-400 font-semibold mb-3 flex items-center">
+                      <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                      Support Levels
+                    </h5>
+                    <div className="space-y-2">
+                      {data.metrics
+                        .filter(m => m.label.includes('Support'))
+                        .map((metric, i) => (
+                          <div key={i} className="bg-gray-700 rounded p-3">
+                            <div className="text-green-300 font-medium text-lg">
+                              {metric.value.split(' - ')[0]}
+                            </div>
+                            <div className="text-gray-400 text-sm mt-1">
+                              {metric.value.split(' - ').slice(1).join(' - ')}
+                            </div>
+                          </div>
+                        ))}
+                      {data.metrics.filter(m => m.label.includes('Support')).length === 0 && (
+                        <p className="text-gray-500 text-sm">No support levels identified</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Resistance Levels */}
+                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+                    <h5 className="text-red-400 font-semibold mb-3 flex items-center">
+                      <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                      Resistance Levels
+                    </h5>
+                    <div className="space-y-2">
+                      {data.metrics
+                        .filter(m => m.label.includes('Resistance'))
+                        .map((metric, i) => (
+                          <div key={i} className="bg-gray-700 rounded p-3">
+                            <div className="text-red-300 font-medium text-lg">
+                              {metric.value.split(' - ')[0]}
+                            </div>
+                            <div className="text-gray-400 text-sm mt-1">
+                              {metric.value.split(' - ').slice(1).join(' - ')}
+                            </div>
+                          </div>
+                        ))}
+                      {data.metrics.filter(m => m.label.includes('Resistance')).length === 0 && (
+                        <p className="text-gray-500 text-sm">No resistance levels identified</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Key Metrics - Standard rendering for other sections */}
+            {data.metrics && data.metrics.length > 0 && !isTechnicalAnalysis && (
               <div>
                 <h4 className="font-medium mb-2">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
