@@ -155,6 +155,7 @@ Be concise and actionable for options traders.`,
       technicalAnalysis: `You are a technical analyst. Provide a detailed technical analysis for ${symbol}.
 
 Current Price: ${scrapedData.currentPrice || 'Not available'}
+Target Price: ${scrapedData.targetPrice || 'Not available'}
 
 Provide your analysis in the following JSON format:
 {
@@ -162,6 +163,7 @@ Provide your analysis in the following JSON format:
   "supportLevels": ["$XXX - description", "$XXX - description"],
   "resistanceLevels": ["$XXX - description", "$XXX - description"],
   "trend30to60Days": "Detailed outlook for the next 30-60 days based on technical patterns, momentum indicators, and historical price action. Include specific price targets if the trend continues.",
+  "targetPriceAnalysis": "Analysis of the analyst target price - what it implies for upside/downside potential and how it aligns with technical levels",
   "optionsStrategy": "Specific recommendation on whether to sell puts or covered calls based on the technical setup, with suggested strike price levels",
   "rating": 7
 }
@@ -427,8 +429,9 @@ async function scrapeTechnicalAnalysis(symbol) {
   const signals = []
   let rating = 6
   let currentPrice = ''
+  let targetPrice = ''
 
-  // Scrape current price from StockAnalysis
+  // Scrape current price and target price from StockAnalysis
   try {
     const priceUrl = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/`
     const response = await axios.get(priceUrl, {
@@ -445,8 +448,43 @@ async function scrapeTechnicalAnalysis(symbol) {
     console.log('Technical scraping failed')
   }
 
+  // Scrape target price from StockAnalysis forecast page
+  try {
+    const forecastUrl = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/forecast/`
+    const forecastResponse = await axios.get(forecastUrl, {
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 10000
+    })
+    const $forecast = cheerio.load(forecastResponse.data)
+
+    // Look for analyst price target
+    targetPrice = $forecast('[data-test="target-price"]').first().text().trim() ||
+                  $forecast('td:contains("Price Target")').next().text().trim() ||
+                  $forecast('.text-2xl:contains("$")').first().text().trim()
+
+    // Try alternative selectors
+    if (!targetPrice) {
+      $forecast('div, span').each((_, el) => {
+        const text = $forecast(el).text().trim()
+        if (text.includes('Price Target') || text.includes('Analyst Target')) {
+          const match = text.match(/\$[\d,.]+/)
+          if (match) {
+            targetPrice = match[0]
+            return false // break
+          }
+        }
+      })
+    }
+
+    if (targetPrice) {
+      metrics.push({ label: 'Target Price', value: targetPrice })
+    }
+  } catch (error) {
+    console.log('Target price scraping failed')
+  }
+
   // Get comprehensive AI analysis
-  const aiResponse = await generateAIInsight(symbol, 'technicalAnalysis', { currentPrice, metrics })
+  const aiResponse = await generateAIInsight(symbol, 'technicalAnalysis', { currentPrice, targetPrice, metrics })
 
   // Try to parse JSON response from AI
   let technicalData = null
@@ -486,6 +524,8 @@ async function scrapeTechnicalAnalysis(symbol) {
       analysis: technicalData.summary || 'Technical analysis completed',
       metrics,
       signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Technical analysis completed' }],
+      currentPrice: currentPrice || null,
+      targetPrice: targetPrice || null,
       // Detailed technical data for UI
       detailedTechnical: {
         trend30to60Days: {
@@ -496,6 +536,11 @@ async function scrapeTechnicalAnalysis(symbol) {
           title: 'Support & Resistance Levels',
           support: technicalData.supportLevels || [],
           resistance: technicalData.resistanceLevels || []
+        },
+        targetPriceAnalysis: {
+          title: 'Target Price Analysis',
+          content: technicalData.targetPriceAnalysis || 'Analysis not available',
+          targetPrice: targetPrice || null
         },
         optionsStrategy: {
           title: 'Options Strategy Recommendation',
@@ -514,7 +559,9 @@ async function scrapeTechnicalAnalysis(symbol) {
       { label: 'Moving Averages', value: 'Compare 50 & 200 day' },
       { label: 'Volume Analysis', value: 'Check accumulation/distribution' }
     ],
-    signals: [{ type: 'info', message: 'Use technical indicators to identify optimal entry and exit points' }]
+    signals: [{ type: 'info', message: 'Use technical indicators to identify optimal entry and exit points' }],
+    currentPrice: currentPrice || null,
+    targetPrice: targetPrice || null
   }
 }
 

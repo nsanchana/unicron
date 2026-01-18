@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User } from 'lucide-react'
+import { Search, Loader, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
 import { saveToLocalStorage } from '../utils/storage'
 
@@ -30,7 +30,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
     companyAnalysis: true,
     financialHealth: true,
     technicalAnalysis: true,
-    optionsData: true,
     recentDevelopments: true
   })
 
@@ -120,7 +119,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         'companyAnalysis',
         'financialHealth',
         'technicalAnalysis',
-        'optionsData',
         'recentDevelopments'
       ]
 
@@ -140,7 +138,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         results.companyAnalysis?.rating || 0,
         results.financialHealth?.rating || 0,
         results.technicalAnalysis?.rating || 0,
-        results.optionsData?.rating || 0,
         results.recentDevelopments?.rating || 0
       ].filter(rating => rating > 0)
 
@@ -196,11 +193,24 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
       companyAnalysis: true,
       financialHealth: true,
       technicalAnalysis: true,
-      optionsData: true,
       recentDevelopments: true
     })
     // Scroll to top to show the research
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDeleteResearch = (index) => {
+    const itemToDelete = researchData[index]
+    if (window.confirm(`Delete research for ${itemToDelete.symbol}?`)) {
+      const updatedResearchData = researchData.filter((_, i) => i !== index)
+      setResearchData(updatedResearchData)
+      saveToLocalStorage('researchData', updatedResearchData)
+
+      // If the deleted item was being viewed, clear the display
+      if (companyData && companyData.symbol === itemToDelete.symbol && companyData.date === itemToDelete.date) {
+        setCompanyData(null)
+      }
+    }
   }
 
   const handleRerunResearch = async (oldSymbol) => {
@@ -215,7 +225,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         'companyAnalysis',
         'financialHealth',
         'technicalAnalysis',
-        'optionsData',
         'recentDevelopments'
       ]
 
@@ -235,7 +244,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         results.companyAnalysis?.rating || 0,
         results.financialHealth?.rating || 0,
         results.technicalAnalysis?.rating || 0,
-        results.optionsData?.rating || 0,
         results.recentDevelopments?.rating || 0
       ].filter(rating => rating > 0)
 
@@ -259,7 +267,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         companyAnalysis: true,
         financialHealth: true,
         technicalAnalysis: true,
-        optionsData: true,
         recentDevelopments: true
       })
 
@@ -489,6 +496,20 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   </div>
                 )}
 
+                {/* Target Price Analysis */}
+                {data.detailedTechnical.targetPriceAnalysis && (
+                  <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg p-4 mb-3 border border-blue-700/30">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.targetPriceAnalysis.title}</h5>
+                    {data.detailedTechnical.targetPriceAnalysis.targetPrice && (
+                      <div className="flex items-center mb-3">
+                        <span className="text-gray-400 text-sm mr-2">Analyst Target:</span>
+                        <span className="text-2xl font-bold text-blue-300">{data.detailedTechnical.targetPriceAnalysis.targetPrice}</span>
+                      </div>
+                    )}
+                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.targetPriceAnalysis.content}</p>
+                  </div>
+                )}
+
                 {/* Options Strategy */}
                 {data.detailedTechnical.optionsStrategy && (
                   <div className="bg-gray-700 rounded-lg p-4 mb-3">
@@ -666,7 +687,6 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           {renderSection('Company Analysis', 'companyAnalysis', companyData.companyAnalysis, companyData.companyAnalysis?.rating)}
           {renderSection('Financial Health', 'financialHealth', companyData.financialHealth, companyData.financialHealth?.rating)}
           {renderSection('Technical Analysis', 'technicalAnalysis', companyData.technicalAnalysis, companyData.technicalAnalysis?.rating)}
-          {renderSection('Options Market Data', 'optionsData', companyData.optionsData, companyData.optionsData?.rating)}
           {renderSection('Recent Developments', 'recentDevelopments', companyData.recentDevelopments, companyData.recentDevelopments?.rating)}
 
           {/* Chat Interface */}
@@ -756,34 +776,79 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         <div className="card">
           <h3 className="text-lg font-semibold mb-4">Research History</h3>
           <div className="space-y-4">
-            {researchData.slice(0, 10).map((item, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                <div className="flex-1 cursor-pointer" onClick={() => handleViewResearch(item)}>
-                  <h4 className="font-semibold">{item.symbol}</h4>
-                  <p className="text-sm text-gray-400">
-                    {formatDateDDMMYYYY(item.date)} • {formatTime(item.lastRefresh)}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold ${getRatingColor(item.overallRating)}`}>
-                      {item.overallRating}/10
+            {researchData.slice(0, 10).map((item, index) => {
+              // Extract current price and target price from technical analysis
+              const currentPrice = item.technicalAnalysis?.currentPrice ||
+                item.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
+              const targetPrice = item.technicalAnalysis?.targetPrice ||
+                item.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
+
+              // Calculate upside percentage
+              let upsidePercent = null
+              if (currentPrice && targetPrice) {
+                const current = parseFloat(currentPrice.replace(/[$,]/g, ''))
+                const target = parseFloat(targetPrice.replace(/[$,]/g, ''))
+                if (!isNaN(current) && !isNaN(target) && current > 0) {
+                  upsidePercent = ((target - current) / current * 100).toFixed(1)
+                }
+              }
+
+              return (
+                <div key={index} className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer" onClick={() => handleViewResearch(item)}>
+                  {/* Single Row: Symbol, Price Boxes, Date, Rating, Actions */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      <h4 className="font-semibold text-lg">{item.symbol}</h4>
+                      {currentPrice && (
+                        <div className="bg-gray-800 rounded px-2 py-1 flex items-center space-x-1">
+                          <span className="text-xs text-gray-400">Current:</span>
+                          <span className="text-white font-medium">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
+                        </div>
+                      )}
+                      {targetPrice && (
+                        <div className="bg-blue-900/40 border border-blue-700/50 rounded px-2 py-1 flex items-center space-x-1">
+                          <span className="text-xs text-blue-300">Target:</span>
+                          <span className="text-blue-400 font-medium">{targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`}</span>
+                        </div>
+                      )}
+                      {upsidePercent !== null && (
+                        <div className={`rounded px-2 py-1 font-medium text-sm ${parseFloat(upsidePercent) >= 0 ? 'bg-green-900/40 border border-green-700/50 text-green-400' : 'bg-red-900/40 border border-red-700/50 text-red-400'}`}>
+                          {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
+                        </div>
+                      )}
+                      <span className="text-sm text-gray-400">
+                        {formatDateDDMMYYYY(item.date)}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-400">Overall Rating</p>
+                    <div className="flex items-center space-x-2">
+                      <div className={`text-lg font-bold ${getRatingColor(item.overallRating)}`}>
+                        {item.overallRating}/10
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRerunResearch(item.symbol)
+                        }}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                        title="Rerun research"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteResearch(index)
+                        }}
+                        className="p-2 hover:bg-red-900/50 rounded-lg transition-colors"
+                        title="Delete research"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-400" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRerunResearch(item.symbol)
-                    }}
-                    className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                    title="Rerun research to get latest data"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

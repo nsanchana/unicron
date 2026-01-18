@@ -287,26 +287,60 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <h3 className="text-lg font-semibold mb-4">Recent Research</h3>
           {dashboardStats.recentResearch.length > 0 ? (
             <div className="space-y-3">
-              {dashboardStats.recentResearch.map((item, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                  <div>
-                    <p className="font-semibold">{item.symbol}</p>
-                    <p className="text-sm text-gray-400">
-                      {formatDateDDMMYYYY(item.date)}
-                    </p>
+              {dashboardStats.recentResearch.map((item, index) => {
+                // Extract current price and target price from technical analysis
+                const currentPrice = item.technicalAnalysis?.currentPrice ||
+                  item.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
+                const targetPrice = item.technicalAnalysis?.targetPrice ||
+                  item.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
+
+                // Calculate upside
+                let upsidePercent = null
+                if (currentPrice && targetPrice) {
+                  const current = parseFloat(currentPrice.replace(/[$,]/g, ''))
+                  const target = parseFloat(targetPrice.replace(/[$,]/g, ''))
+                  if (!isNaN(current) && !isNaN(target) && current > 0) {
+                    upsidePercent = ((target - current) / current * 100).toFixed(1)
+                  }
+                }
+
+                return (
+                  <div key={index} className="p-3 bg-gray-700 rounded-lg">
+                    {/* Single Row: Symbol, Price Boxes, Date, Rating */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3 flex-wrap gap-y-2">
+                        <p className="font-semibold text-lg">{item.symbol}</p>
+                        {currentPrice && (
+                          <div className="bg-gray-800 rounded px-2 py-1 flex items-center space-x-1">
+                            <span className="text-xs text-gray-400">Current:</span>
+                            <span className="text-white font-medium">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
+                          </div>
+                        )}
+                        {targetPrice && (
+                          <div className="bg-blue-900/40 border border-blue-700/50 rounded px-2 py-1 flex items-center space-x-1">
+                            <span className="text-xs text-blue-300">Target:</span>
+                            <span className="text-blue-400 font-medium">{targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`}</span>
+                          </div>
+                        )}
+                        {upsidePercent !== null && (
+                          <div className={`rounded px-2 py-1 font-medium text-sm ${parseFloat(upsidePercent) >= 0 ? 'bg-green-900/40 border border-green-700/50 text-green-400' : 'bg-red-900/40 border border-red-700/50 text-red-400'}`}>
+                            {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
+                          </div>
+                        )}
+                        <span className="text-sm text-gray-400">
+                          {formatDateDDMMYYYY(item.date)}
+                        </span>
+                      </div>
+                      <div className={`text-lg font-bold ${
+                        item.overallRating >= 7 ? 'text-green-400' :
+                        item.overallRating >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {item.overallRating}/10
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm">Rating: {item.overallRating}/10</p>
-                    <p className={`text-xs capitalize ${
-                      item.overallRating >= 7 ? 'text-green-400' :
-                      item.overallRating >= 5 ? 'text-yellow-400' : 'text-red-400'
-                    }`}>
-                      {item.overallRating >= 7 ? 'Strong Buy' :
-                       item.overallRating >= 5 ? 'Hold' : 'Avoid'}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <p className="text-gray-400">No research data available</p>
