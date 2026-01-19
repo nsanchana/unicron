@@ -130,11 +130,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
       for (const section of sections) {
         console.log(`Scraping ${section} for ${symbol}...`)
-        
+
         let sectionData = null
         let attempts = 0
         const maxAttempts = 3
-        
+
         while (attempts < maxAttempts && !sectionData) {
           try {
             sectionData = await scrapeCompanyData(symbol.toUpperCase(), section)
@@ -148,11 +148,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             }
           }
         }
-        
+
         if (!sectionData) {
           throw new Error(`Failed to scrape ${section} after ${maxAttempts} attempts`)
         }
-        
+
         results[section] = sectionData
 
         // Small delay between requests to be respectful
@@ -652,11 +652,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 <h4 className="font-medium mb-2">Signals</h4>
                 <div className="space-y-1">
                   {data.signals.map((signal, index) => (
-                    <div key={index} className={`text-sm p-2 rounded ${
-                      signal.type === 'positive' ? 'bg-green-900 text-green-300' :
+                    <div key={index} className={`text-sm p-2 rounded ${signal.type === 'positive' ? 'bg-green-900 text-green-300' :
                       signal.type === 'negative' ? 'bg-red-900 text-red-300' :
-                      'bg-yellow-900 text-yellow-300'
-                    }`}>
+                        'bg-yellow-900 text-yellow-300'
+                      }`}>
                       {signal.message}
                     </div>
                   ))}
@@ -670,30 +669,34 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   }
 
   return (
-    <div className="space-y-6">
+  return (
+    <div className="space-y-8 pb-12">
       {/* Search Form */}
-      <div className="card">
+      <div className="glass-card shadow-blue-500/5">
         <form onSubmit={handleSearch} className="flex gap-4">
-          <div className="flex-1">
+          <div className="flex-1 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+            </div>
             <input
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="Enter stock symbol (e.g., AAPL, TSLA, NVDA)"
-              className="input-primary w-full"
+              placeholder="SEARCH ASSET (E.G. AAPL, TSLA, NVDA)"
+              className="glass-input w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-gray-700"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center space-x-3"
           >
             {loading ? (
-              <Loader className="h-5 w-5 animate-spin" />
+              <RefreshCw className="h-5 w-5 animate-spin" />
             ) : (
               <Search className="h-5 w-5" />
             )}
-            <span>{loading ? 'Analyzing...' : 'Analyze Company'}</span>
+            <span>{loading ? 'Analyzing' : 'Research'}</span>
           </button>
         </form>
 
@@ -720,34 +723,33 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
       {/* Analysis Results */}
       {companyData && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Overall Rating Header */}
-          <div className="card border-l-4 border-l-primary-500">
+          <div className="glass-card bg-gradient-to-r from-blue-600/10 to-transparent border-blue-500/20">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold">{companyData.symbol} Analysis</h2>
-                <p className="text-gray-400">Comprehensive company research and rating</p>
+                <h2 className="text-3xl font-black tracking-tight">{companyData.symbol} Analysis</h2>
+                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Deep Intelligence Report</p>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-8">
                 <div className="text-center">
-                  <div className={`text-4xl font-bold ${getRatingColor(companyData.overallRating)}`}>
-                    {companyData.overallRating}/100
+                  <div className={`text-5xl font-black ${getRatingColor(companyData.overallRating)} text-shadow-glow`}>
+                    {companyData.overallRating}
                   </div>
-                  <div className="text-sm text-gray-400">Overall Rating</div>
+                  <div className="text-[10px] text-gray-500 font-black uppercase tracking-tighter mt-1">Global Score</div>
                 </div>
-                {!companyData.saved && (
+                {!companyData.saved ? (
                   <button
                     onClick={handleSaveResearch}
-                    className="btn-primary flex items-center space-x-2"
+                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-6 py-3 rounded-xl font-bold uppercase tracking-widest transition-all active:scale-95 flex items-center space-x-2"
                   >
                     <Save className="h-4 w-4" />
-                    <span>Save Research</span>
+                    <span>Save Report</span>
                   </button>
-                )}
-                {companyData.saved && (
-                  <div className="flex items-center space-x-2 text-green-400">
+                ) : (
+                  <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
                     <CheckCircle className="h-5 w-5" />
-                    <span className="text-sm font-medium">Saved</span>
+                    <span className="text-sm font-black uppercase tracking-widest">Secured</span>
                   </div>
                 )}
               </div>
@@ -780,9 +782,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 mb-4 ${
-                        msg.role === 'user' ? 'justify-end' : ''
-                      }`}
+                      className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
+                        }`}
                     >
                       {msg.role === 'assistant' && (
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
@@ -790,11 +791,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          msg.role === 'user'
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-gray-700 text-gray-200'
-                        }`}
+                        className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-700 text-gray-200'
+                          }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>

@@ -424,112 +424,110 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       {/* Trade Setup Form */}
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Trade Analysis Setup</h3>
+      <div className="glass-card overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600/10 to-transparent p-6 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-xl font-black tracking-tight flex items-center">
+            <Calculator className="h-6 w-6 mr-3 text-blue-400" />
+            Trade Deployment Engine
+          </h3>
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Manual Entry Terminal</div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Symbol Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Stock Symbol</label>
-            <input
-              type="text"
-              list="symbol-suggestions"
-              value={selectedSymbol}
-              onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
-              onBlur={(e) => handleSymbolChange(e.target.value.toUpperCase())}
-              placeholder="Enter symbol (e.g., AAPL)"
-              className="input-primary w-full"
-            />
-            <datalist id="symbol-suggestions">
-              {availableSymbols.map(symbol => (
-                <option key={symbol} value={symbol} />
-              ))}
-            </datalist>
-            {availableSymbols.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                Select from researched symbols or enter any symbol
-              </p>
-            )}
-          </div>
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Symbol Selection */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Asset Symbol</label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  list="symbol-suggestions"
+                  value={selectedSymbol}
+                  onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
+                  onBlur={(e) => handleSymbolChange(e.target.value.toUpperCase())}
+                  placeholder="E.G. NVDA"
+                  className="glass-input w-full py-4 text-xl font-black placeholder:text-gray-700"
+                />
+                <datalist id="symbol-suggestions">
+                  {availableSymbols.map(symbol => (
+                    <option key={symbol} value={symbol} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
 
-          {/* Trade Type */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Trade Type</label>
-            <select
-              value={tradeType}
-              onChange={(e) => setTradeType(e.target.value)}
-              className="input-primary w-full"
-            >
-              <option value="cashSecuredPut">Cash-Secured Put</option>
-              <option value="coveredCall">Covered Call</option>
-            </select>
-            <p className="text-xs text-gray-400 mt-1">
-              {tradeType === 'cashSecuredPut' ? 'Put Option' : 'Call Option'}
-            </p>
-          </div>
+            {/* Trade Type */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Strategy Type</label>
+              <select
+                value={tradeType}
+                onChange={(e) => setTradeType(e.target.value)}
+                className="glass-input w-full py-4 font-bold appearance-none cursor-pointer"
+              >
+                <option value="cashSecuredPut">Cash-Secured Put</option>
+                <option value="coveredCall">Covered Call</option>
+              </select>
+            </div>
 
-          {/* Current Market Price */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Current Market Price</label>
-            <div className="relative">
+            {/* Current Market Price */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Spot Price ($)</label>
+              <div className="relative group">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={currentPrice}
+                  onChange={(e) => setCurrentPrice(e.target.value)}
+                  placeholder="0.00"
+                  className="glass-input w-full py-4 text-xl font-black"
+                  disabled={fetchingPrice}
+                />
+                {fetchingPrice && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Strike Price */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Execution Strike ($)</label>
               <input
                 type="number"
                 step="0.01"
-                value={currentPrice}
-                onChange={(e) => setCurrentPrice(e.target.value)}
+                value={strikePrice}
+                onChange={(e) => setStrikePrice(e.target.value)}
                 placeholder="0.00"
-                className="input-primary w-full"
-                disabled={fetchingPrice}
+                className="glass-input w-full py-4 text-xl font-black text-blue-400"
               />
-              {fetchingPrice && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
-                </div>
-              )}
             </div>
-            {priceError && (
-              <p className="text-xs text-yellow-400 mt-1">{priceError}</p>
-            )}
-          </div>
 
-          {/* Strike Price */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Strike Price</label>
-            <input
-              type="number"
-              step="0.01"
-              value={strikePrice}
-              onChange={(e) => setStrikePrice(e.target.value)}
-              placeholder="150.00"
-              className="input-primary w-full"
-            />
-          </div>
+            {/* Premium */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Yield / Share ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={premium}
+                onChange={(e) => setPremium(e.target.value)}
+                placeholder="0.00"
+                className="glass-input w-full py-4 text-xl font-black text-emerald-400"
+              />
+            </div>
 
-          {/* Premium */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Premium (per contract)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={premium}
-              onChange={(e) => setPremium(e.target.value)}
-              placeholder="0.00"
-              className="input-primary w-full"
-            />
-            <p className="text-xs text-gray-400 mt-1">Premium earned per share</p>
-          </div>
-
-          {/* Expiration Date */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Expiration Date</label>
-            <input
-              type="date"
-              value={expirationDate}
-              onChange={(e) => setExpirationDate(e.target.value)}
-              className="input-primary w-full"
-            />
+            {/* Expiration Date */}
+            <div className="space-y-3">
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Terminal Date</label>
+              <input
+                type="date"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+                className="glass-input w-full py-4 font-bold"
+              />
+            </div>
           </div>
         </div>
 
@@ -675,12 +673,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             <div className="space-y-2">
               {analysis.riskAssessment.factors?.map((factor, index) => (
-                <div key={index} className={`p-3 rounded-lg ${
-                  factor.type === 'positive' ? 'bg-green-900 text-green-300' :
-                  factor.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
-                  factor.type === 'info' ? 'bg-blue-900 text-blue-300' :
-                  'bg-red-900 text-red-300'
-                }`}>
+                <div key={index} className={`p-3 rounded-lg ${factor.type === 'positive' ? 'bg-green-900 text-green-300' :
+                    factor.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
+                      factor.type === 'info' ? 'bg-blue-900 text-blue-300' :
+                        'bg-red-900 text-red-300'
+                  }`}>
                   <div className="font-medium">{factor.message}</div>
                   {factor.detail && (
                     <div className="text-xs mt-1 opacity-90">{factor.detail}</div>
@@ -831,9 +828,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 mb-4 ${
-                        msg.role === 'user' ? 'justify-end' : ''
-                      }`}
+                      className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
+                        }`}
                     >
                       {msg.role === 'assistant' && (
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
@@ -841,11 +837,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          msg.role === 'user'
+                        className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
                             ? 'bg-primary-600 text-white'
                             : 'bg-gray-700 text-gray-200'
-                        }`}
+                          }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
@@ -899,11 +894,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <h3 className="text-lg font-semibold mb-4">Trade Analysis History</h3>
           <div className="space-y-4">
             {tradeData.slice(0, 10).map((trade, index) => (
-              <div key={index} className={`p-4 rounded-lg ${
-                trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
-                trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                'bg-gray-700'
-              }`}>
+              <div key={index} className={`p-4 rounded-lg ${trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                  trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                    'bg-gray-700'
+                }`}>
                 {/* Top Row: Symbol, Type, and Status */}
                 <div className="flex justify-between items-start mb-3">
                   <div>

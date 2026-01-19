@@ -57,36 +57,43 @@ function Login({ onLoginSuccess }) {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
-      theme === 'light'
-        ? 'bg-gradient-to-br from-gray-50 via-white to-blue-50'
-        : 'bg-gradient-to-br from-gray-900 via-gray-900 to-blue-900/20'
-    }`}>
-      <div className="w-full max-w-md">
+    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 relative overflow-hidden ${theme === 'light'
+        ? 'bg-gray-50'
+        : 'bg-[#0f172a]'
+      }`}>
+      {/* Dynamic Background Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+      <div className="w-full max-w-md relative z-10 px-4">
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-            Unicron
+        <div className="text-center mb-10">
+          <div className="inline-block p-4 rounded-3xl bg-gray-800/40 backdrop-blur-2xl border border-gray-700/50 mb-6 shadow-2xl animate-float">
+            <img src="/unicron-logo.png" alt="Unicron" className="h-16 w-16 object-contain" />
+          </div>
+          <h1 className="text-5xl font-black tracking-tight mb-3">
+            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Unicron
+            </span>
           </h1>
-          <p className={`transition-colors duration-300 ${
-            theme === 'light' ? 'text-gray-600' : 'text-gray-400'
-          }`}>
-            Options Trading Analysis Tool
+          <p className={`text-lg transition-colors duration-300 ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'
+            }`}>
+            The Future of Options Analysis
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-semibold text-white">Login</h2>
-            <p className="text-sm text-gray-400 mt-1">Private Application</p>
+        <div className="glass-card p-10 border-white/10">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+            <div className="h-1 w-12 bg-blue-500 mx-auto mt-2 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">
-                <User className="inline h-4 w-4 mr-1" />
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-300 ml-1">
+                <User className="inline h-4 w-4 mr-2 text-blue-400" />
                 Username
               </label>
               <input
@@ -94,31 +101,31 @@ function Login({ onLoginSuccess }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
-                className="input-primary w-full"
+                className="glass-input w-full py-3"
                 required
                 autoFocus
               />
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">
-                <Lock className="inline h-4 w-4 mr-1" />
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-300 ml-1">
+                <Lock className="inline h-4 w-4 mr-2 text-purple-400" />
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="input-primary w-full"
+                placeholder="••••••••"
+                className="glass-input w-full py-3"
                 required
               />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm animate-shake">
                 {error}
               </div>
             )}
@@ -127,32 +134,33 @@ function Login({ onLoginSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50"
             >
               {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Logging In...</span>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Securing Session...</span>
                 </div>
               ) : (
-                <span>Sign In</span>
+                <span className="flex items-center justify-center">
+                  Sign In to Terminal
+                </span>
               )}
             </button>
           </form>
 
           {/* Info Message */}
-          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-            <p className="text-sm text-blue-300">
-              <strong>Welcome back!</strong> Sign in to access your portfolio and trading analysis.
+          <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl">
+            <p className="text-xs text-gray-400 text-center leading-relaxed">
+              Protected by military-grade encryption. Your session data is stored locally and never shared.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className={`text-center mt-6 text-sm transition-colors duration-300 ${
-          theme === 'light' ? 'text-gray-600' : 'text-gray-400'
-        }`}>
-          <p>Your data is encrypted and stored securely.</p>
+        <div className={`text-center mt-10 text-sm font-medium transition-colors duration-300 ${theme === 'light' ? 'text-gray-500' : 'text-gray-500'
+          }`}>
+          <p>© 2026 Unicron Intelligence Systems</p>
         </div>
       </div>
     </div>
