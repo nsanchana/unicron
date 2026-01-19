@@ -3,113 +3,113 @@
 @import 'tailwindcss/utilities';
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #111827;
+  color: rgba(255, 255, 255, 0.92);
+  background-color: #030712; /* Deeper dark */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  
+  /* Premium Design Tokens */
+  --glass-bg: rgba(17, 24, 39, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+  
+  --primary-glow: rgba(59, 130, 246, 0.15);
+  --success-glow: rgba(16, 185, 129, 0.15);
+  --warning-glow: rgba(245, 158, 11, 0.15);
 }
 
 .light-mode {
-  color: rgba(17, 24, 39, 0.87);
-  background-color: #ffffff;
+  color: rgba(17, 24, 39, 0.9);
+  background-color: #f9fafb;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.05);
 }
 
-.light-mode body {
-  background-color: #ffffff;
+body {
+  margin: 0;
+  min-height: 100vh;
 }
 
 #root {
   width: 100%;
-  margin: 0;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Premium Look */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.light-mode ::-webkit-scrollbar-track {
-  background: #e5e7eb;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #eab308;
-  border-radius: 4px;
-}
-
-.light-mode ::-webkit-scrollbar-thumb {
-  background: #3b82f6;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.light-mode ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
-}
-
-/* Loading animation */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Custom button styles */
-.btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-}
-
-.btn-secondary {
-  @apply bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-}
-
-/* Card styles */
+/* Glassmorphism Card System */
 .card {
-  @apply bg-gray-800 border border-gray-700 rounded-lg p-6 shadow-lg;
+  @apply backdrop-blur-md rounded-2xl p-6 transition-all duration-300;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
 }
 
 .light-mode .card {
-  @apply bg-white border border-gray-200;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
-/* Input styles */
-.input-primary {
-  @apply bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+/* Typography Enhancements */
+h1, h2, h3, h4 {
+  @apply tracking-tight font-bold;
 }
 
-.light-mode .input-primary {
-  @apply bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500;
-}
-
-/* Shimmer animation for progress bars */
+/* Animations */
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .animate-shimmer {
-  animation: shimmer 2s infinite;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Button & Input Refinement */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl 
+         transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-95;
+}
+
+.input-primary {
+  @apply bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-2.5 
+         focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all;
+}
+
+.light-mode .input-primary {
+  @apply bg-white border-gray-200 text-gray-900;
 }

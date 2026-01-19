@@ -17,94 +17,108 @@ const formatDateDDMMYYYY = (dateString) => {
   return `${day}/${month}/${year}`
 }
 
-// Reusable Progress Bar Component for consistency
+// Reusable Progress Bar Component with Premium Aesthetic
 const PremiumProgressBar = ({ label, current, min, max, icon: Icon }) => {
   const barScaleValue = max / 0.8
   const minPos = (min / barScaleValue) * 100
-  const maxPos = 80 // Max is always at 80% by definition
+  const maxPos = 80
   const currentPos = Math.min(Math.max((current / barScaleValue) * 100, 0.5), 100)
 
   const isMinAchieved = current >= min
   const isMaxAchieved = current >= max
 
+  // Dynamic colors for the glow effect
+  const glowColor = isMaxAchieved ? 'rgba(16, 185, 129, 0.3)' : isMinAchieved ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.15)'
+
   return (
-    <div className="card bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700/50">
-      <h3 className="text-lg font-semibold mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {Icon && <Icon className="h-5 w-5 text-blue-400" />}
-          <span>{label} Premium Progress</span>
+    <div className="card group relative overflow-hidden">
+      {/* Background glow pulse */}
+      <div
+        className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] transition-all duration-700 group-hover:blur-[60px]"
+        style={{ backgroundColor: glowColor }}
+      ></div>
+
+      <h3 className="text-lg font-bold mb-6 flex items-center justify-between relative z-10">
+        <div className="flex items-center space-x-3">
+          <div className={`p-2 rounded-xl border border-gray-700/50 bg-gray-900/50 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`}>
+            {Icon && <Icon className="h-5 w-5" />}
+          </div>
+          <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{label} Premium</span>
         </div>
-        <div className="text-xs text-gray-400 font-normal">
-          Target: ${min.toLocaleString(undefined, { maximumFractionDigits: 0 })} - ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        <div className="text-[10px] tracking-widest text-gray-500 uppercase font-bold">
+          Goal: ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
       </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-6 relative z-10">
         <div>
-          <div className="flex justify-between text-sm mb-3">
-            <span className="font-medium text-blue-400">Current: ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-            <span className="text-gray-500 text-xs">
-              {current > 0 ? `${((current / max) * 100).toFixed(0)}% of max` : '0%'}
-            </span>
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Current Premium</p>
+              <span className="text-3xl font-black text-white">${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="text-right">
+              <span className={`text-sm font-bold ${isMinAchieved ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                {((current / max) * 100).toFixed(0)}%
+              </span>
+              <p className="text-[10px] text-gray-500 font-bold uppercase">of target</p>
+            </div>
           </div>
 
-          <div className="relative pt-6 pb-2">
-            <div className="w-full bg-gray-700/50 rounded-full h-5 overflow-hidden border border-gray-600/30">
+          <div className="relative pt-6 pb-4">
+            {/* Main Bar Track */}
+            <div className="w-full bg-gray-900/80 rounded-full h-4 overflow-hidden border border-gray-700/30">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out relative shadow-lg ${isMaxAchieved ? 'bg-gradient-to-r from-green-500 via-emerald-400 to-cyan-400' :
-                    isMinAchieved ? 'bg-gradient-to-r from-yellow-500 via-green-500 to-emerald-400' :
-                      'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
+                className={`h-full rounded-full transition-all duration-1000 ease-out relative ${isMaxAchieved ? 'bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500' :
+                  isMinAchieved ? 'bg-gradient-to-r from-yellow-500 via-emerald-500 to-emerald-400' :
+                    'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
                   }`}
-                style={{ width: `${currentPos}%` }}
+                style={{ width: `${currentPos}%`, boxShadow: `0 0 20px ${glowColor}` }}
               >
-                <div className="absolute inset-x-0 top-0 h-1/2 bg-white/20 rounded-t-full"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                <div className="absolute inset-x-0 top-0 h-1/2 bg-white/10 rounded-t-full"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
               </div>
             </div>
 
-            <div className="absolute top-4 h-9 w-0.5 bg-yellow-400/80 z-10" style={{ left: `${minPos}%` }}>
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <span className="text-[10px] uppercase tracking-wider text-yellow-400 font-bold">Min</span>
-                <span className="text-[10px] text-gray-400 font-medium">${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            {/* Threshold Markers - Refined Design */}
+            <div className="absolute top-4 h-10 w-[1px] bg-yellow-400/30 z-10" style={{ left: `${minPos}%` }}>
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <div className={`w-1.5 h-1.5 rounded-full mb-1 transition-all ${isMinAchieved ? 'bg-yellow-400 shadow-[0_0_8px_#facc15]' : 'bg-gray-600'}`}></div>
+                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
             </div>
 
-            <div className="absolute top-4 h-9 w-0.5 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)] z-10" style={{ left: `${maxPos}%` }}>
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Max</span>
-                <span className="text-[10px] text-gray-400 font-medium">${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <div className="absolute top-4 h-10 w-[1px] bg-emerald-400/30 z-10" style={{ left: `${maxPos}%` }}>
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <div className={`w-1.5 h-1.5 rounded-full mb-1 transition-all ${isMaxAchieved ? 'bg-emerald-400 shadow-[0_0_8px_#10b981]' : 'bg-gray-600'}`}></div>
+                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
             </div>
 
             {current > max && (
-              <div className="absolute -right-1 top-4 h-9 flex items-center" style={{ left: `calc(${Math.min(currentPos, 100)}% + 4px)` }}>
-                <div className="flex items-center space-x-1 animate-pulse">
-                  <span className="text-[10px] font-bold text-cyan-400">+{((current / max - 1) * 100).toFixed(0)}%</span>
-                </div>
+              <div className="absolute -right-2 top-4 h-10 flex items-center" style={{ left: `calc(${Math.min(currentPos, 100)}% + 8px)` }}>
+                <span className="text-[10px] font-black text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20 animate-pulse">
+                  +{((current / max - 1) * 100).toFixed(0)}%
+                </span>
               </div>
             )}
-          </div>
-
-          <div className="flex justify-between text-[10px] text-gray-500 mt-2 px-1">
-            <span>0%</span>
-            <span>125% of Max</span>
           </div>
         </div>
 
         {isMaxAchieved ? (
-          <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-900/10 p-2 rounded-lg border border-emerald-500/20 text-xs">
+          <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-900/20 p-2.5 rounded-xl border border-emerald-500/20 text-xs font-medium animate-float">
             <CheckCircle className="h-4 w-4" />
-            <span>Target exceeded! Outstanding performance! 🚀</span>
+            <span>Target exceeded! Incredible performance! 🚀</span>
           </div>
         ) : isMinAchieved ? (
-          <div className="flex items-center space-x-2 text-green-400 bg-green-900/10 p-2 rounded-lg border border-green-500/20 text-xs">
+          <div className="flex items-center space-x-2 text-green-400 bg-green-900/20 p-2.5 rounded-xl border border-green-500/20 text-xs font-medium">
             <CheckCircle className="h-4 w-4" />
-            <span>Minimum target achieved! 🎉</span>
+            <span>Minimum floor target achieved! 🎉</span>
           </div>
         ) : current > 0 && (
-          <div className="flex items-center space-x-2 text-yellow-400 bg-yellow-900/10 p-2 rounded-lg border border-yellow-500/20 text-xs">
+          <div className="flex items-center space-x-2 text-yellow-400 bg-yellow-900/10 p-2.5 rounded-xl border border-yellow-500/20 text-xs font-medium">
             <AlertCircle className="h-4 w-4" />
-            <span>Keep pushing to reach your {label.toLowerCase()} goal</span>
+            <span>Keep going to reach your {label.toLowerCase()} goal</span>
           </div>
         )}
       </div>
@@ -204,51 +218,55 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
     <div className="space-y-6">
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center space-x-3">
-            <DollarSign className="h-8 w-8 text-primary-400" />
+        <div className="card border-l-4 border-l-blue-500/50 bg-gradient-to-br from-blue-500/5 to-transparent">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-blue-500/10 rounded-2xl">
+              <DollarSign className="h-6 w-6 text-blue-400" />
+            </div>
             <div>
-              <p className="text-sm text-gray-400">Portfolio Size</p>
-              <p className="text-2xl font-bold">${dashboardStats.portfolioSize.toLocaleString()}</p>
+              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Portfolio Size</p>
+              <p className="text-2xl font-black text-white">${dashboardStats.portfolioSize.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
-        <div className="card text-green-400 bg-green-900/5">
-          <div className="flex items-center space-x-3">
-            <TrendingUp className="h-8 w-8" />
+        <div className="card border-l-4 border-l-emerald-500/50 bg-gradient-to-br from-emerald-500/5 to-transparent">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
+              <TrendingUp className="h-6 w-6" />
+            </div>
             <div>
-              <p className="text-sm text-gray-400">Annual Return (Estimated)</p>
-              <p className="text-2xl font-bold">~{((dashboardStats.yearlyPremium / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
-              <p className="text-xs text-gray-400">Based on YTD premium</p>
+              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Est. Annual Return</p>
+              <p className="text-2xl font-black text-white">~{((dashboardStats.yearlyPremium / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
+              <p className="text-[10px] text-gray-500">Based on YTD premium</p>
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="flex items-center space-x-3">
-            <Target className="h-8 w-8 text-blue-400" />
+        <div className="card border-l-4 border-l-purple-500/50 bg-gradient-to-br from-purple-500/5 to-transparent">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-purple-500/10 rounded-2xl">
+              <Target className="h-6 w-6 text-purple-400" />
+            </div>
             <div>
-              <p className="text-sm text-gray-400">Allocated Capital</p>
-              <p className={`text-2xl font-bold ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
+              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Allocated Capital</p>
+              <p className={`text-2xl font-black ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
                 ${dashboardStats.totalAllocated.toFixed(0)}
               </p>
-              <p className="text-xs text-gray-400">
-                {dashboardStats.allocationPercentage.toFixed(1)}% of portfolio
-              </p>
+              <p className="text-[10px] text-gray-500">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <div className="flex items-center space-x-3">
-            <Calendar className="h-8 w-8 text-purple-400" />
+        <div className="card border-l-4 border-l-orange-500/50 bg-gradient-to-br from-orange-500/5 to-transparent">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-orange-500/10 rounded-2xl">
+              <Calendar className="h-6 w-6 text-orange-400" />
+            </div>
             <div>
-              <p className="text-sm text-gray-400">Active Trades</p>
-              <p className="text-2xl font-bold">{dashboardStats.activeTradesCount}</p>
-              <p className="text-xs text-gray-400">
-                {dashboardStats.totalTrades} total trades
-              </p>
+              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Active Trades</p>
+              <p className="text-2xl font-black text-white">{dashboardStats.activeTradesCount}</p>
+              <p className="text-[10px] text-gray-500">{dashboardStats.totalTrades} total trades</p>
             </div>
           </div>
         </div>
