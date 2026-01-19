@@ -1,27 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Default to Dark Mode (M3 Dark Theme) */
+  --md-sys-color-primary: #D0BCFF;
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD8E4;
+
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-on-background: #E6E1E5;
+
+  --md-sys-color-surface: #1C1B1F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+
+  /* Surface Container Colors (M3 specific) */
+  --md-sys-color-surface-container-lowest: #0F0D13;
+  --md-sys-color-surface-container-low: #1C1B1F;
+  --md-sys-color-surface-container: #211F26;
+  --md-sys-color-surface-container-high: #2B2930;
+  --md-sys-color-surface-container-highest: #36343B;
+
+  /* Typography */
+  font-family: 'Roboto', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #111827;
+
+  color: var(--md-sys-color-on-background);
+  background-color: var(--md-sys-color-background);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
 }
 
 .light-mode {
-  color: rgba(17, 24, 39, 0.87);
-  background-color: #ffffff;
+  /* Light Mode (M3 Light Theme) */
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+
+  /* Surface Container Colors */
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F7F2FA;
+  --md-sys-color-surface-container: #F3EDF7;
+  --md-sys-color-surface-container-high: #ECE6F0;
+  --md-sys-color-surface-container-highest: #E6E0E9;
 }
 
 .light-mode body {
-  background-color: #ffffff;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
 }
 
 #root {
@@ -35,35 +114,44 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.light-mode ::-webkit-scrollbar-track {
-  background: #e5e7eb;
+  background: var(--md-sys-color-surface-container);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #eab308;
+  background: var(--md-sys-color-outline);
   border-radius: 4px;
 }
 
-.light-mode ::-webkit-scrollbar-thumb {
-  background: #3b82f6;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
+  background: var(--md-sys-color-outline-variant);
 }
 
-.light-mode ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
+/* Base Component Styles (M3-ified) */
+
+.btn-primary {
+  @apply bg-primary text-on-primary font-medium px-6 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200 active:bg-primary-container active:text-on-primary-container;
 }
 
-/* Loading animation */
+.btn-secondary {
+  @apply bg-surface-container-high text-on-surface font-medium px-6 py-2.5 rounded-full hover:bg-surface-container-highest transition-colors duration-200;
+}
+
+.card {
+  @apply bg-surface-container text-on-surface rounded-2xl p-6 shadow-sm border border-outline-variant;
+}
+
+.input-primary {
+  @apply bg-surface-container-highest border-b-2 border-outline-variant text-on-surface placeholder-on-surface-variant rounded-t-lg px-4 py-3 focus:border-primary focus:bg-surface-container-highest focus:outline-none transition-colors;
+}
+
+/* Animations using standard Tailwind or custom */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: .5;
   }
@@ -73,38 +161,11 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Custom button styles */
-.btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-}
-
-.btn-secondary {
-  @apply bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-}
-
-/* Card styles */
-.card {
-  @apply bg-gray-800 border border-gray-700 rounded-lg p-6 shadow-lg;
-}
-
-.light-mode .card {
-  @apply bg-white border border-gray-200;
-}
-
-/* Input styles */
-.input-primary {
-  @apply bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent;
-}
-
-.light-mode .input-primary {
-  @apply bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500;
-}
-
-/* Shimmer animation for progress bars */
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }

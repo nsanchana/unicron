@@ -290,7 +290,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   const renderDetailedSubsection = (subsection) => {
     if (!subsection) return null
     return (
-      <div className="bg-gray-700 rounded-lg p-4 mb-3">
+      <div className="bg-surface-container-high rounded-lg p-4 mb-3">
         <div className="flex items-center justify-between mb-2">
           <h5 className="font-semibold text-primary-400">{subsection.title}</h5>
           <div className={`flex items-center space-x-1 ${getRatingColor(subsection.rating)}`}>
@@ -298,7 +298,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             <span className="font-bold text-sm">{subsection.rating}/10</span>
           </div>
         </div>
-        <p className="text-gray-300 text-sm leading-relaxed">{subsection.content}</p>
+        <p className="text-on-surface-variant text-sm leading-relaxed">{subsection.content}</p>
       </div>
     )
   }
@@ -313,7 +313,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
       <div className="card">
         <button
           onClick={() => toggleSection(sectionKey)}
-          className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors"
         >
           <div className="flex items-center space-x-3">
             {getRatingIcon(rating)}
@@ -334,7 +334,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {data.analysis && (
               <div>
                 <h4 className="font-medium mb-2">Executive Summary</h4>
-                <p className="text-gray-300 text-sm leading-relaxed bg-gray-800 p-3 rounded-lg">{data.analysis}</p>
+                <p className="text-on-surface-variant text-sm leading-relaxed bg-surface-container p-3 rounded-lg">{data.analysis}</p>
               </div>
             )}
 
@@ -346,7 +346,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 {data.metrics.find(m => m.label === 'Current Price') && (
                   <div className="bg-gradient-to-r from-primary-900 to-primary-800 rounded-lg p-4 mb-4 border border-primary-600">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">Current Price</span>
+                      <span className="text-on-surface-variant text-sm">Current Price</span>
                       <span className="text-3xl font-bold text-white">
                         ${data.metrics.find(m => m.label === 'Current Price')?.value}
                       </span>
@@ -357,7 +357,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 {/* Support & Resistance Visual Display */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Support Levels */}
-                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                  <div className="bg-surface-container rounded-lg p-4 border-l-4 border-green-500">
                     <h5 className="text-green-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                       Support Levels
@@ -366,11 +366,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       {data.metrics
                         .filter(m => m.label.includes('Support'))
                         .map((metric, i) => (
-                          <div key={i} className="bg-gray-700 rounded p-3">
+                          <div key={i} className="bg-surface-container-high rounded p-3">
                             <div className="text-green-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-gray-400 text-sm mt-1">
+                            <div className="text-on-surface-variant text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
@@ -382,7 +382,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   </div>
 
                   {/* Resistance Levels */}
-                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+                  <div className="bg-surface-container rounded-lg p-4 border-l-4 border-red-500">
                     <h5 className="text-red-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                       Resistance Levels
@@ -391,11 +391,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       {data.metrics
                         .filter(m => m.label.includes('Resistance'))
                         .map((metric, i) => (
-                          <div key={i} className="bg-gray-700 rounded p-3">
+                          <div key={i} className="bg-surface-container-high rounded p-3">
                             <div className="text-red-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-gray-400 text-sm mt-1">
+                            <div className="text-on-surface-variant text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
@@ -415,8 +415,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 <h4 className="font-medium mb-2">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {data.metrics.map((metric, index) => (
-                    <div key={index} className="flex justify-between text-sm bg-gray-800 p-2 rounded">
-                      <span className="text-gray-400">{metric.label}:</span>
+                    <div key={index} className="flex justify-between text-sm bg-surface-container p-2 rounded">
+                      <span className="text-on-surface-variant">{metric.label}:</span>
                       <span className="font-medium">{metric.value}</span>
                     </div>
                   ))}
@@ -427,7 +427,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {/* Detailed Analysis Sections - Only for Company Analysis */}
             {isCompanyAnalysis && data.detailedAnalysis && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Detailed Analysis</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-outline-variant pb-2">Detailed Analysis</h4>
                 {renderDetailedSubsection(data.detailedAnalysis.marketPosition)}
                 {renderDetailedSubsection(data.detailedAnalysis.businessModel)}
                 {renderDetailedSubsection(data.detailedAnalysis.industryTrends)}
@@ -440,19 +440,19 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {/* Detailed Technical Analysis */}
             {isTechnicalAnalysis && data.detailedTechnical && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Technical Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-outline-variant pb-2">Technical Details</h4>
 
                 {/* 30-60 Day Trend Outlook */}
                 {data.detailedTechnical.trend30to60Days && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.trend30to60Days.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
+                    <p className="text-on-surface-variant text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
                   </div>
                 )}
 
                 {/* Support & Resistance Levels */}
                 {data.detailedTechnical.supportResistance && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.supportResistance.title}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -460,14 +460,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                         {data.detailedTechnical.supportResistance.support?.length > 0 ? (
                           <ul className="space-y-1">
                             {data.detailedTechnical.supportResistance.support.map((level, i) => (
-                              <li key={i} className="text-sm text-gray-300 flex items-center">
+                              <li key={i} className="text-sm text-on-surface-variant flex items-center">
                                 <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
                                 {level}
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-gray-400">No support levels identified</p>
+                          <p className="text-sm text-on-surface-variant">No support levels identified</p>
                         )}
                       </div>
                       <div>
@@ -475,14 +475,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                         {data.detailedTechnical.supportResistance.resistance?.length > 0 ? (
                           <ul className="space-y-1">
                             {data.detailedTechnical.supportResistance.resistance.map((level, i) => (
-                              <li key={i} className="text-sm text-gray-300 flex items-center">
+                              <li key={i} className="text-sm text-on-surface-variant flex items-center">
                                 <span className="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
                                 {level}
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-sm text-gray-400">No resistance levels identified</p>
+                          <p className="text-sm text-on-surface-variant">No resistance levels identified</p>
                         )}
                       </div>
                     </div>
@@ -491,9 +491,9 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Options Strategy */}
                 {data.detailedTechnical.optionsStrategy && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.optionsStrategy.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
+                    <p className="text-on-surface-variant text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
                   </div>
                 )}
               </div>
@@ -502,33 +502,33 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {/* Detailed Recent Developments */}
             {isRecentDevelopments && data.detailedDevelopments && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Event Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-outline-variant pb-2">Event Details</h4>
 
                 {/* Next Earnings Call */}
                 {data.detailedDevelopments.nextEarningsCall && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.nextEarningsCall.title}</h5>
                     <div className="flex items-center mb-2">
                       <span className="text-yellow-400 font-medium mr-2">Date:</span>
                       <span className="text-gray-200">{data.detailedDevelopments.nextEarningsCall.date}</span>
                     </div>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
+                    <p className="text-on-surface-variant text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
                   </div>
                 )}
 
                 {/* Major Events */}
                 {data.detailedDevelopments.majorEvents && data.detailedDevelopments.majorEvents.events?.length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.majorEvents.title}</h5>
                     <div className="space-y-3">
                       {data.detailedDevelopments.majorEvents.events.map((event, i) => (
                         <div key={i} className="border-l-2 border-primary-500 pl-3">
                           <div className="flex justify-between items-start">
                             <span className="font-medium text-gray-200">{event.event}</span>
-                            {event.date && <span className="text-xs text-gray-400 ml-2">{event.date}</span>}
+                            {event.date && <span className="text-xs text-on-surface-variant ml-2">{event.date}</span>}
                           </div>
                           {event.expectedImpact && (
-                            <p className="text-sm text-gray-400 mt-1">{event.expectedImpact}</p>
+                            <p className="text-sm text-on-surface-variant mt-1">{event.expectedImpact}</p>
                           )}
                         </div>
                       ))}
@@ -538,17 +538,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Upcoming Catalysts */}
                 {data.detailedDevelopments.catalysts && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.catalysts.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
+                    <p className="text-on-surface-variant text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
                   </div>
                 )}
 
                 {/* Options Implication */}
                 {data.detailedDevelopments.optionsImplication && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="bg-surface-container-high rounded-lg p-4 mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.optionsImplication.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
+                    <p className="text-on-surface-variant text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
                   </div>
                 )}
               </div>
@@ -560,11 +560,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 <h4 className="font-medium mb-2">Signals</h4>
                 <div className="space-y-1">
                   {data.signals.map((signal, index) => (
-                    <div key={index} className={`text-sm p-2 rounded ${
-                      signal.type === 'positive' ? 'bg-green-900 text-green-300' :
-                      signal.type === 'negative' ? 'bg-red-900 text-red-300' :
-                      'bg-yellow-900 text-yellow-300'
-                    }`}>
+                    <div key={index} className={`text-sm p-2 rounded ${signal.type === 'positive' ? 'bg-green-900 text-green-300' :
+                        signal.type === 'negative' ? 'bg-red-900 text-red-300' :
+                          'bg-yellow-900 text-yellow-300'
+                      }`}>
                       {signal.message}
                     </div>
                   ))}
@@ -634,14 +633,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">{companyData.symbol} Analysis</h2>
-                <p className="text-gray-400">Comprehensive company research and rating</p>
+                <p className="text-on-surface-variant">Comprehensive company research and rating</p>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-center">
                   <div className={`text-4xl font-bold ${getRatingColor(companyData.overallRating)}`}>
                     {companyData.overallRating}/10
                   </div>
-                  <div className="text-sm text-gray-400">Overall Rating</div>
+                  <div className="text-sm text-on-surface-variant">Overall Rating</div>
                 </div>
                 {!companyData.saved && (
                   <button
@@ -673,7 +672,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <div className="card">
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <MessageCircle className="h-5 w-5 text-primary-400" />
@@ -685,13 +684,12 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-gray-800 rounded-lg p-4 h-80 overflow-y-auto mb-4">
+                <div className="bg-surface-container rounded-lg p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 mb-4 ${
-                        msg.role === 'user' ? 'justify-end' : ''
-                      }`}
+                      className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
+                        }`}
                     >
                       {msg.role === 'assistant' && (
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
@@ -699,11 +697,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          msg.role === 'user'
+                        className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
                             ? 'bg-primary-600 text-white'
-                            : 'bg-gray-700 text-gray-200'
-                        }`}
+                            : 'bg-surface-container-high text-gray-200'
+                          }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
@@ -719,7 +716,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="bg-surface-container-high rounded-lg p-3">
                         <Loader className="h-5 w-5 animate-spin text-primary-400" />
                       </div>
                     </div>
@@ -757,10 +754,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <h3 className="text-lg font-semibold mb-4">Research History</h3>
           <div className="space-y-4">
             {researchData.slice(0, 10).map((item, index) => (
-              <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+              <div key={index} className="flex justify-between items-center p-4 bg-surface-container-high rounded-lg hover:bg-gray-600 transition-colors">
                 <div className="flex-1 cursor-pointer" onClick={() => handleViewResearch(item)}>
                   <h4 className="font-semibold">{item.symbol}</h4>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-on-surface-variant">
                     {formatDateDDMMYYYY(item.date)} • {formatTime(item.lastRefresh)}
                   </p>
                 </div>
@@ -769,7 +766,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                     <div className={`text-2xl font-bold ${getRatingColor(item.overallRating)}`}>
                       {item.overallRating}/10
                     </div>
-                    <p className="text-xs text-gray-400">Overall Rating</p>
+                    <p className="text-xs text-on-surface-variant">Overall Rating</p>
                   </div>
                   <button
                     onClick={(e) => {

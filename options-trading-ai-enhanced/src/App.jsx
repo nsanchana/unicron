@@ -243,17 +243,9 @@ function App() {
   ]
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br text-white transition-colors duration-300 ${
-      theme === 'light'
-        ? 'from-gray-50 via-white to-blue-50'
-        : 'from-gray-900 via-gray-900 to-blue-900/20'
-    }`}>
+    <div className="min-h-screen bg-background text-on-background transition-colors duration-300">
       {/* Header */}
-      <header className={`border-b bg-opacity-80 backdrop-blur-xl transition-colors duration-300 ${
-        theme === 'light'
-          ? 'border-gray-200 bg-white'
-          : 'border-gray-700/50 bg-gray-800/80'
-      }`}>
+      <header className="border-b border-outline/10 bg-surface/90 backdrop-blur-md sticky top-0 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
@@ -262,7 +254,7 @@ function App() {
                 alt="Unicron Logo"
                 className="h-10 w-10 object-contain"
               />
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">
                 Unicron
               </h1>
             </div>
@@ -270,42 +262,42 @@ function App() {
               {/* Cloud Sync Status */}
               <div className="flex items-center space-x-2" title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}>
                 {cloudSyncStatus === 'syncing' && (
-                  <div className="flex items-center space-x-1 text-yellow-400">
+                  <div className="flex items-center space-x-1 text-tertiary">
                     <Cloud className="h-4 w-4 animate-pulse" />
-                    <span className="text-xs">Syncing...</span>
+                    <span className="text-xs font-medium">Syncing...</span>
                   </div>
                 )}
                 {cloudSyncStatus === 'synced' && (
-                  <div className="flex items-center space-x-1 text-green-400">
+                  <div className="flex items-center space-x-1 text-primary">
                     <Cloud className="h-4 w-4" />
-                    <span className="text-xs">Synced</span>
+                    <span className="text-xs font-medium">Synced</span>
                   </div>
                 )}
                 {cloudSyncStatus === 'error' && (
-                  <div className="flex items-center space-x-1 text-red-400">
+                  <div className="flex items-center space-x-1 text-error">
                     <CloudOff className="h-4 w-4" />
-                    <span className="text-xs">Offline</span>
+                    <span className="text-xs font-medium">Offline</span>
                   </div>
                 )}
                 {cloudSyncStatus === 'idle' && (
-                  <div className="flex items-center space-x-1 text-gray-500">
+                  <div className="flex items-center space-x-1 text-on-surface-variant/50">
                     <Cloud className="h-4 w-4" />
                   </div>
                 )}
               </div>
-              <div className="text-sm text-gray-400">
-                <span className="text-blue-400 font-medium">{user.username}</span> • Last refresh: {formatDateTime(lastRefresh)}
+              <div className="text-sm text-on-surface-variant">
+                <span className="text-primary font-medium">{user.username}</span> • Last refresh: {formatDateTime(lastRefresh)}
               </div>
               <button
                 onClick={() => setLastRefresh(new Date())}
-                className="p-2 rounded-lg hover:bg-gray-700/50 transition-all duration-200"
+                className="p-2 rounded-full hover:bg-surface-container-highest transition-all duration-200 text-on-surface-variant hover:text-primary"
                 title="Refresh data"
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-error-container text-on-error-container rounded-full hover:bg-error hover:text-on-error transition-all duration-200 text-sm font-medium"
                 title="Logout"
               >
                 <LogOut className="h-4 w-4" />
@@ -314,7 +306,7 @@ function App() {
               {activeTab === 'research' && researchData.length > 0 && (
                 <button
                   onClick={handleExportResearch}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-on-primary rounded-full hover:shadow-md transition-all duration-200 text-sm font-medium"
                 >
                   <Download className="h-4 w-4" />
                   <span>Export Research</span>
@@ -323,7 +315,7 @@ function App() {
               {activeTab === 'trades' && tradeData.length > 0 && (
                 <button
                   onClick={handleExportTrades}
-                  className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-on-primary rounded-full hover:shadow-md transition-all duration-200 text-sm font-medium"
                 >
                   <Download className="h-4 w-4" />
                   <span>Export Trades</span>
@@ -335,26 +327,22 @@ function App() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className={`border-b bg-opacity-50 backdrop-blur-lg transition-colors duration-300 ${
-        theme === 'light'
-          ? 'border-gray-200 bg-gray-50'
-          : 'border-gray-700/50 bg-gray-800/50'
-      }`}>
+      <nav className="bg-surface-container-low border-b border-outline/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon
+              const isActive = activeTab === tab.id
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
-                  }`}
+                  className={`flex items-center space-x-2 py-2 px-4 rounded-full font-medium text-sm transition-all duration-200 mt-2 mb-2 ${isActive
+                      ? 'bg-secondary-container text-on-secondary-container'
+                      : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                    }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                   <span>{tab.label}</span>
                 </button>
               )

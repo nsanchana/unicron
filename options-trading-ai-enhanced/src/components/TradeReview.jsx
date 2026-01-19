@@ -312,7 +312,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       case 'Low': return 'text-green-400'
       case 'Medium': return 'text-yellow-400'
       case 'High': return 'text-red-400'
-      default: return 'text-gray-400'
+      default: return 'text-on-surface-variant'
     }
   }
 
@@ -321,7 +321,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       case 'Low': return <CheckCircle className="h-5 w-5 text-green-400" />
       case 'Medium': return <AlertTriangle className="h-5 w-5 text-yellow-400" />
       case 'High': return <AlertTriangle className="h-5 w-5 text-red-400" />
-      default: return <AlertTriangle className="h-5 w-5 text-gray-400" />
+      default: return <AlertTriangle className="h-5 w-5 text-on-surface-variant" />
     }
   }
 
@@ -419,7 +419,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       case 'Hold': return 'text-yellow-400 bg-yellow-900'
       case 'Sell': return 'text-red-400 bg-red-900'
       case 'Strong Sell': return 'text-red-400 bg-red-900'
-      default: return 'text-gray-400 bg-gray-900'
+      default: return 'text-on-surface-variant bg-surface-container-lowest'
     }
   }
 
@@ -448,7 +448,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               ))}
             </datalist>
             {availableSymbols.length > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-on-surface-variant mt-1">
                 Select from researched symbols or enter any symbol
               </p>
             )}
@@ -465,7 +465,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               <option value="cashSecuredPut">Cash-Secured Put</option>
               <option value="coveredCall">Covered Call</option>
             </select>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-on-surface-variant mt-1">
               {tradeType === 'cashSecuredPut' ? 'Put Option' : 'Call Option'}
             </p>
           </div>
@@ -518,7 +518,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               placeholder="0.00"
               className="input-primary w-full"
             />
-            <p className="text-xs text-gray-400 mt-1">Premium earned per share</p>
+            <p className="text-xs text-on-surface-variant mt-1">Premium earned per share</p>
           </div>
 
           {/* Expiration Date */}
@@ -629,17 +629,17 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">${analysis.stockPrice.toFixed(2)}</div>
-                <div className="text-sm text-gray-400">Current Stock Price</div>
+                <div className="text-sm text-on-surface-variant">Current Stock Price</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">${analysis.strikePrice.toFixed(2)}</div>
-                <div className="text-sm text-gray-400">Strike Price</div>
+                <div className="text-sm text-on-surface-variant">Strike Price</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {Math.ceil((new Date(analysis.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))} Days
                 </div>
-                <div className="text-sm text-gray-400">Days to Expiration</div>
+                <div className="text-sm text-on-surface-variant">Days to Expiration</div>
               </div>
             </div>
           </div>
@@ -658,7 +658,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <div className={`font-semibold ${getRiskColor(analysis.riskAssessment.overallRisk)}`}>
                     {analysis.riskAssessment.overallRisk} Risk
                   </div>
-                  <div className="text-sm text-gray-400">Overall Risk Level</div>
+                  <div className="text-sm text-on-surface-variant">Overall Risk Level</div>
                 </div>
               </div>
 
@@ -668,19 +668,18 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <div className="font-semibold text-green-400">
                     ${(analysis.riskAssessment.maxLoss || 0).toFixed(2)}
                   </div>
-                  <div className="text-sm text-gray-400">Maximum Loss</div>
+                  <div className="text-sm text-on-surface-variant">Maximum Loss</div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
               {analysis.riskAssessment.factors?.map((factor, index) => (
-                <div key={index} className={`p-3 rounded-lg ${
-                  factor.type === 'positive' ? 'bg-green-900 text-green-300' :
-                  factor.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
-                  factor.type === 'info' ? 'bg-blue-900 text-blue-300' :
-                  'bg-red-900 text-red-300'
-                }`}>
+                <div key={index} className={`p-3 rounded-lg ${factor.type === 'positive' ? 'bg-green-900 text-green-300' :
+                    factor.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
+                      factor.type === 'info' ? 'bg-blue-900 text-blue-300' :
+                        'bg-red-900 text-red-300'
+                  }`}>
                   <div className="font-medium">{factor.message}</div>
                   {factor.detail && (
                     <div className="text-xs mt-1 opacity-90">{factor.detail}</div>
@@ -691,12 +690,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Market Sentiment section */}
             {analysis.earningsAndEvents?.marketSentiment && (
-              <div className="mt-4 p-3 bg-gray-700 rounded-lg">
+              <div className="mt-4 p-3 bg-surface-container-high rounded-lg">
                 <h5 className="font-medium mb-2">Market Sentiment</h5>
-                <p className="text-sm text-gray-300 mb-2">{analysis.earningsAndEvents.marketSentiment.description}</p>
+                <p className="text-sm text-on-surface-variant mb-2">{analysis.earningsAndEvents.marketSentiment.description}</p>
                 <ul className="space-y-1">
                   {analysis.earningsAndEvents.marketSentiment.factors.map((factor, idx) => (
-                    <li key={idx} className="text-xs text-gray-400 flex items-start">
+                    <li key={idx} className="text-xs text-on-surface-variant flex items-start">
                       <span className="text-primary-500 mr-2">•</span>
                       {factor}
                     </li>
@@ -742,7 +741,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                     const content = title ? section.replace(/^\*\*(.+?):\*\*\s*/, '') : section
 
                     // Determine card color based on title
-                    let cardColor = 'bg-gray-700'
+                    let cardColor = 'bg-surface-container-high'
                     if (title && title.includes('STRONG BUY')) cardColor = 'bg-green-900 border-l-4 border-green-500'
                     else if (title && title.includes('BUY')) cardColor = 'bg-green-900/50 border-l-4 border-green-600'
                     else if (title && title.includes('AVOID')) cardColor = 'bg-red-900/50 border-l-4 border-red-600'
@@ -753,7 +752,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                         {title && (
                           <h6 className="font-semibold text-sm mb-2 text-primary-300">{title}</h6>
                         )}
-                        <div className="text-gray-300 text-sm leading-relaxed">
+                        <div className="text-on-surface-variant text-sm leading-relaxed">
                           {content.split('**').map((part, i) =>
                             i % 2 === 1 ? <strong key={i} className="text-white">{part}</strong> : part
                           )}
@@ -784,11 +783,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <h5 className="font-medium mb-3">What to Watch</h5>
                   <div className="space-y-4">
                     {analysis.earningsAndEvents.whatToWatch.map((section, idx) => (
-                      <div key={idx} className="bg-gray-700 p-3 rounded-lg">
+                      <div key={idx} className="bg-surface-container-high p-3 rounded-lg">
                         <h6 className="font-medium text-primary-400 mb-2">{section.category}</h6>
                         <ul className="space-y-1">
                           {section.items.map((item, itemIdx) => (
-                            <li key={itemIdx} className="text-xs text-gray-300 flex items-start">
+                            <li key={itemIdx} className="text-xs text-on-surface-variant flex items-start">
                               <span className="text-primary-500 mr-2">•</span>
                               {item}
                             </li>
@@ -806,7 +805,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <div className="card">
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-surface-container-high rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <MessageCircle className="h-5 w-5 text-primary-400" />
@@ -820,7 +819,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 {/* Chat Messages */}
                 <div className="bg-gray-800 rounded-lg p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.length === 0 && (
-                    <div className="text-center text-gray-400 py-8">
+                    <div className="text-center text-on-surface-variant py-8">
                       <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p className="text-sm">Ask me anything about this trade!</p>
                       <p className="text-xs mt-2 text-gray-500">
@@ -831,9 +830,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
-                      className={`flex items-start space-x-3 mb-4 ${
-                        msg.role === 'user' ? 'justify-end' : ''
-                      }`}
+                      className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
+                        }`}
                     >
                       {msg.role === 'assistant' && (
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
@@ -841,11 +839,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          msg.role === 'user'
+                        className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
                             ? 'bg-primary-600 text-white'
-                            : 'bg-gray-700 text-gray-200'
-                        }`}
+                            : 'bg-surface-container-high text-gray-200'
+                          }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
@@ -861,7 +858,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="bg-surface-container-high rounded-lg p-3">
                         <Loader className="h-5 w-5 animate-spin text-primary-400" />
                       </div>
                     </div>
@@ -899,11 +896,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <h3 className="text-lg font-semibold mb-4">Trade Analysis History</h3>
           <div className="space-y-4">
             {tradeData.slice(0, 10).map((trade, index) => (
-              <div key={index} className={`p-4 rounded-lg ${
-                trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
-                trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                'bg-gray-700'
-              }`}>
+              <div key={index} className={`p-4 rounded-lg ${trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                  trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                    'bg-gray-700'
+                }`}>
                 {/* Top Row: Symbol, Type, and Status */}
                 <div className="flex justify-between items-start mb-3">
                   <div>

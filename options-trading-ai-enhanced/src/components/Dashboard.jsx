@@ -115,7 +115,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <div className="flex items-center space-x-3">
             <DollarSign className="h-8 w-8 text-primary-400" />
             <div>
-              <p className="text-sm text-gray-400">Portfolio Size</p>
+              <p className="text-sm text-on-surface-variant">Portfolio Size</p>
               <p className="text-2xl font-bold">${dashboardStats.portfolioSize.toLocaleString()}</p>
             </div>
           </div>
@@ -125,9 +125,9 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <div className="flex items-center space-x-3">
             <TrendingUp className="h-8 w-8 text-green-400" />
             <div>
-              <p className="text-sm text-gray-400">Weekly Premium</p>
+              <p className="text-sm text-on-surface-variant">Weekly Premium</p>
               <p className="text-2xl font-bold">${dashboardStats.weeklyPremium.toFixed(0)}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-on-surface-variant">
                 Target: ${settings.weeklyPremiumTarget.min}-${settings.weeklyPremiumTarget.max}
               </p>
             </div>
@@ -138,11 +138,11 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <div className="flex items-center space-x-3">
             <Target className="h-8 w-8 text-blue-400" />
             <div>
-              <p className="text-sm text-gray-400">Allocated Capital</p>
+              <p className="text-sm text-on-surface-variant">Allocated Capital</p>
               <p className={`text-2xl font-bold ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
                 ${dashboardStats.totalAllocated.toFixed(0)}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-on-surface-variant">
                 {dashboardStats.allocationPercentage.toFixed(1)}% of portfolio
               </p>
             </div>
@@ -153,9 +153,9 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <div className="flex items-center space-x-3">
             <Calendar className="h-8 w-8 text-purple-400" />
             <div>
-              <p className="text-sm text-gray-400">Active Trades</p>
+              <p className="text-sm text-on-surface-variant">Active Trades</p>
               <p className="text-2xl font-bold">{dashboardStats.activeTradesCount}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-on-surface-variant">
                 {dashboardStats.totalTrades} total trades
               </p>
             </div>
@@ -164,7 +164,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
       </div>
 
       {/* Weekly Premium Progress */}
-      <div className="card bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700/50">
+      <div className="card bg-gradient-to-br from-surface-container to-surface-container-high border border-outline-variant/30">
         <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
           <Target className="h-5 w-5 text-blue-400" />
           <span>Weekly Premium Progress</span>
@@ -173,22 +173,21 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           <div>
             <div className="flex justify-between text-sm mb-3">
               <span className="font-medium text-blue-400">Current: ${dashboardStats.weeklyPremium.toFixed(0)}</span>
-              <span className="text-gray-400">Target: ${settings.weeklyPremiumTarget.min} - ${settings.weeklyPremiumTarget.max}</span>
+              <span className="text-on-surface-variant">Target: ${settings.weeklyPremiumTarget.min} - ${settings.weeklyPremiumTarget.max}</span>
             </div>
 
             {/* Progress bar with markers */}
             <div className="relative">
               {/* Background bar */}
-              <div className="w-full bg-gray-700 rounded-full h-4 overflow-visible">
+              <div className="w-full bg-surface-container-high rounded-full h-4 overflow-visible">
                 {/* Progress fill */}
                 <div
-                  className={`h-4 rounded-full transition-all duration-500 relative ${
-                    dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.max
+                  className={`h-4 rounded-full transition-all duration-500 relative ${dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.max
                       ? 'bg-gradient-to-r from-green-500 via-green-400 to-emerald-400'
                       : dashboardStats.weeklyPremium >= settings.weeklyPremiumTarget.min
-                      ? 'bg-gradient-to-r from-yellow-500 via-green-500 to-green-400'
-                      : 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
-                  }`}
+                        ? 'bg-gradient-to-r from-yellow-500 via-green-500 to-green-400'
+                        : 'bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500'
+                    }`}
                   style={{
                     width: `${Math.min(Math.max(dashboardStats.premiumProgress, 2), 100)}%`,
                   }}
@@ -231,7 +230,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
             </div>
 
             {/* Progress percentage text */}
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
+            <div className="flex justify-between text-xs text-on-surface-variant mt-2">
               <span>0%</span>
               <span className="font-medium text-blue-400">
                 {dashboardStats.premiumProgress > 100
@@ -272,7 +271,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
             <AlertCircle className="h-6 w-6 text-red-400" />
             <div>
               <h3 className="font-semibold text-red-400">Risk Alert</h3>
-              <p className="text-sm text-gray-300">
+              <p className="text-sm text-on-surface-variant">
                 {dashboardStats.highRiskTrades} trade{dashboardStats.highRiskTrades > 1 ? 's' : ''} exceed{dashboardStats.highRiskTrades > 1 ? '' : 's'} your {settings.maxTradePercentage}% allocation limit
               </p>
             </div>
@@ -288,28 +287,27 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           {dashboardStats.recentResearch.length > 0 ? (
             <div className="space-y-3">
               {dashboardStats.recentResearch.map((item, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <div key={index} className="flex justify-between items-center p-3 bg-surface-container-high rounded-lg">
                   <div>
                     <p className="font-semibold">{item.symbol}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-on-surface-variant">
                       {formatDateDDMMYYYY(item.date)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm">Rating: {item.overallRating}/10</p>
-                    <p className={`text-xs capitalize ${
-                      item.overallRating >= 7 ? 'text-green-400' :
-                      item.overallRating >= 5 ? 'text-yellow-400' : 'text-red-400'
-                    }`}>
+                    <p className={`text-xs capitalize ${item.overallRating >= 7 ? 'text-green-400' :
+                        item.overallRating >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
                       {item.overallRating >= 7 ? 'Strong Buy' :
-                       item.overallRating >= 5 ? 'Hold' : 'Avoid'}
+                        item.overallRating >= 5 ? 'Hold' : 'Avoid'}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-400">No research data available</p>
+            <p className="text-on-surface-variant">No research data available</p>
           )}
         </div>
 
@@ -319,11 +317,10 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           {tradeData.length > 0 ? (
             <div className="space-y-3">
               {tradeData.slice(0, 5).map((item, index) => (
-                <div key={index} className={`flex justify-between items-center p-3 rounded-lg ${
-                  item.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
-                  item.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                  'bg-gray-700'
-                }`}>
+                <div key={index} className={`flex justify-between items-center p-3 rounded-lg ${item.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                    item.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                      'bg-surface-container-high'
+                  }`}>
                   <div className="flex-1">
                     <p className="font-semibold">
                       {item.symbol} {item.type?.toUpperCase() || item.tradeType?.toUpperCase()}
@@ -343,17 +340,16 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
                         </span>
                       )}
                     </p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-on-surface-variant">
                       {formatDateDDMMYYYY(item.timestamp)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="text-right">
                       <p className="text-sm">${item.premium} premium</p>
-                      <p className={`text-xs ${
-                        item.rating >= 7 ? 'text-green-400' :
-                        item.rating >= 5 ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
+                      <p className={`text-xs ${item.rating >= 7 ? 'text-green-400' :
+                          item.rating >= 5 ? 'text-yellow-400' : 'text-red-400'
+                        }`}>
                         Rating: {item.rating}/10
                       </p>
                     </div>
@@ -391,7 +387,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400">No trade data available</p>
+            <p className="text-on-surface-variant">No trade data available</p>
           )}
         </div>
       </div>
