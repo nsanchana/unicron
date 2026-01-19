@@ -11,6 +11,16 @@ export default async function handler(req, res) {
             KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN ? 'Set' : 'Missing'
         }
 
+        // List all keys available in process.env (masking values)
+        const availableEnvKeys = Object.keys(process.env).sort();
+
+        // Check specific Vercel vars
+        const vercelVars = {
+            VERCEL: process.env.VERCEL,
+            VERCEL_ENV: process.env.VERCEL_ENV,
+            NODE_ENV: process.env.NODE_ENV
+        };
+
         // Attempt simple KV operation
         let kvOperation = 'Pending'
         let kvResult = null
@@ -28,6 +38,8 @@ export default async function handler(req, res) {
         res.status(200).json({
             status: kvOperation === 'Success' ? 'Online' : 'Error',
             environment: envStatus,
+            availableEnvKeys,
+            vercelContext: vercelVars,
             connectionTest: kvOperation,
             lastResult: kvResult,
             timestamp: new Date().toISOString()
