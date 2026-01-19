@@ -166,7 +166,7 @@ async function scrapeCompanyAnalysis(symbol) {
     scrapedInfo.industry = $sa('[data-test="industry"]').text().trim()
     scrapedInfo.marketCap = $sa('[data-test="market-cap"]').text().trim()
   } catch (error) {
-    console.log('StockAnalysis scraping failed, trying alternatives...')
+    // Silent failure for alternatives
   }
 
   // Fallback to Yahoo Finance if needed
@@ -181,7 +181,7 @@ async function scrapeCompanyAnalysis(symbol) {
 
       if (!scrapedInfo.description) {
         scrapedInfo.description = $yahoo('p[class*="description"]').first().text().trim() ||
-                                   $yahoo('section[data-test="description"]').text().trim()
+          $yahoo('section[data-test="description"]').text().trim()
       }
       if (!scrapedInfo.sector) scrapedInfo.sector = $yahoo('span:contains("Sector")').next().text().trim()
       if (!scrapedInfo.industry) scrapedInfo.industry = $yahoo('span:contains("Industry")').next().text().trim()
@@ -289,7 +289,7 @@ async function scrapeTechnicalAnalysis(symbol) {
     const $ = cheerio.load(response.data)
 
     currentPrice = $('[data-test="stock-price"]').first().text().trim() ||
-                   $('.text-3xl, .text-4xl').first().text().trim()
+      $('.text-3xl, .text-4xl').first().text().trim()
 
     if (currentPrice) {
       metrics.push({ label: 'Current Price', value: currentPrice })
@@ -349,7 +349,7 @@ async function scrapeOptionsData(symbol) {
 
     if (metrics.length > 0) rating += 2
   } catch (error) {
-    console.log('Options scraping failed, using generated insights')
+    // console.log('Options scraping failed, using generated insights')
   }
 
   // Always provide meaningful analysis
@@ -432,7 +432,7 @@ async function scrapeRecentDevelopments(symbol) {
       signals.push({ type: 'warning', message: 'Recent news shows negative sentiment' })
     }
   } catch (error) {
-    console.log('News scraping failed, using generated insights')
+    // console.log('News scraping failed, using generated insights')
   }
 
   // Always provide meaningful analysis
@@ -463,10 +463,10 @@ async function scrapeRecentDevelopments(symbol) {
   }
 }
 
-// Hardcoded credentials for private application
+// Credentials from environment variables
 const AUTHORIZED_CREDENTIALS = {
-  username: 'nsanchana',
-  password: 'Ns998923++'
+  username: process.env.ADMIN_USERNAME || 'admin',
+  password: process.env.ADMIN_PASSWORD || 'password123'
 }
 
 // Authentication Routes
@@ -537,7 +537,7 @@ app.post('/api/scrape', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Symbol and section are required' })
     }
 
-    console.log(`Scraping ${section} for ${symbol}...`)
+    // console.log(`Scraping ${section} for ${symbol}...`)
 
     let result
     switch (section) {
@@ -629,7 +629,7 @@ app.post('/api/scrape/earnings-events', requireAuth, async (req, res) => {
 
       // Look for earnings date
       let earningsDate = $yahoo('td:contains("Earnings Date")').next().text().trim() ||
-                        $yahoo('span:contains("Earnings Date")').parent().find('span').last().text().trim()
+        $yahoo('span:contains("Earnings Date")').parent().find('span').last().text().trim()
 
       // Check if it contains "Estimated" or similar keywords
       if (earningsDate && (earningsDate.toLowerCase().includes('estimate') || earningsDate.includes('*'))) {
@@ -654,7 +654,7 @@ app.post('/api/scrape/earnings-events', requireAuth, async (req, res) => {
         const $sa = cheerio.load(saResponse.data)
 
         earningsDate = $sa('[data-test="earnings-date"]').text().trim() ||
-                      $sa('td:contains("Next Earnings")').next().text().trim()
+          $sa('td:contains("Next Earnings")').next().text().trim()
 
         if (earningsDate && (earningsDate.toLowerCase().includes('estimate') || earningsDate.includes('*'))) {
           isEstimate = true
@@ -669,7 +669,7 @@ app.post('/api/scrape/earnings-events', requireAuth, async (req, res) => {
         }
       }
     } catch (error) {
-      console.log('Earnings date scraping failed:', error.message)
+      // console.log('Earnings date scraping failed:', error.message)
     }
 
     // Only set earnings data if we found a valid future date
