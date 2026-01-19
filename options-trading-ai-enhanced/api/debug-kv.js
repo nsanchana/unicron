@@ -18,7 +18,10 @@ export default async function handler(req, res) {
         const vercelVars = {
             VERCEL: process.env.VERCEL,
             VERCEL_ENV: process.env.VERCEL_ENV,
-            NODE_ENV: process.env.NODE_ENV
+            NODE_ENV: process.env.NODE_ENV,
+            VERCEL_PROJECT_NAME: process.env.VERCEL_PROJECT_NAME,
+            VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+            VERCEL_URL: process.env.VERCEL_URL
         };
 
         // Attempt simple KV operation
