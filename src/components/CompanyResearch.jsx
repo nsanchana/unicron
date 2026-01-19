@@ -668,7 +668,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
     )
   }
 
-  return (
+
   return (
     <div className="space-y-8 pb-12">
       {/* Search Form */}

@@ -31,7 +31,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon }) => {
   const glowColor = isMaxAchieved ? 'rgba(16, 185, 129, 0.3)' : isMinAchieved ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.15)'
 
   return (
-    <div className="card group relative overflow-hidden">
+    <div className="glass-card group relative overflow-hidden">
       {/* Background glow pulse */}
       <div
         className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] transition-all duration-700 group-hover:blur-[60px]"
@@ -218,7 +218,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
     <div className="space-y-6">
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card border-l-4 border-l-blue-500/50 bg-gradient-to-br from-blue-500/5 to-transparent">
+        <div className="stat-card-primary">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-blue-500/10 rounded-2xl">
               <DollarSign className="h-6 w-6 text-blue-400" />
@@ -230,7 +230,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           </div>
         </div>
 
-        <div className="card border-l-4 border-l-emerald-500/50 bg-gradient-to-br from-emerald-500/5 to-transparent">
+        <div className="stat-card-success">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
               <TrendingUp className="h-6 w-6" />
@@ -243,7 +243,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           </div>
         </div>
 
-        <div className="card border-l-4 border-l-purple-500/50 bg-gradient-to-br from-purple-500/5 to-transparent">
+        <div className="stat-card-primary border-purple-500/20">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-purple-500/10 rounded-2xl">
               <Target className="h-6 w-6 text-purple-400" />
@@ -258,7 +258,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
           </div>
         </div>
 
-        <div className="card border-l-4 border-l-orange-500/50 bg-gradient-to-br from-orange-500/5 to-transparent">
+        <div className="stat-card-warning">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-orange-500/10 rounded-2xl">
               <Calendar className="h-6 w-6 text-orange-400" />
@@ -299,7 +299,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
 
       {/* Risk Alerts */}
       {dashboardStats.highRiskTrades > 0 && (
-        <div className="card border-l-4 border-l-red-500">
+        <div className="glass-card border-l-4 border-l-red-500 bg-gradient-to-br from-red-500/5 to-transparent animate-slide-in-up">
           <div className="flex items-center space-x-3">
             <AlertCircle className="h-6 w-6 text-red-400" />
             <div>
@@ -315,7 +315,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Research */}
-        <div className="card">
+        <div className="glass-card">
           <h3 className="text-lg font-semibold mb-4">Recent Research</h3>
           {dashboardStats.recentResearch.length > 0 ? (
             <div className="space-y-3">
