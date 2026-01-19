@@ -368,7 +368,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   const renderDetailedSubsection = (subsection) => {
     if (!subsection) return null
     return (
-      <div className="bg-gray-700 rounded-lg p-4 mb-3">
+      <div className="glass-card mb-3">
         <div className="flex items-center justify-between mb-2">
           <h5 className="font-semibold text-primary-400">{subsection.title}</h5>
           <div className={`flex items-center space-x-1 ${getRatingColor(subsection.rating)}`}>
@@ -391,7 +391,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
       <div className="card">
         <button
           onClick={() => toggleSection(sectionKey)}
-          className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+          className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
         >
           <div className="flex items-center space-x-3">
             {getRatingIcon(rating)}
@@ -412,7 +412,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {data.analysis && (
               <div>
                 <h4 className="font-medium mb-2">Executive Summary</h4>
-                <p className="text-gray-300 text-sm leading-relaxed bg-gray-800 p-3 rounded-lg">{data.analysis}</p>
+                <p className="text-gray-300 text-sm leading-relaxed glass-item">{data.analysis}</p>
               </div>
             )}
 
@@ -435,7 +435,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 {/* Support & Resistance Visual Display */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Support Levels */}
-                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-green-500">
+                  <div className="glass-card border-l-4 border-green-500">
                     <h5 className="text-green-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                       Support Levels
@@ -444,7 +444,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       {data.metrics
                         .filter(m => m.label.includes('Support'))
                         .map((metric, i) => (
-                          <div key={i} className="bg-gray-700 rounded p-3">
+                          <div key={i} className="glass-item">
                             <div className="text-green-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
@@ -460,7 +460,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   </div>
 
                   {/* Resistance Levels */}
-                  <div className="bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+                  <div className="glass-card border-l-4 border-red-500">
                     <h5 className="text-red-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                       Resistance Levels
@@ -469,7 +469,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       {data.metrics
                         .filter(m => m.label.includes('Resistance'))
                         .map((metric, i) => (
-                          <div key={i} className="bg-gray-700 rounded p-3">
+                          <div key={i} className="glass-item">
                             <div className="text-red-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
@@ -493,7 +493,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                 <h4 className="font-medium mb-2">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {data.metrics.map((metric, index) => (
-                    <div key={index} className="flex justify-between text-sm bg-gray-800 p-2 rounded">
+                    <div key={index} className="flex justify-between text-sm glass-item p-2">
                       <span className="text-gray-400">{metric.label}:</span>
                       <span className="font-medium">{metric.value}</span>
                     </div>
@@ -522,7 +522,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* 30-60 Day Trend Outlook */}
                 {data.detailedTechnical.trend30to60Days && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.trend30to60Days.title}</h5>
                     <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
                   </div>
@@ -530,7 +530,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Support & Resistance Levels */}
                 {data.detailedTechnical.supportResistance && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.supportResistance.title}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -583,7 +583,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Options Strategy */}
                 {data.detailedTechnical.optionsStrategy && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.optionsStrategy.title}</h5>
                     <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
                   </div>
@@ -598,7 +598,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Next Earnings Call */}
                 {data.detailedDevelopments.nextEarningsCall && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.nextEarningsCall.title}</h5>
                     <div className="flex items-center mb-2">
                       <span className="text-yellow-400 font-medium mr-2">Date:</span>
@@ -610,7 +610,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Major Events */}
                 {data.detailedDevelopments.majorEvents && data.detailedDevelopments.majorEvents.events?.length > 0 && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.majorEvents.title}</h5>
                     <div className="space-y-3">
                       {data.detailedDevelopments.majorEvents.events.map((event, i) => (
@@ -630,7 +630,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Upcoming Catalysts */}
                 {data.detailedDevelopments.catalysts && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.catalysts.title}</h5>
                     <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
                   </div>
@@ -638,7 +638,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
 
                 {/* Options Implication */}
                 {data.detailedDevelopments.optionsImplication && (
-                  <div className="bg-gray-700 rounded-lg p-4 mb-3">
+                  <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.optionsImplication.title}</h5>
                     <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
                   </div>
@@ -766,7 +766,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <div className="card">
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <MessageCircle className="h-5 w-5 text-primary-400" />
@@ -778,7 +778,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-gray-800 rounded-lg p-4 h-80 overflow-y-auto mb-4">
+                <div className="glass-card p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
@@ -793,7 +793,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
                           ? 'bg-primary-600 text-white'
-                          : 'bg-gray-700 text-gray-200'
+                          : 'glass-item text-gray-200'
                           }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -810,7 +810,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="glass-item">
                         <Loader className="h-5 w-5 animate-spin text-primary-400" />
                       </div>
                     </div>
@@ -850,25 +850,25 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             <div className="flex space-x-2">
               <button
                 onClick={() => handleSort('date')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'date' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                className={`px-3 py-1 rounded text-sm ${sortBy === 'date' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
               >
                 Date {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('rating')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'rating' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                className={`px-3 py-1 rounded text-sm ${sortBy === 'rating' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
               >
                 Rating {sortBy === 'rating' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('currentPrice')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'currentPrice' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                className={`px-3 py-1 rounded text-sm ${sortBy === 'currentPrice' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
               >
                 Current Price {sortBy === 'currentPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('targetPrice')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'targetPrice' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                className={`px-3 py-1 rounded text-sm ${sortBy === 'targetPrice' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
               >
                 Target Price {sortBy === 'targetPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
@@ -894,13 +894,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
               }
 
               return (
-                <div key={itemKey} className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer" onClick={() => handleViewResearch(item)}>
+                <div key={itemKey} className="glass-item cursor-pointer" onClick={() => handleViewResearch(item)}>
                   {/* Single Row: Symbol, Price Boxes, Date, Rating, Actions */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
                       <h4 className="font-semibold text-lg">{item.symbol}</h4>
                       {currentPrice && (
-                        <div className="bg-gray-800 rounded px-2 py-1 flex items-center space-x-1">
+                        <div className="glass-item px-2 py-1 flex items-center space-x-1">
                           <span className="text-xs text-gray-400">Current:</span>
                           <span className="text-white font-medium">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
                         </div>

@@ -688,7 +688,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Market Sentiment section */}
             {analysis.earningsAndEvents?.marketSentiment && (
-              <div className="mt-4 p-3 bg-gray-700 rounded-lg">
+              <div className="mt-4 glass-item">
                 <h5 className="font-medium mb-2">Market Sentiment</h5>
                 <p className="text-sm text-gray-300 mb-2">{analysis.earningsAndEvents.marketSentiment.description}</p>
                 <ul className="space-y-1">
@@ -781,7 +781,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <h5 className="font-medium mb-3">What to Watch</h5>
                   <div className="space-y-4">
                     {analysis.earningsAndEvents.whatToWatch.map((section, idx) => (
-                      <div key={idx} className="bg-gray-700 p-3 rounded-lg">
+                      <div key={idx} className="glass-item">
                         <h6 className="font-medium text-primary-400 mb-2">{section.category}</h6>
                         <ul className="space-y-1">
                           {section.items.map((item, itemIdx) => (
@@ -803,7 +803,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <div className="card">
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-700 rounded-lg transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <MessageCircle className="h-5 w-5 text-primary-400" />
@@ -815,7 +815,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-gray-800 rounded-lg p-4 h-80 overflow-y-auto mb-4">
+                <div className="glass-card p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.length === 0 && (
                     <div className="text-center text-gray-400 py-8">
                       <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -839,7 +839,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
                             ? 'bg-primary-600 text-white'
-                            : 'bg-gray-700 text-gray-200'
+                            : 'glass-item text-gray-200'
                           }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -856,7 +856,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-3">
+                      <div className="glass-item">
                         <Loader className="h-5 w-5 animate-spin text-primary-400" />
                       </div>
                     </div>
@@ -958,19 +958,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
                 {/* Trade Details Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="glass-item">
                     <div className="text-xs text-gray-400 mb-1">Strike Price</div>
                     <div className="text-lg font-bold text-white">${trade.strikePrice}</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="glass-item">
                     <div className="text-xs text-gray-400 mb-1">Expiry Date</div>
                     <div className="text-lg font-bold text-yellow-400">{formatDateDDMMYYYY(trade.expirationDate)}</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="glass-item">
                     <div className="text-xs text-gray-400 mb-1">Premium</div>
                     <div className="text-lg font-bold text-green-400">${trade.premium}</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded-lg p-3">
+                  <div className="glass-item">
                     <div className="text-xs text-gray-400 mb-1">Analysis Date</div>
                     <div className="text-lg font-bold text-gray-300">{formatDateDDMMYYYY(trade.timestamp)}</div>
                   </div>

@@ -12,12 +12,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
+
   /* Premium Design Tokens */
   --glass-bg: rgba(17, 24, 39, 0.7);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.03);
-  
+
   --primary-glow: rgba(59, 130, 246, 0.15);
   --success-glow: rgba(16, 185, 129, 0.15);
   --warning-glow: rgba(245, 158, 11, 0.15);
@@ -145,14 +145,22 @@ body {
 }
 
 /* Typography Enhancements */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   @apply tracking-tight font-bold;
 }
 
 /* Animations */
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-shimmer {
@@ -160,8 +168,15 @@ h1, h2, h3, h4 {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .animate-float {
@@ -169,10 +184,13 @@ h1, h2, h3, h4 {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { 
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
   }
-  50% { 
+
+  50% {
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
   }
 }
@@ -186,6 +204,7 @@ h1, h2, h3, h4 {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -197,9 +216,26 @@ h1, h2, h3, h4 {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .animate-shake {
@@ -208,13 +244,11 @@ h1, h2, h3, h4 {
 
 /* Button & Input Refinement */
 .btn-primary {
-  @apply bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl 
-         transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-95;
+  @apply bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-95;
 }
 
 .input-primary {
-  @apply bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-2.5 
-         focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all;
+  @apply bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all;
 }
 
 .light-mode .input-primary {
@@ -269,4 +303,26 @@ h1, h2, h3, h4 {
 
 .glass-table tbody tr:hover {
   @apply bg-white/5;
+}
+
+/* Glass Item - For list items and nested cards */
+.glass-item {
+  @apply backdrop-blur-md rounded-lg p-3 transition-all duration-300;
+  background: rgba(17, 24, 39, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-item:hover {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.light-mode .glass-item {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .glass-item:hover {
+  background: rgba(255, 255, 255, 0.8);
 }

@@ -337,7 +337,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
                 }
 
                 return (
-                  <div key={index} className="p-3 bg-gray-700 rounded-lg">
+                  <div key={index} className="glass-item cursor-pointer">
                     {/* Single Row: Symbol, Price Boxes, Date, Rating */}
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3 flex-wrap gap-y-2">
@@ -386,7 +386,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
               {tradeData.slice(0, 5).map((item, index) => (
                 <div key={index} className={`flex justify-between items-center p-3 rounded-lg ${item.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
                   item.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                    'bg-gray-700'
+                    'glass-item'
                   }`}>
                   <div className="flex-1">
                     <p className="font-semibold">

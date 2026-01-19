@@ -137,7 +137,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
                     step="1"
                     value={formData.maxTradePercentage}
                     onChange={(e) => handleInputChange('maxTradePercentage', parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="w-full h-2 glass-item appearance-none cursor-pointer accent-blue-500"
                   />
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-3xl font-black text-white">{formData.maxTradePercentage}%</span>
@@ -192,7 +192,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
                 <div className="text-2xl font-black text-white">
                   ${(formData.weeklyPremiumTarget.min * 52).toLocaleString()} - ${(formData.weeklyPremiumTarget.max * 52).toLocaleString()}
                 </div>
-                <div className="h-1 w-full bg-gray-700 rounded-full mt-2 overflow-hidden">
+                <div className="h-1 w-full glass-item rounded-full mt-2 overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 w-[70%]" />
                 </div>
               </div>
