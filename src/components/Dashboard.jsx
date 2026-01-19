@@ -343,7 +343,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
                       <div className="flex items-center space-x-3 flex-wrap gap-y-2">
                         <p className="font-semibold text-lg">{item.symbol}</p>
                         {currentPrice && (
-                          <div className="bg-gray-800 rounded px-2 py-1 flex items-center space-x-1">
+                          <div className="glass-item px-2 py-1 flex items-center space-x-1">
                             <span className="text-xs text-gray-400">Current:</span>
                             <span className="text-white font-medium">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
                           </div>
@@ -379,7 +379,7 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
         </div>
 
         {/* Recent Trades */}
-        <div className="card">
+        <div className="glass-card">
           <h3 className="text-lg font-semibold mb-4">Recent Trades</h3>
           {tradeData.length > 0 ? (
             <div className="space-y-3">
