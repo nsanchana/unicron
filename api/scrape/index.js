@@ -77,7 +77,7 @@ async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: { responseMimeType: "application/json" }
     })
 
@@ -200,7 +200,7 @@ async function generateAIInsight(symbol, dataType, scrapedData = {}) {
     const isJsonExpected = dataType === 'technicalAnalysis' || dataType === 'recentDevelopments'
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.5-flash',
       generationConfig: isJsonExpected ? { responseMimeType: "application/json" } : undefined
     })
 
