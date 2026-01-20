@@ -36,8 +36,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 // Helper function to generate AI insights using Gemini
 async function generateAIInsight(symbol, dataType, scrapedData = {}) {
+  console.log(`Generating AI insight for ${symbol} - ${dataType}...`)
+
   // If no API key, fall back to template insights
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
+    console.log('Gemini API key not configured, using fallback insights.')
     return generateFallbackInsight(symbol, dataType, scrapedData)
   }
 
@@ -108,12 +111,16 @@ Be concise and actionable.`
 
     const prompt = prompts[dataType] || `Analyze ${dataType} for ${symbol} with data: ${JSON.stringify(scrapedData)}`
 
+    console.log('Calling Gemini API...')
     const result = await model.generateContent(prompt)
     const response = await result.response
-    return response.text()
+    const text = response.text()
+    console.log('Gemini API call successful.')
+    return text
 
   } catch (error) {
-    console.error('AI insight generation failed:', error.message)
+    console.error(`AI insight generation failed for ${symbol} (${dataType}):`, error.message)
+    // If it's a safety block or other terminal error, fallback gracefully
     return generateFallbackInsight(symbol, dataType, scrapedData)
   }
 }
