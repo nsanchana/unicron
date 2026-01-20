@@ -185,9 +185,11 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
     const monthlyTarget = { min: (pSize * 0.25) / 12, max: (pSize * 0.30) / 12 }
     const yearlyTarget = { min: pSize * 0.25, max: pSize * 0.30 }
 
-    // Portfolio allocation
+    // Portfolio allocation - Sum of Strike Price * 100 for active Cash Secured Puts
     const activeTrades = executedTrades.filter(t => !t.closed)
-    const totalAllocated = activeTrades.reduce((sum, t) => sum + (t.premium * t.quantity * 100), 0)
+    const totalAllocated = activeTrades
+      .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
+      .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
     const allocationPercentage = (totalAllocated / pSize) * 100
 
     return {
