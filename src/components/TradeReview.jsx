@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader } from 'lucide-react'
+import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage } from '../utils/storage'
 
