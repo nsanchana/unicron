@@ -464,7 +464,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Symbol Selection */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Asset Symbol</label>
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Stock Symbol</label>
               <div className="relative group">
                 <input
                   type="text"
@@ -519,7 +519,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Strike Price */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Execution Strike ($)</label>
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Strike Price ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -532,7 +532,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Premium */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Yield / Share ($)</label>
+              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Premium ($)</label>
               <input
                 type="number"
                 step="0.01"
