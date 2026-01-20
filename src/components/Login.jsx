@@ -58,8 +58,8 @@ function Login({ onLoginSuccess }) {
 
   return (
     <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 relative overflow-hidden ${theme === 'light'
-        ? 'bg-gray-50'
-        : 'bg-[#0f172a]'
+      ? 'bg-gray-50'
+      : 'bg-[#0f172a]'
       }`}>
       {/* Dynamic Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -69,7 +69,7 @@ function Login({ onLoginSuccess }) {
         {/* Logo and Title */}
         <div className="text-center mb-10">
           <div className="inline-block p-4 rounded-3xl bg-gray-800/40 backdrop-blur-2xl border border-gray-700/50 mb-6 shadow-2xl animate-float">
-            <img src="/unicron-logo.png" alt="Unicron" className="h-16 w-16 object-contain" />
+            <img src="/unicron-logo.jpg" alt="Unicron" className="h-16 w-16 object-contain rounded-lg" />
           </div>
           <h1 className="text-5xl font-black tracking-tight mb-3">
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">

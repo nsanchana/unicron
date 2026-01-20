@@ -845,8 +845,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                         }`}
                     >
                       {msg.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
-                          <Bot className="h-5 w-5 text-white" />
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center p-1">
+                          <img src="/unicron-logo.jpg" alt="Unicron" className="h-full w-full object-contain rounded-full" />
                         </div>
                       )}
                       <div
@@ -866,8 +866,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   ))}
                   {chatLoading && (
                     <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-white" />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center p-1">
+                        <img src="/unicron-logo.jpg" alt="Unicron" className="h-full w-full object-contain rounded-full" />
                       </div>
                       <div className="glass-item">
                         <Loader className="h-5 w-5 animate-spin text-primary-400" />

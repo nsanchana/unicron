@@ -263,9 +263,9 @@ function App() {
             <div className="flex items-center space-x-4">
               <div className="p-2 bg-gray-800/50 rounded-xl border border-white/10 shadow-xl animate-float">
                 <img
-                  src="/unicron-logo.png"
+                  src="/unicron-logo.jpg"
                   alt="Unicron Logo"
-                  className="h-10 w-10 object-contain"
+                  className="h-10 w-10 object-contain rounded-lg"
                 />
               </div>
               <div>
