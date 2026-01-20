@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
+import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
 import { saveToLocalStorage } from '../utils/storage'
 
@@ -803,6 +803,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
               </div>
             </div>
           </div>
+
+          {/* Fallback Warning */}
+          {(companyData.isFallback || companyData.companyAnalysis?.isFallback) && (
+            <div className="p-4 bg-orange-900/30 border border-orange-500/50 rounded-xl text-orange-200 flex items-start space-x-3 animate-in fade-in slide-in-from-top-4">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Displaying Basic Analysis</p>
+                <p className="text-sm opacity-90">The AI engine encountered an issue or is not configured. Please check your GEMINI_API_KEY. {(companyData.error || companyData.companyAnalysis?.error) && `(Error: ${companyData.error || companyData.companyAnalysis?.error})`}</p>
+              </div>
+            </div>
+          )}
 
           {/* Analysis Sections */}
           {renderSection('Company Analysis', 'companyAnalysis', companyData.companyAnalysis, companyData.companyAnalysis?.rating)}

@@ -57,18 +57,22 @@ const cache = {
 // Helper to extract JSON from markdown or raw text
 function extractJson(text) {
   try {
-    // Try direct parse first
-    return JSON.parse(text)
-  } catch (e) {
-    // Try to find JSON block
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    // Try to find JSON block first (most common for Gemini)
+    const jsonMatch = text.match(/```json\s*(\{[\s\S]*\})\s*```/) || text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
+      const jsonStr = jsonMatch[1] || jsonMatch[0]
       try {
-        return JSON.parse(jsonMatch[0])
+        return JSON.parse(jsonStr)
       } catch (parseError) {
-        console.error('Failed to parse matched JSON block:', parseError.message)
+        // If it fails, try cleaning it (e.g., removing trailing commas)
+        const cleanedStr = jsonStr.replace(/,\s*([\]}])/g, '$1')
+        return JSON.parse(cleanedStr)
       }
     }
+    // Fallback to direct parse
+    return JSON.parse(text)
+  } catch (e) {
+    console.error('JSON Extraction failed:', e.message)
     throw new Error('No valid JSON found in response')
   }
 }
@@ -86,14 +90,23 @@ async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
 
   console.log(`[CompanyAnalysis] Starting analysis for ${symbol}`)
 
+  // Diagnostic logging for API key
+  if (!apiKey) {
+    console.warn(`[CompanyAnalysis] GEMINI_API_KEY is completely missing in environment variables.`)
+  } else {
+    const maskedKey = apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4)
+    console.log(`[CompanyAnalysis] Found API Key: ${maskedKey} (length: ${apiKey.length})`)
+  }
+
   if (!apiKey || apiKey.trim() === '' || apiKey === 'your_gemini_api_key_here') {
-    console.log('[CompanyAnalysis] No Gemini API key found, using fallback')
-    return generateFallbackCompanyAnalysis(symbol, scrapedData)
+    console.warn(`[CompanyAnalysis] No Gemini API key found for ${symbol}, using fallback data`)
+    const fallback = generateFallbackCompanyAnalysis(symbol, scrapedData)
+    return { ...fallback, isFallback: true }
   }
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.0-flash-exp',
       generationConfig: { responseMimeType: "application/json" }
     })
 
@@ -162,9 +175,10 @@ Be specific, factual, and thorough. Use your knowledge of ${symbol} to provide m
     return analysis
 
   } catch (error) {
-    console.error('[CompanyAnalysis] AI failed:', error.message)
-    console.error('[CompanyAnalysis] Error stack:', error.stack)
-    return generateFallbackCompanyAnalysis(symbol, scrapedData)
+    console.error(`[CompanyAnalysis] Gemini API call failed for ${symbol}:`, error.message)
+    console.error(`[CompanyAnalysis] Full error stack:`, error.stack)
+    const fallback = generateFallbackCompanyAnalysis(symbol, scrapedData)
+    return { ...fallback, isFallback: true, error: error.message }
   }
 }
 
@@ -213,9 +227,10 @@ async function generateAIInsight(symbol, dataType, scrapedData = {}) {
   console.log(`Generating AI insight for ${symbol} - ${dataType}...`)
 
   // If no API key, fall back to template insights
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.log('Gemini API key not configured, using fallback insights.')
-    return generateFallbackInsight(symbol, dataType, scrapedData)
+  if (!apiKey || apiKey.trim() === '' || apiKey === 'your_gemini_api_key_here') {
+    console.warn(`[AIInsight] Gemini API key not configured for ${dataType} - ${symbol}, using fallback.`)
+    const fallback = generateFallbackInsight(symbol, dataType, scrapedData)
+    return typeof fallback === 'string' ? `${fallback} (Note: This is an automated fallback insight)` : fallback
   }
 
   try {
@@ -224,7 +239,7 @@ async function generateAIInsight(symbol, dataType, scrapedData = {}) {
     const isJsonExpected = dataType === 'technicalAnalysis' || dataType === 'recentDevelopments'
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.0-flash-exp',
       generationConfig: isJsonExpected ? { responseMimeType: "application/json" } : undefined
     })
 
@@ -302,8 +317,9 @@ Use your knowledge of ${symbol}'s recent news, earnings schedule, product announ
     return responseText
 
   } catch (error) {
-    console.error('AI insight generation failed:', error.message)
-    return generateFallbackInsight(symbol, dataType, scrapedData)
+    console.error(`[AIInsight] Gemini API call failed for ${dataType} - ${symbol}:`, error.message)
+    const fallback = generateFallbackInsight(symbol, dataType, scrapedData)
+    return typeof fallback === 'string' ? `${fallback} (Error: ${error.message})` : fallback
   }
 }
 
