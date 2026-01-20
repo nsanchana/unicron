@@ -43,9 +43,9 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon }) => {
           <div className={`p-2 rounded-xl border border-gray-700/50 bg-gray-900/50 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`}>
             {Icon && <Icon className="h-5 w-5" />}
           </div>
-          <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{label} Premium</span>
+          <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{label} Earnings</span>
         </div>
-        <div className="text-[10px] tracking-widest text-gray-500 uppercase font-bold">
+        <div className="text-sm tracking-wider text-emerald-400 font-black uppercase bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30">
           Goal: ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
       </h3>
@@ -54,7 +54,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon }) => {
         <div>
           <div className="flex justify-between items-end mb-4">
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Current Premium</p>
+              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Current Earnings</p>
               <span className="text-3xl font-black text-white">${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
             <div className="text-right">
@@ -339,37 +339,43 @@ function Dashboard({ researchData, tradeData, setTradeData, settings }) {
                 }
 
                 return (
-                  <div key={index} className="glass-item cursor-pointer">
-                    {/* Single Row: Symbol, Price Boxes, Date, Rating */}
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3 flex-wrap gap-y-2">
-                        <p className="font-semibold text-lg">{item.symbol}</p>
-                        {currentPrice && (
-                          <div className="glass-item px-2 py-1 flex items-center space-x-1">
-                            <span className="text-xs text-gray-400">Current:</span>
-                            <span className="text-white font-medium">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
-                          </div>
-                        )}
-                        {targetPrice && (
-                          <div className="bg-blue-900/40 border border-blue-700/50 rounded px-2 py-1 flex items-center space-x-1">
-                            <span className="text-xs text-blue-300">Target:</span>
-                            <span className="text-blue-400 font-medium">{targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`}</span>
-                          </div>
-                        )}
-                        {upsidePercent !== null && (
-                          <div className={`rounded px-2 py-1 font-medium text-sm ${parseFloat(upsidePercent) >= 0 ? 'bg-green-900/40 border border-green-700/50 text-green-400' : 'bg-red-900/40 border border-red-700/50 text-red-400'}`}>
-                            {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
-                          </div>
-                        )}
-                        <span className="text-sm text-gray-400">
-                          {formatDateDDMMYYYY(item.date)}
-                        </span>
+                  <div key={index} className="glass-item hover:bg-white/10 transition-colors cursor-pointer">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        <p className="font-bold text-xl text-white">{item.symbol}</p>
+                        <div className={`text-lg font-black px-3 py-1 rounded-lg ${item.overallRating >= 7 ? 'text-green-400 bg-green-500/10 border border-green-500/30' :
+                            item.overallRating >= 5 ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/30' :
+                              'text-red-400 bg-red-500/10 border border-red-500/30'
+                          }`}>
+                          {item.overallRating}/100
+                        </div>
                       </div>
-                      <div className={`text-lg font-bold ${item.overallRating >= 7 ? 'text-green-400' :
-                        item.overallRating >= 5 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
-                        {item.overallRating}/100
-                      </div>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {formatDateDDMMYYYY(item.date)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {currentPrice && (
+                        <div className="glass-item px-3 py-1.5 flex items-center space-x-2">
+                          <span className="text-xs text-gray-400 font-medium">Current:</span>
+                          <span className="text-white font-bold">{currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`}</span>
+                        </div>
+                      )}
+                      {targetPrice && (
+                        <div className="bg-blue-900/40 border border-blue-700/50 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+                          <span className="text-xs text-blue-300 font-medium">Target:</span>
+                          <span className="text-blue-400 font-bold">{targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`}</span>
+                        </div>
+                      )}
+                      {upsidePercent !== null && (
+                        <div className={`rounded-lg px-3 py-1.5 font-bold text-sm ${parseFloat(upsidePercent) >= 0
+                            ? 'bg-green-900/40 border border-green-700/50 text-green-400'
+                            : 'bg-red-900/40 border border-red-700/50 text-red-400'
+                          }`}>
+                          {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
