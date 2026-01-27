@@ -303,8 +303,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
           </div>
         )}
       </div>
-    </div >
-    </div >
+    </div>
   )
 }
 
