@@ -6,7 +6,7 @@ import {
   startOfYear, endOfYear,
   isWithinInterval
 } from 'date-fns'
-import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
+import { saveToLocalStorage } from '../utils/storage'
 import { scrapeCompanyData } from '../services/webScraping'
 import { useState } from 'react'
 
@@ -159,7 +159,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
     const updatedTradeData = tradeData.filter(trade => trade.id !== tradeId)
     setTradeData(updatedTradeData)
-    saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
   }
 
   const handleEditTrade = () => {
@@ -171,7 +171,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     if (window.confirm(`Delete research for ${itemToDelete.symbol}?`)) {
       const updatedResearchData = researchData.filter((_, i) => i !== index)
       setResearchData(updatedResearchData)
-      saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+      saveToLocalStorage('researchData', updatedResearchData)
     }
   }
 
@@ -233,7 +233,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       const updatedResearchData = [updatedEntry, ...filteredData]
 
       setResearchData(updatedResearchData)
-      saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+      saveToLocalStorage('researchData', updatedResearchData)
 
       alert(`Successfully refreshed research for ${oldSymbol}!`)
     } catch (err) {
@@ -260,7 +260,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       t.id === trade.id ? executedTrade : t
     )
     setTradeData(updatedTradeData)
-    saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+    saveToLocalStorage('tradeData', updatedTradeData)
 
     alert(`Trade for ${trade.symbol} converted to EXECUTED! Execution date set to ${formatDateDDMMYYYY(new Date().toISOString())}.`)
   }

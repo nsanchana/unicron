@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
-import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
+import { saveToLocalStorage } from '../utils/storage'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -111,7 +111,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           const updatedResearchData = [...researchData]
           updatedResearchData[researchIndex] = { ...updatedResearchData[researchIndex], chatHistory: finalMessages }
           setResearchData(updatedResearchData)
-          saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+          saveToLocalStorage('researchData', updatedResearchData)
         }
       }
     } catch (err) {
@@ -264,7 +264,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
     setResearchData(updatedResearchData)
 
     // Persist to localStorage
-    saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+    saveToLocalStorage('researchData', updatedResearchData)
 
     // Update current display
     setCompanyData(savedResearch)
@@ -293,7 +293,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
     if (window.confirm(`Delete research for ${itemToDelete.symbol}?`)) {
       const updatedResearchData = researchData.filter((_, i) => i !== index)
       setResearchData(updatedResearchData)
-      saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+      saveToLocalStorage('researchData', updatedResearchData)
 
       // If the deleted item was being viewed, clear the display
       if (companyData && companyData.symbol === itemToDelete.symbol && companyData.date === itemToDelete.date) {

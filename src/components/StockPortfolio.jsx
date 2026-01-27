@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Save, RefreshCw, DollarSign, TrendingUp, TrendingDown, Briefcase } from 'lucide-react'
-import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 
-function StockPortfolio({ stockData, setStockData }) {
+function StockPortfolio({ stockData, onUpdate }) {
     const [loading, setLoading] = useState(false)
     const [editingId, setEditingId] = useState(null)
 
@@ -20,8 +19,7 @@ function StockPortfolio({ stockData, setStockData }) {
             lastPriceUpdate: null
         }
         const updatedData = [newStock, ...stockData]
-        setStockData(updatedData)
-        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
+        onUpdate(updatedData)
         setEditingId(newStock.id)
     }
 
@@ -29,8 +27,7 @@ function StockPortfolio({ stockData, setStockData }) {
     const handleDeleteRow = (id) => {
         if (!confirm('Are you sure you want to delete this stock entry?')) return
         const updatedData = stockData.filter(item => item.id !== id)
-        setStockData(updatedData)
-        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
+        onUpdate(updatedData)
     }
 
     // Update a field in a row
@@ -41,8 +38,7 @@ function StockPortfolio({ stockData, setStockData }) {
             }
             return item
         })
-        setStockData(updatedData)
-        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
+        onUpdate(updatedData)
     }
 
     // Fetch current prices for all symbols
@@ -114,8 +110,7 @@ function StockPortfolio({ stockData, setStockData }) {
             return item
         })
 
-        setStockData(updatedData)
-        saveToLocalStorage('stockData', updatedData)
+        onUpdate(updatedData)
         setLoading(false)
     }
 

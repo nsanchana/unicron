@@ -6,7 +6,7 @@ import Dashboard from './components/Dashboard'
 import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
-import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
+import { saveToLocalStorage, loadFromLocalStorage, exportToCSV } from './utils/storage'
 import { API_BASE_URL } from './config'
 
 // Helper function to format time as HH:MM:SS with DD/MM/YYYY
@@ -38,6 +38,8 @@ function App() {
   const [lastCloudSync, setLastCloudSync] = useState(null)
   const saveTimeoutRef = useRef(null)
 
+  const [initialCloudLoadComplete, setInitialCloudLoadComplete] = useState(false)
+
   // Load data from cloud
   const loadFromCloud = useCallback(async (userId) => {
     try {
@@ -51,12 +53,12 @@ function App() {
 
       const cloudData = await response.json()
 
-      // Use cloud data if it exists, otherwise keep local data
-      if (cloudData.researchData?.length > 0) {
+      // Always update local state with cloud data to ensure sync (even if empty)
+      if (cloudData.researchData !== undefined) {
         setResearchData(cloudData.researchData)
         saveToLocalStorage('researchData', cloudData.researchData)
       }
-      if (cloudData.tradeData?.length > 0) {
+      if (cloudData.tradeData !== undefined) {
         setTradeData(cloudData.tradeData)
         saveToLocalStorage('tradeData', cloudData.tradeData)
       }
@@ -64,9 +66,9 @@ function App() {
         setSettings(cloudData.settings)
         saveToLocalStorage('settings', cloudData.settings)
       }
-      if (cloudData.stockData && Array.isArray(cloudData.stockData)) {
+      if (cloudData.stockData !== undefined && Array.isArray(cloudData.stockData)) {
         setStockData(cloudData.stockData)
-        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, cloudData.stockData)
+        saveToLocalStorage('stockData', cloudData.stockData)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -76,6 +78,8 @@ function App() {
       console.error('Failed to load from cloud:', error)
       setCloudSyncStatus('error')
       return false
+    } finally {
+      setInitialCloudLoadComplete(true)
     }
   }, [])
 
@@ -146,7 +150,7 @@ function App() {
     if (savedResearch) setResearchData(savedResearch)
     if (savedTrades) setTradeData(savedTrades)
     if (savedSettings) setSettings(savedSettings)
-    const savedStocks = loadFromLocalStorage(STORAGE_KEYS.STOCK_DATA)
+    const savedStocks = loadFromLocalStorage('stockData')
     if (savedStocks) setStockData(savedStocks)
 
     // Then sync from cloud (will override local data if cloud has data)
@@ -162,7 +166,7 @@ function App() {
 
   // Auto-save to cloud when data changes
   useEffect(() => {
-    if (!user) return
+    if (!user || !initialCloudLoadComplete) return
 
     // Don't save on initial load
     const hasData = researchData.length > 0 || tradeData.length > 0 || stockData.length > 0
@@ -184,29 +188,55 @@ function App() {
     }
   }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData])
 
-  const handleExportResearch = () => {
-    exportToCSV(researchData, 'company-research')
+  // Handle full data import
+  const handleImportData = (importedData) => {
+    try {
+      if (importedData.researchData) setResearchData(importedData.researchData)
+      if (importedData.tradeData) setTradeData(importedData.tradeData)
+      if (importedData.stockData) setStockData(importedData.stockData)
+      if (importedData.settings) {
+        setSettings(importedData.settings)
+        // Also update local storage for settings immediately
+        localStorage.setItem('settings', JSON.stringify(importedData.settings))
+      }
+
+      // Force a save to cloud if user is logged in
+      if (user) {
+        debouncedSaveToCloud(user.id || user.username, {
+          researchData: importedData.researchData || researchData,
+          tradeData: importedData.tradeData || tradeData,
+          stockData: importedData.stockData || stockData,
+          settings: importedData.settings || settings
+        })
+      }
+      return true
+    } catch (error) {
+      console.error('Import failed:', error)
+      return false
+    }
   }
 
-  const handleExportTrades = () => {
-    exportToCSV(tradeData, 'trade-analysis')
-  }
+  // Handle full data export
+  const handleExportData = () => {
+    const fullData = {
+      researchData,
+      tradeData,
+      stockData,
+      settings,
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    }
 
-  const handleSettingsUpdate = (newSettings) => {
-    setSettings(newSettings)
-    saveToLocalStorage('settings', newSettings)
-  }
-
-  const handleThemeToggle = (newTheme) => {
-    setTheme(newTheme)
-    localStorage.setItem('unicron_theme', newTheme)
-    document.documentElement.classList.toggle('light-mode', newTheme === 'light')
-  }
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData)
-    // Store user in localStorage
-    localStorage.setItem('unicron_user', JSON.stringify(userData))
+    // Create and download JSON file
+    const dataStr = JSON.stringify(fullData, null, 2)
+    const blob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `unicron_backup_${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const handleLogout = async () => {
@@ -389,7 +419,10 @@ function App() {
         {activeTab === 'stocks' && (
           <StockPortfolio
             stockData={stockData}
-            setStockData={setStockData}
+            onUpdate={(newData) => {
+              setStockData(newData)
+              saveToLocalStorage('stockData', newData)
+            }}
           />
         )}
         {activeTab === 'settings' && (
@@ -398,6 +431,8 @@ function App() {
             onSettingsUpdate={handleSettingsUpdate}
             theme={theme}
             onThemeToggle={handleThemeToggle}
+            onImportData={handleImportData}
+            onExportData={handleExportData}
           />
         )}
       </main>

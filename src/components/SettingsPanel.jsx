@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Settings, Save, DollarSign, Target, AlertTriangle, Sun, Moon } from 'lucide-react'
+import { Settings, Save, DollarSign, Target, AlertTriangle, Sun, Moon, Download } from 'lucide-react'
 
-function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
+function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImportData, onExportData }) {
   const [formData, setFormData] = useState(settings)
   const [saved, setSaved] = useState(false)
 
@@ -158,8 +158,8 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
                 <button
                   onClick={() => onThemeToggle('light')}
                   className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold ${theme === 'light'
-                      ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.2)]'
-                      : 'text-gray-400 hover:text-white'
+                    ? 'bg-white text-gray-900 shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                    : 'text-gray-400 hover:text-white'
                     }`}
                 >
                   <Sun className="h-4 w-4" />
@@ -168,8 +168,8 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
                 <button
                   onClick={() => onThemeToggle('dark')}
                   className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold ${theme === 'dark'
-                      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]'
-                      : 'text-gray-400 hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]'
+                    : 'text-gray-400 hover:text-white'
                     }`}
                 >
                   <Moon className="h-4 w-4" />
@@ -178,74 +178,133 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle }) {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-8">
-          <div className="glass-card bg-gradient-to-b from-blue-600/5 to-transparent border-blue-500/20">
-            <h3 className="text-sm font-black text-blue-400 mb-6 uppercase tracking-[0.2em] border-b border-blue-500/10 pb-4 flex items-center">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Strategic Guardrails
-            </h3>
-            <div className="space-y-6">
-              <div className="group">
-                <p className="text-xs font-bold text-gray-500 mb-2">EXPECTED ANNUAL YIELD</p>
-                <div className="text-2xl font-black text-white">
-                  ${(formData.weeklyPremiumTarget.min * 52).toLocaleString()} - ${(formData.weeklyPremiumTarget.max * 52).toLocaleString()}
-                </div>
-                <div className="h-1 w-full glass-item rounded-full mt-2 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 w-[70%]" />
-                </div>
-              </div>
+          {/* Data Management Card */}
+          <div className="glass-card overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600/10 to-transparent p-6 border-b border-white/5">
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <Save className="h-5 w-5 mr-2 text-purple-400" />
+                Data Management
+              </h3>
+            </div>
 
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-4">
-                <h4 className="text-xs font-bold text-gray-400">CORE DIRECTIVES</h4>
-                <div className="space-y-3">
-                  {[
-                    { text: '30D Cash Secured Puts', color: 'bg-emerald-400' },
-                    { text: '5D Covered Calls', color: 'bg-blue-400' },
-                    { text: 'Capital Preservation First', color: 'bg-red-400' }
-                  ].map((rule, idx) => (
-                    <div key={idx} className="flex items-center space-x-3">
-                      <div className={`w-1.5 h-1.5 rounded-full ${rule.color} shadow-[0_0_8px_currentColor]`} />
-                      <span className="text-sm font-bold text-gray-300">{rule.text}</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="p-8">
+              <p className="text-gray-400 text-sm mb-6">
+                Manually backup your research, trades, and settings to a local file, or restore from a previous backup.
+                Use this to transfer data between devices.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={onExportData}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl border border-white/10 transition-all font-bold group"
+                >
+                  <Download className="h-4 w-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <span>Export Backup</span>
+                </button>
+
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0]
+                      if (!file) return
+
+                      const reader = new FileReader()
+                      reader.onload = (event) => {
+                        try {
+                          const data = JSON.parse(event.target.result)
+                          const success = onImportData(data)
+                          if (success) {
+                            alert('Data imported successfully!')
+                            window.location.reload() // Reload to reflect changes
+                          }
+                        } catch (err) {
+                          alert('Failed to parse import file: ' + err.message)
+                        }
+                      }
+                      reader.readAsText(file)
+                    }}
+                  />
+                  <div className="flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl border border-white/10 transition-all font-bold h-full group">
+                    <Save className="h-4 w-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <span>Import Backup</span>
+                  </div>
+                </label>
               </div>
             </div>
           </div>
-
-          <button
-            onClick={handleSave}
-            disabled={errors.length > 0}
-            className="w-full glass-card bg-blue-600 hover:bg-blue-500 text-white border-blue-400/50 py-6 transition-all duration-300 flex items-center justify-center space-x-3 group active:scale-[0.98] disabled:opacity-50"
-          >
-            <div className="p-2 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform">
-              <Save className="h-6 w-6" />
-            </div>
-            <span className="text-xl font-black tracking-tight uppercase">
-              {saved ? 'Securely Updated' : 'Commit Changes'}
-            </span>
-          </button>
-
-          {errors.length > 0 && (
-            <div className="glass-card border-red-500/30 bg-red-500/5 p-6 animate-pulse">
-              <h4 className="text-sm font-bold text-red-400 mb-3 flex items-center">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                SYSTEM ERROR
-              </h4>
-              <ul className="space-y-1">
-                {errors.map((error, index) => (
-                  <li key={index} className="text-xs font-bold text-red-300 uppercase leading-relaxed">
-                    🚨 {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
-    </div>
+
+      <div className="space-y-8">
+        <div className="glass-card bg-gradient-to-b from-blue-600/5 to-transparent border-blue-500/20">
+          <h3 className="text-sm font-black text-blue-400 mb-6 uppercase tracking-[0.2em] border-b border-blue-500/10 pb-4 flex items-center">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Strategic Guardrails
+          </h3>
+          <div className="space-y-6">
+            <div className="group">
+              <p className="text-xs font-bold text-gray-500 mb-2">EXPECTED ANNUAL YIELD</p>
+              <div className="text-2xl font-black text-white">
+                ${(formData.weeklyPremiumTarget.min * 52).toLocaleString()} - ${(formData.weeklyPremiumTarget.max * 52).toLocaleString()}
+              </div>
+              <div className="h-1 w-full glass-item rounded-full mt-2 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 w-[70%]" />
+              </div>
+            </div>
+
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-4">
+              <h4 className="text-xs font-bold text-gray-400">CORE DIRECTIVES</h4>
+              <div className="space-y-3">
+                {[
+                  { text: '30D Cash Secured Puts', color: 'bg-emerald-400' },
+                  { text: '5D Covered Calls', color: 'bg-blue-400' },
+                  { text: 'Capital Preservation First', color: 'bg-red-400' }
+                ].map((rule, idx) => (
+                  <div key={idx} className="flex items-center space-x-3">
+                    <div className={`w-1.5 h-1.5 rounded-full ${rule.color} shadow-[0_0_8px_currentColor]`} />
+                    <span className="text-sm font-bold text-gray-300">{rule.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={errors.length > 0}
+          className="w-full glass-card bg-blue-600 hover:bg-blue-500 text-white border-blue-400/50 py-6 transition-all duration-300 flex items-center justify-center space-x-3 group active:scale-[0.98] disabled:opacity-50"
+        >
+          <div className="p-2 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform">
+            <Save className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-black tracking-tight uppercase">
+            {saved ? 'Securely Updated' : 'Commit Changes'}
+          </span>
+        </button>
+
+        {errors.length > 0 && (
+          <div className="glass-card border-red-500/30 bg-red-500/5 p-6 animate-pulse">
+            <h4 className="text-sm font-bold text-red-400 mb-3 flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              SYSTEM ERROR
+            </h4>
+            <ul className="space-y-1">
+              {errors.map((error, index) => (
+                <li key={index} className="text-xs font-bold text-red-300 uppercase leading-relaxed">
+                  🚨 {error}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div >
+    </div >
   )
 }
 
