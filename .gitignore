@@ -7,3 +7,7 @@ dist/
 *.log
 .vercel
 .env*.local
+database.sqlite
+database.sqlite-journal
+database.sqlite
+database.sqlite-journal
