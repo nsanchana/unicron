@@ -30,6 +30,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
           researchData: [],
           tradeData: [],
+          stockData: [],
           settings: {
             portfolioSize: 71000,
             weeklyPremiumTarget: { min: 340, max: 410 },
@@ -44,11 +45,12 @@ export default async function handler(req, res) {
 
     // POST/PUT - Save user data to cloud
     if (req.method === 'POST' || req.method === 'PUT') {
-      const { researchData, tradeData, settings } = req.body
+      const { researchData, tradeData, settings, stockData } = req.body
 
       const userData = {
         researchData: researchData || [],
         tradeData: tradeData || [],
+        stockData: stockData || [],
         settings: settings || {
           portfolioSize: 71000,
           weeklyPremiumTarget: { min: 340, max: 410 },

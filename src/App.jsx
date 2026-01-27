@@ -6,7 +6,7 @@ import Dashboard from './components/Dashboard'
 import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
-import { saveToLocalStorage, loadFromLocalStorage, exportToCSV } from './utils/storage'
+import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
 import { API_BASE_URL } from './config'
 
 // Helper function to format time as HH:MM:SS with DD/MM/YYYY
@@ -66,7 +66,7 @@ function App() {
       }
       if (cloudData.stockData && Array.isArray(cloudData.stockData)) {
         setStockData(cloudData.stockData)
-        saveToLocalStorage('stockData', cloudData.stockData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, cloudData.stockData)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -146,7 +146,7 @@ function App() {
     if (savedResearch) setResearchData(savedResearch)
     if (savedTrades) setTradeData(savedTrades)
     if (savedSettings) setSettings(savedSettings)
-    const savedStocks = loadFromLocalStorage('stockData')
+    const savedStocks = loadFromLocalStorage(STORAGE_KEYS.STOCK_DATA)
     if (savedStocks) setStockData(savedStocks)
 
     // Then sync from cloud (will override local data if cloud has data)

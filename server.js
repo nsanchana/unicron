@@ -7,7 +7,6 @@ import dotenv from 'dotenv'
 import {
   requireAuth,
   getSessionConfig,
-  getSessionConfig,
   AICache,
   UserData
 } from './auth.js'

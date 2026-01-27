@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   PORTFOLIO_SETTINGS: 'optionsTrading_portfolioSettings',
   RESEARCH_DATA: 'optionsTrading_researchData',
   TRADE_DATA: 'optionsTrading_tradeData',
+  STOCK_DATA: 'optionsTrading_stockData',
   LAST_REFRESH: 'optionsTrading_lastRefresh'
 }
 
@@ -67,9 +68,9 @@ export function loadResearchData() {
   try {
     const data = localStorage.getItem(STORAGE_KEYS.RESEARCH_DATA)
     if (!data) return []
-    
+
     const researchData = JSON.parse(data)
-    
+
     // Migrate old 0-10 ratings to 0-100 scale
     const migratedData = researchData.map(item => {
       if (item.overallRating !== undefined && item.overallRating <= 10 && item.overallRating >= 0) {
@@ -80,12 +81,12 @@ export function loadResearchData() {
       }
       return item
     })
-    
+
     // Save migrated data back to localStorage
     if (migratedData.some((item, index) => item.overallRating !== researchData[index].overallRating)) {
       saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, migratedData)
     }
-    
+
     return migratedData
   } catch (error) {
     console.error('Error loading research data:', error)

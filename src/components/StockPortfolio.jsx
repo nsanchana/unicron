@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Save, RefreshCw, DollarSign, TrendingUp, TrendingDown, Briefcase } from 'lucide-react'
-import { saveToLocalStorage } from '../utils/storage'
+import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 
 function StockPortfolio({ stockData, setStockData }) {
     const [loading, setLoading] = useState(false)
@@ -21,7 +21,7 @@ function StockPortfolio({ stockData, setStockData }) {
         }
         const updatedData = [newStock, ...stockData]
         setStockData(updatedData)
-        saveToLocalStorage('stockData', updatedData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
         setEditingId(newStock.id)
     }
 
@@ -30,7 +30,7 @@ function StockPortfolio({ stockData, setStockData }) {
         if (!confirm('Are you sure you want to delete this stock entry?')) return
         const updatedData = stockData.filter(item => item.id !== id)
         setStockData(updatedData)
-        saveToLocalStorage('stockData', updatedData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
     }
 
     // Update a field in a row
@@ -42,7 +42,7 @@ function StockPortfolio({ stockData, setStockData }) {
             return item
         })
         setStockData(updatedData)
-        saveToLocalStorage('stockData', updatedData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedData)
     }
 
     // Fetch current prices for all symbols
@@ -306,8 +306,8 @@ function StockPortfolio({ stockData, setStockData }) {
                                             {/* P&L */}
                                             <td className="px-3 py-3 text-right whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-bold ${pnl >= 0
-                                                        ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                    : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                                     }`}>
                                                     {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
