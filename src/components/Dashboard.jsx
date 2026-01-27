@@ -58,41 +58,45 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
   const glowColor = isMaxAchieved ? 'rgba(16, 185, 129, 0.3)' : isMinAchieved ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.15)'
 
   return (
-    <div className="glass-card group relative overflow-hidden">
+    <div className="glass-card group relative overflow-hidden flex flex-col h-full">
       {/* Background glow pulse */}
       <div
         className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] transition-all duration-700 group-hover:blur-[60px]"
         style={{ backgroundColor: glowColor }}
       ></div>
 
-      <h3 className="text-lg font-bold mb-6 flex items-center justify-between relative z-10">
+      <div className="flex items-center justify-between mb-8 relative z-10">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-xl border border-gray-700/50 bg-gray-900/50 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`}>
+          <div className={`p-2.5 rounded-xl border border-gray-700/50 bg-gray-900/50 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`}>
             {Icon && <Icon className="h-5 w-5" />}
           </div>
-          <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{label} Earnings</span>
+          <span className="text-xl font-black tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{label} Earnings</span>
         </div>
-        <div className="text-sm tracking-wider text-emerald-400 font-black uppercase bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30 font-mono">
+        <div className="text-[11px] tracking-[0.2em] text-emerald-400 font-black uppercase bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/30 font-mono">
           Goal: ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
-      </h3>
+      </div>
 
-      <div className="space-y-7 relative z-10">
+      <div className="flex-1 flex flex-col justify-between space-y-8 relative z-10">
         <div>
           <div className="flex justify-between items-start mb-6">
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">Current Position</p>
-              <div className="flex flex-col space-y-1">
-                <span className="text-4xl font-black text-white font-mono leading-none">${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                {projection && (
-                  <div className="flex items-center space-x-2 pt-1">
-                    <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 px-1.5 py-0.5 rounded">Projected</span>
-                    <span className="text-lg font-black text-blue-300 font-mono tracking-tight">${projection.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                )}
+            <div className="min-h-[82px] flex flex-col justify-end">
+              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-2">Current Position</p>
+              <div className="flex flex-col">
+                <span className="text-4xl font-black text-white font-mono leading-none tracking-tighter">${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <div className="h-6 mt-1.5">
+                  {projection ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[8px] text-blue-400 font-black uppercase tracking-widest bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">Projected</span>
+                      <span className="text-sm font-black text-blue-300 font-mono tracking-tight">${projection.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    </div>
+                  ) : (
+                    <div className="opacity-0">Placeholder</div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="text-right pt-1">
+            <div className="text-right pt-2">
               <span className={`text-2xl font-black font-mono leading-none ${isMinAchieved ? 'text-emerald-400' : 'text-yellow-400'}`}>
                 {((current / max) * 100).toFixed(0)}%
               </span>
@@ -100,7 +104,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
             </div>
           </div>
 
-          <div className="relative pt-10 pb-8 mt-4">
+          <div className="relative pt-10 pb-8 mt-10">
             {/* Main Bar Track */}
             <div className="w-full bg-gray-900/80 rounded-full h-5 overflow-hidden border border-gray-700/30 shadow-inner">
               {/* Projection Ghost Bar */}
@@ -128,34 +132,34 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
               </div>
             </div>
 
-            {/* Threshold Markers - Updated for better spacing */}
-            <div className="absolute top-8 h-12 w-[1px] bg-yellow-400/30 z-20" style={{ left: `${minPos}%` }}>
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <div className={`w-2 h-2 rounded-full mb-1 transition-all ${isMinAchieved ? 'bg-yellow-400 shadow-[0_0_8px_#facc15]' : 'bg-gray-600'}`}></div>
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter font-mono bg-black/40 px-1 rounded-sm">${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            {/* Threshold Markers - Standardized at vertical sync */}
+            <div className="absolute top-10 h-10 w-[1px] bg-yellow-400/30 z-20" style={{ left: `${minPos}%` }}>
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <span className="text-[10px] text-gray-500 font-black uppercase tracking-tighter font-mono mb-1">${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <div className={`w-2.5 h-2.5 rounded-full border-2 border-gray-900 transition-all ${isMinAchieved ? 'bg-yellow-400 shadow-[0_0_8px_#facc15]' : 'bg-gray-600'}`}></div>
               </div>
             </div>
 
-            <div className="absolute top-8 h-12 w-[1px] bg-emerald-400/30 z-20" style={{ left: `${maxPos}%` }}>
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                <div className={`w-2 h-2 rounded-full mb-1 transition-all ${isMaxAchieved ? 'bg-emerald-400 shadow-[0_0_8px_#10b981]' : 'bg-gray-600'}`}></div>
-                <span className="text-[9px] text-emerald-400/70 font-black uppercase tracking-tighter font-mono bg-black/40 px-1 rounded-sm">${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <div className="absolute top-10 h-10 w-[1px] bg-emerald-400/30 z-20" style={{ left: `${maxPos}%` }}>
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <span className="text-[10px] text-emerald-400/70 font-black uppercase tracking-tighter font-mono mb-1">${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <div className={`w-2.5 h-2.5 rounded-full border-2 border-gray-900 transition-all ${isMaxAchieved ? 'bg-emerald-400 shadow-[0_0_8px_#10b981]' : 'bg-gray-600'}`}></div>
               </div>
             </div>
 
-            {/* Projection Marker - Fixed positioning */}
+            {/* Projection Marker */}
             {projectionPos && (
-              <div className="absolute top-8 h-14 w-[1px] bg-blue-400/50 z-20 border-l border-blue-400/30" style={{ left: `${projectionPos}%` }}>
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                  <div className={`w-2 h-2 rounded-full mb-1 transition-all bg-blue-400 shadow-[0_0_10px_#60a5fa]`}></div>
-                  <span className="text-[8px] text-blue-400 font-black uppercase tracking-[0.1em] whitespace-nowrap bg-blue-500/5 px-2 py-0.5 rounded border border-blue-500/10">Run-Rate</span>
+              <div className="absolute top-10 h-14 w-[1px] bg-blue-400/50 z-20 border-l border-blue-400/30" style={{ left: `${projectionPos}%` }}>
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                  <div className={`w-3 h-3 rounded-full border-4 border-gray-900 transition-all bg-blue-400 shadow-[0_0_10px_#60a5fa]`}></div>
+                  <span className="text-[9px] text-blue-400 font-black uppercase tracking-[0.2em] whitespace-nowrap bg-blue-500/5 px-2 py-1 rounded border border-blue-500/10 mt-1">Run-Rate</span>
                 </div>
               </div>
             )}
 
             {current > max && currentPos < 100 && (
-              <div className="absolute -right-2 top-8 h-10 flex items-center" style={{ left: `calc(${currentPos}% + 8px)` }}>
-                <span className="text-[10px] font-black text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded border border-cyan-400/20 animate-pulse">
+              <div className="absolute -right-2 top-10 h-10 flex items-center" style={{ left: `calc(${currentPos}% + 12px)` }}>
+                <span className="text-[10px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded-lg border border-cyan-400/20 animate-pulse uppercase tracking-wider">
                   +{((current / max - 1) * 100).toFixed(0)}%
                 </span>
               </div>
@@ -163,27 +167,29 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
           </div>
         </div>
 
-        {isMaxAchieved ? (
-          <div className="flex items-center space-x-3 text-emerald-400 bg-emerald-950/30 p-3 rounded-xl border border-emerald-500/20 text-xs font-bold animate-float">
-            <CheckCircle className="h-4 w-4" />
-            <span className="uppercase tracking-wide">Target exceeded! Incredible performance! 🚀</span>
-          </div>
-        ) : isMinAchieved ? (
-          <div className="flex items-center space-x-3 text-green-400 bg-green-950/30 p-3 rounded-xl border border-green-500/20 text-xs font-bold">
-            <CheckCircle className="h-4 w-4" />
-            <span className="uppercase tracking-wide">Minimum floor target achieved! 🎉</span>
-          </div>
-        ) : projection >= max ? (
-          <div className="flex items-center space-x-3 text-blue-400 bg-blue-950/30 p-3 rounded-xl border border-blue-500/20 text-xs font-bold">
-            <TrendingUp className="h-4 w-4" />
-            <span className="uppercase tracking-wide">On track to reach yearly target! Keep it up! 📈</span>
-          </div>
-        ) : current > 0 && (
-          <div className="flex items-center space-x-3 text-yellow-400 bg-yellow-950/20 p-3 rounded-xl border border-yellow-500/20 text-xs font-bold">
-            <AlertCircle className="h-4 w-4" />
-            <span className="uppercase tracking-wide">Increase volume to reach goal</span>
-          </div>
-        )}
+        <div className="pt-4">
+          {isMaxAchieved ? (
+            <div className="flex items-center space-x-3 text-emerald-400 bg-emerald-950/30 p-4 rounded-xl border border-emerald-500/20 text-xs font-black animate-float">
+              <CheckCircle className="h-5 w-5 shrink-0" />
+              <span className="uppercase tracking-[0.1em]">Target exceeded! Exceptional run rate 🚀</span>
+            </div>
+          ) : isMinAchieved ? (
+            <div className="flex items-center space-x-3 text-green-400 bg-green-950/30 p-4 rounded-xl border border-green-500/20 text-xs font-black">
+              <CheckCircle className="h-5 w-5 shrink-0" />
+              <span className="uppercase tracking-[0.1em]">Minimum floor target secured 🎉</span>
+            </div>
+          ) : projection >= max ? (
+            <div className="flex items-center space-x-3 text-blue-400 bg-blue-950/30 p-4 rounded-xl border border-blue-500/20 text-xs font-black">
+              <TrendingUp className="h-5 w-5 shrink-0" />
+              <span className="uppercase tracking-[0.1em]">Projection tracking to target goal 📈</span>
+            </div>
+          ) : current > 0 && (
+            <div className="flex items-center space-x-3 text-yellow-400 bg-yellow-950/20 p-4 rounded-xl border border-yellow-500/20 text-xs font-black">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span className="uppercase tracking-[0.1em]">Deployment volume increase required</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -397,75 +403,76 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     <div className="space-y-6">
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="stat-card-primary">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl">
+        <div className="stat-card-primary flex flex-col justify-between">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
               <DollarSign className="h-6 w-6 text-blue-400" />
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Portfolio Size</p>
-              <p className="text-2xl font-black text-white">${dashboardStats.portfolioSize.toLocaleString()}</p>
-            </div>
+            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Portfolio Size</p>
+          </div>
+          <div>
+            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
+            <div className="h-4"></div>
           </div>
         </div>
 
-        <div className="stat-card-success">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
+        <div className="stat-card-success flex flex-col justify-between">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400">
               <TrendingUp className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Est. Annual Return</p>
-              <p className="text-2xl font-black text-white">~{((dashboardStats.yearlyPremium / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
-              <p className="text-[10px] text-gray-500">Based on YTD premium</p>
-            </div>
+            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
+          </div>
+          <div>
+            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyPremium / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
           </div>
         </div>
 
-        <div className="stat-card-primary border-purple-500/20">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-purple-500/10 rounded-2xl">
+        <div className="stat-card-primary border-purple-500/20 flex flex-col justify-between">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
               <Target className="h-6 w-6 text-purple-400" />
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Allocated Capital</p>
-              <p className={`text-2xl font-black ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
-                ${dashboardStats.totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-[10px] text-gray-500">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
-            </div>
+            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Allocated Capital</p>
+          </div>
+          <div>
+            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
+              ${dashboardStats.totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
           </div>
         </div>
 
-        <div className="stat-card-warning">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-orange-500/10 rounded-2xl">
+        <div className="stat-card-warning flex flex-col justify-between">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
               <Calendar className="h-6 w-6 text-orange-400" />
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Active Trades</p>
-              <p className="text-2xl font-black text-white">{dashboardStats.activeTradesCount}</p>
-              <p className="text-[10px] text-gray-500">{dashboardStats.totalTrades} total trades</p>
-            </div>
+            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Active Trades</p>
+          </div>
+          <div>
+            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
           </div>
         </div>
 
-        <div className={`stat-card-primary ${dashboardStats.totalStockPnL >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
-          <div className="flex items-center space-x-4">
-            <div className={`p-3 rounded-2xl ${dashboardStats.totalStockPnL >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+        <div className={`stat-card-primary flex flex-col justify-between ${dashboardStats.totalStockPnL >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
+          <div className="flex items-center space-x-4 mb-4">
+            <div className={`p-3 rounded-2xl border ${dashboardStats.totalStockPnL >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
               {dashboardStats.totalStockPnL >= 0 ? (
                 <TrendingUp className="h-6 w-6 text-green-400" />
               ) : (
                 <TrendingDown className="h-6 w-6 text-red-400" />
               )}
             </div>
-            <div>
-              <p className="text-[11px] text-gray-400 uppercase font-bold tracking-widest">Stock P&L</p>
-              <p className={`text-2xl font-black ${dashboardStats.totalStockPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {dashboardStats.totalStockPnL >= 0 ? '+' : ''}${dashboardStats.totalStockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-[10px] text-gray-500">Total Unrealized + Realized</p>
-            </div>
+            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Stock P&L</p>
+          </div>
+          <div>
+            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.totalStockPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {dashboardStats.totalStockPnL >= 0 ? '+' : ''}${dashboardStats.totalStockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
           </div>
         </div>
       </div>
