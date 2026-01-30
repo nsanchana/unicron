@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Save, RefreshCw, DollarSign, TrendingUp, TrendingDown, Briefcase } from 'lucide-react'
+import CompanyLogo from './CompanyLogo'
 
 function StockPortfolio({ stockData, onUpdate }) {
     const [loading, setLoading] = useState(false)
@@ -223,9 +224,7 @@ function StockPortfolio({ stockData, onUpdate }) {
                                             {/* Symbol */}
                                             <td className="px-3 py-3">
                                                 <div className="flex items-center space-x-2">
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-300 shrink-0">
-                                                        {item.symbol ? item.symbol.substring(0, 2) : '??'}
-                                                    </div>
+                                                    <CompanyLogo symbol={item.symbol} className="w-8 h-8" textSize="text-[10px]" />
                                                     <input
                                                         type="text"
                                                         value={item.symbol}

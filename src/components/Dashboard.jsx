@@ -9,12 +9,13 @@ import {
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import { scrapeCompanyData } from '../services/webScraping'
 import { useState } from 'react'
+import CompanyLogo from './CompanyLogo'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
   const date = new Date(dateString)
   const day = String(date.getDate()).padStart(2, '0')
-  const month = date.toLocaleString('defaut', { month: 'short' }).toUpperCase()
+  const month = date.toLocaleString('default', { month: 'short' }).toUpperCase()
   const year = date.getFullYear()
   return `${day} ${month} ${year}`
 }
@@ -563,14 +564,8 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                     {/* Header Row */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
                       <div className="flex items-center space-x-4">
-                        {/* Gradient Initials Icon */}
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 p-[1px] shadow-lg shadow-blue-500/20">
-                          <div className="w-full h-full rounded-2xl bg-gray-900/90 backdrop-blur-xl flex items-center justify-center">
-                            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400">
-                              {item.symbol.slice(0, 2)}
-                            </span>
-                          </div>
-                        </div>
+                        {/* Company Logo */}
+                        <CompanyLogo symbol={item.symbol} className="w-14 h-14" textSize="text-xl" />
 
                         <div>
                           <h4 className="text-2xl font-black tracking-tight text-white mb-0.5">{item.symbol}</h4>
@@ -718,10 +713,13 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                     }`}>
                     <div className="flex justify-between items-start mb-4">
                       {/* Left: Title & Badges */}
-                      <div className="flex items-center flex-wrap gap-2">
-                        <h4 className="font-bold text-lg text-white">
-                          {item.symbol} {item.type === 'put' || item.tradeType === 'cashSecuredPut' ? 'Cash-Secured Put' : 'Covered Call'}
-                        </h4>
+                      <div className="flex items-center flex-wrap gap-3">
+                        <div className="flex items-center">
+                          <CompanyLogo symbol={item.symbol} className="w-10 h-10 mr-3" />
+                          <h4 className="font-bold text-lg text-white">
+                            {item.symbol} {item.type === 'put' || item.tradeType === 'cashSecuredPut' ? 'Cash-Secured Put' : 'Covered Call'}
+                          </h4>
+                        </div>
 
                         {item.status === 'planned' && (
                           <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-blue-600 text-white rounded">

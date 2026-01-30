@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
+import CompanyLogo from './CompanyLogo'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -1072,7 +1073,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                     }`}>
                     {/* Top Row: Symbol, Type, and Status */}
                     <div className="flex justify-between items-start mb-3">
-                      <div>
+                      <div className="flex items-center">
+                        <CompanyLogo symbol={trade.symbol} className="w-10 h-10 mr-3" />
                         <h4 className="font-semibold text-lg flex items-center flex-wrap gap-2">
                           <span>{trade.symbol} {trade.tradeType === 'cashSecuredPut' ? 'Cash-Secured Put' : 'Covered Call'}</span>
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
+import CompanyLogo from './CompanyLogo'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -973,14 +974,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   {/* Header Row */}
                   <div className="flex justify-between items-start mb-6 relative z-10">
                     <div className="flex items-center space-x-4">
-                      {/* Gradient Initials Icon */}
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 p-[1px] shadow-lg shadow-blue-500/20">
-                        <div className="w-full h-full rounded-2xl bg-gray-900/90 backdrop-blur-xl flex items-center justify-center">
-                          <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400">
-                            {item.symbol.slice(0, 2)}
-                          </span>
-                        </div>
-                      </div>
+                      {/* Company Logo */}
+                      <CompanyLogo symbol={item.symbol} className="w-14 h-14" textSize="text-xl" />
 
                       <div>
                         <h4 className="text-2xl font-black tracking-tight text-white mb-0.5">{item.symbol}</h4>
