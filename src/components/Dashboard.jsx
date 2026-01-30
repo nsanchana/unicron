@@ -432,7 +432,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyPremium / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
+            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
           </div>
         </div>
