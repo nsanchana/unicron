@@ -143,11 +143,7 @@ const StrategySection = ({ notes, onSave }) => {
                     }}
                 />
 
-                {(!content && !isEditing) && (
-                    <div className="absolute top-6 left-6 pointer-events-none text-gray-600 italic">
-                        Capture your trading strategy, market observations, and next moves here...
-                    </div>
-                )}
+
             </div>
 
             <style>{`
