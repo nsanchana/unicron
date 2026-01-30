@@ -97,7 +97,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
           {/* % Target Card */}
           <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/20 to-yellow-500/50"></div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">% Target</p>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
             <span className={`text-xl lg:text-2xl font-black font-mono tracking-tight ${isMinAchieved ? 'text-yellow-400' : 'text-orange-400'}`}>
               {((current / max) * 100).toFixed(0)}%
             </span>
