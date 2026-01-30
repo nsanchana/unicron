@@ -80,7 +80,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
           <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group/card">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 to-emerald-500/50"></div>
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Target</p>
-            <span className="text-xl lg:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+            <span className="text-lg lg:text-xl font-black text-emerald-400 font-mono tracking-tight">
               ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
@@ -89,7 +89,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
           <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white/10 to-white/30"></div>
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Current</p>
-            <span className="text-xl lg:text-2xl font-black text-white font-mono tracking-tight">
+            <span className="text-lg lg:text-xl font-black text-white font-mono tracking-tight">
               ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
@@ -98,7 +98,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
           <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/20 to-yellow-500/50"></div>
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
-            <span className={`text-xl lg:text-2xl font-black font-mono tracking-tight ${isMinAchieved ? 'text-yellow-400' : 'text-orange-400'}`}>
+            <span className={`text-lg lg:text-xl font-black font-mono tracking-tight ${isMinAchieved ? 'text-yellow-400' : 'text-orange-400'}`}>
               {((current / max) * 100).toFixed(0)}%
             </span>
           </div>
@@ -134,44 +134,50 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
             {/* Current Position Dot (Pulse) */}
             <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] border-2 border-gray-900 z-20" style={{ left: `${Math.min(currentPos, 100)}%`, transform: 'translate(-50%, -50%)' }}></div>
-          </div>
 
-          {/* Floating Markers/Labels */}
+            {/* FLOATING MARKERS (Aligned Dots) */}
 
-          {/* MIN Marker */}
-          <div className="absolute top-0 z-20 transition-all duration-500" style={{ left: `${minPos}%`, transform: 'translateX(-50%)' }}>
-            <div className="flex flex-col items-center gap-1">
-              <span className="bg-[#1e1e1e] text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl whitespace-nowrap">
-                MIN ${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </span>
-              <div className="h-4 w-[1px] bg-yellow-500/50"></div>
-              <div className={`w-2 h-2 rounded-full border border-black ${isMinAchieved ? 'bg-yellow-500' : 'bg-gray-700'}`}></div>
-            </div>
-          </div>
-
-          {/* Goal Marker */}
-          <div className="absolute top-0 z-30 transition-all duration-500" style={{ left: `${maxPos}%`, transform: 'translateX(-50%)' }}>
-            <div className="flex flex-col items-center gap-1 -mt-5">
-              <span className="bg-[#022c22] text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl shadow-emerald-900/20 whitespace-nowrap">
-                GOAL
-              </span>
-              <div className="h-8 w-[1px] bg-emerald-500/50"></div>
-              <div className={`w-2.5 h-2.5 rounded-full border border-black ${isMaxAchieved ? 'bg-emerald-400' : 'bg-gray-600'}`}></div>
-            </div>
-          </div>
-
-          {/* Projection Marker */}
-          {projectionPos && (
-            <div className="absolute top-0 z-20 transition-all duration-500" style={{ left: `${Math.min(projectionPos, 100)}%`, transform: 'translateX(-50%)' }}>
-              <div className="flex flex-col items-center gap-1 -mt-8">
-                <span className="bg-blue-950/80 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl backdrop-blur-sm whitespace-nowrap">
-                  PROJECTED ${projection.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-                <div className="h-11 w-[1px] bg-blue-500/30 border-l border-dashed border-blue-400/50"></div>
-                <div className="w-2 h-2 rounded-full border border-black bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+            {/* MIN Marker */}
+            <div className="absolute top-1/2 -translate-y-1/2 z-30" style={{ left: `${minPos}%` }}>
+              <div className="relative flex flex-col items-center -translate-x-1/2">
+                <div className="absolute bottom-2 flex flex-col items-center pb-1">
+                  <span className="bg-[#1e1e1e] text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl whitespace-nowrap mb-1">
+                    MIN ${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                  <div className="h-4 w-[1px] bg-yellow-500/50"></div>
+                </div>
+                <div className={`w-2 h-2 rounded-full border border-black ${isMinAchieved ? 'bg-yellow-500' : 'bg-gray-700'}`}></div>
               </div>
             </div>
-          )}
+
+            {/* GOAL Marker */}
+            <div className="absolute top-1/2 -translate-y-1/2 z-40" style={{ left: `${maxPos}%` }}>
+              <div className="relative flex flex-col items-center -translate-x-1/2">
+                <div className="absolute bottom-2 flex flex-col items-center pb-1">
+                  <span className="bg-[#022c22] text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl shadow-emerald-900/20 whitespace-nowrap mb-1">
+                    GOAL ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                  <div className="h-8 w-[1px] bg-emerald-500/50"></div>
+                </div>
+                <div className={`w-2.5 h-2.5 rounded-full border border-black ${isMaxAchieved ? 'bg-emerald-400' : 'bg-gray-600'}`}></div>
+              </div>
+            </div>
+
+            {/* Projection Marker */}
+            {projectionPos && (
+              <div className="absolute top-1/2 -translate-y-1/2 z-20" style={{ left: `${Math.min(projectionPos, 100)}%` }}>
+                <div className="relative flex flex-col items-center -translate-x-1/2">
+                  <div className="absolute bottom-2 flex flex-col items-center pb-1">
+                    <span className="bg-blue-950/80 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl backdrop-blur-sm whitespace-nowrap mb-1">
+                      PROJECTED ${projection.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </span>
+                    <div className="h-12 w-[1px] bg-blue-500/30 border-l border-dashed border-blue-400/50"></div>
+                  </div>
+                  <div className="w-2 h-2 rounded-full border border-black bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Status Messaging */}
