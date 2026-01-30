@@ -40,13 +40,22 @@ const StrategySection = ({ notes, onSave }) => {
 
     const handleInput = () => {
         setIsEditing(true)
+        if (editorRef.current) {
+            // Check if text is actually empty (handling <br> remnants)
+            const text = editorRef.current.innerText.trim()
+            if (!text && !editorRef.current.querySelector('img')) {
+                setContent('')
+            } else {
+                setContent(editorRef.current.innerHTML)
+            }
+        }
     }
 
     const handleBlur = () => {
         setIsEditing(false)
-        // Optional: Auto-save on blur? 
-        // const html = editorRef.current.innerHTML
-        // onSave(html)
+        if (editorRef.current) {
+            setContent(editorRef.current.innerHTML)
+        }
     }
 
     return (
