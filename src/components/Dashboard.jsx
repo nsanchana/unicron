@@ -10,6 +10,7 @@ import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import { scrapeCompanyData } from '../services/webScraping'
 import { useState } from 'react'
 import CompanyLogo from './CompanyLogo'
+import StrategySection from './StrategySection'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -209,7 +210,9 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
   )
 }
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData }) => {
+
+
+const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, strategyNotes, setStrategyNotes }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -843,6 +846,9 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           )}
         </div>
       </div>
+
+      {/* Strategy Section */}
+      <StrategySection notes={strategyNotes} onSave={setStrategyNotes} />
     </div>
   )
 }

@@ -32,6 +32,7 @@ function App() {
     weeklyPremiumTarget: { min: 340, max: 410 },
     maxTradePercentage: 50
   })
+  const [strategyNotes, setStrategyNotes] = useState('')
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [theme, setTheme] = useState('dark')
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle') // 'idle', 'syncing', 'synced', 'error'
@@ -69,6 +70,10 @@ function App() {
       if (cloudData.stockData !== undefined && Array.isArray(cloudData.stockData)) {
         setStockData(cloudData.stockData)
         saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, cloudData.stockData)
+      }
+      if (cloudData.strategyNotes !== undefined) {
+        setStrategyNotes(cloudData.strategyNotes)
+        saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, cloudData.strategyNotes)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -151,6 +156,8 @@ function App() {
     if (savedSettings) setSettings(savedSettings)
     const savedStocks = loadFromLocalStorage(STORAGE_KEYS.STOCK_DATA)
     if (savedStocks) setStockData(savedStocks)
+    const savedNotes = loadFromLocalStorage(STORAGE_KEYS.STRATEGY_NOTES)
+    if (savedNotes) setStrategyNotes(savedNotes)
 
     // Then sync from cloud (will override local data if cloud has data)
     loadFromCloud(user.id || user.username)
@@ -175,7 +182,8 @@ function App() {
         researchData,
         tradeData,
         settings,
-        stockData
+        stockData,
+        strategyNotes
       })
     }
 
@@ -185,7 +193,7 @@ function App() {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData])
+  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData, strategyNotes])
 
   // Handle full data import
   const handleImportData = (importedData) => {
@@ -198,6 +206,7 @@ function App() {
         // Also update local storage for settings immediately
         localStorage.setItem('settings', JSON.stringify(importedData.settings))
       }
+      if (importedData.strategyNotes) setStrategyNotes(importedData.strategyNotes)
 
       // Force a save to cloud if user is logged in
       if (user) {
@@ -402,6 +411,11 @@ function App() {
             setTradeData={setTradeData}
             stockData={stockData}
             settings={settings}
+            strategyNotes={strategyNotes}
+            setStrategyNotes={(notes) => {
+              setStrategyNotes(notes)
+              saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+            }}
           />
         )}
         {activeTab === 'research' && (

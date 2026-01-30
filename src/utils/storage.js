@@ -5,7 +5,8 @@ export const STORAGE_KEYS = {
   RESEARCH_DATA: 'optionsTrading_researchData',
   TRADE_DATA: 'optionsTrading_tradeData',
   STOCK_DATA: 'optionsTrading_stockData',
-  LAST_REFRESH: 'optionsTrading_lastRefresh'
+  LAST_REFRESH: 'optionsTrading_lastRefresh',
+  STRATEGY_NOTES: 'optionsTrading_strategyNotes'
 }
 
 // Generic localStorage functions
