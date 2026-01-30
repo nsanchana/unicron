@@ -238,6 +238,11 @@ function App() {
     document.body.removeChild(link)
   }
 
+  const handleLoginSuccess = (userData) => {
+    setUser(userData)
+    localStorage.setItem('unicron_user', JSON.stringify(userData))
+  }
+
   const handleLogout = async () => {
     try {
       await fetch(`${API_BASE_URL}/api/auth/logout`, {

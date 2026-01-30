@@ -7,7 +7,6 @@ import dotenv from 'dotenv'
 import {
   requireAuth,
   getSessionConfig,
-  getSessionConfig,
   AICache,
   UserData
 } from './auth.js'
@@ -20,9 +19,10 @@ const PORT = 3001
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow all origins for dev, or echo it
+    callback(null, true)
+  },
   credentials: true
 }))
 app.use(express.json())
