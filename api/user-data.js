@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
     // POST/PUT - Save user data to cloud
     if (req.method === 'POST' || req.method === 'PUT') {
-      const { researchData, tradeData, settings, stockData } = req.body
+      const { researchData, tradeData, settings, stockData, strategyNotes } = req.body
 
       const userData = {
         researchData: researchData || [],
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
           weeklyPremiumTarget: { min: 340, max: 410 },
           maxTradePercentage: 50
         },
+        strategyNotes: strategyNotes || '',
         lastSynced: new Date().toISOString()
       }
 
