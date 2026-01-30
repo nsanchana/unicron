@@ -426,7 +426,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
           <div>
             <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
-            <div className="h-4"></div>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">at start of year</p>
           </div>
         </div>
 
