@@ -85,7 +85,7 @@ INSTRUCTIONS:
 `
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             systemInstruction: systemPrompt
         })
 
@@ -106,14 +106,14 @@ INSTRUCTIONS:
 
         return res.status(200).json({
             response: text,
-            model: 'gemini-1.5-flash'
+            model: 'gemini-2.5-flash'
         })
 
     } catch (error) {
         console.error('Unicron AI Chat error:', error)
         return res.status(500).json({
             error: 'Failed to generate response',
-            details: error.message
+            details: error.message || error.toString()
         })
     }
 }
