@@ -128,7 +128,8 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
             }
         } catch (error) {
             console.error('Chat error:', error)
-            setMessages(prev => [...prev, { id: Date.now(), role: 'assistant', content: "I'm having trouble connecting to the neural network. Please try again." }])
+            const errorMessage = error.message || "I'm having trouble connecting to the neural network. Please try again."
+            setMessages(prev => [...prev, { id: Date.now(), role: 'assistant', content: `❌ **Error**: ${errorMessage}` }])
         } finally {
             setIsLoading(false)
         }
