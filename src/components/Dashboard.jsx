@@ -11,6 +11,7 @@ import { scrapeCompanyData } from '../services/webScraping'
 import { useState } from 'react'
 import CompanyLogo from './CompanyLogo'
 import StrategySection from './StrategySection'
+import UnicronAI from './UnicronAI'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -212,7 +213,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
 
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, strategyNotes, setStrategyNotes }) => {
+const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, strategyNotes, setStrategyNotes, chatHistory, setChatHistory }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -849,6 +850,17 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
       {/* Strategy Section */}
       <StrategySection notes={strategyNotes} onSave={setStrategyNotes} />
+
+      {/* Unicron AI - Context Aware Chat */}
+      <UnicronAI
+        researchData={researchData}
+        tradeData={tradeData}
+        stockData={stockData}
+        settings={settings}
+        strategyNotes={strategyNotes}
+        chatHistory={chatHistory}
+        onUpdateHistory={setChatHistory}
+      />
     </div>
   )
 }

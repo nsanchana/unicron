@@ -1077,7 +1077,7 @@ app.get('/api/user-data', requireAuth, async (req, res) => {
     const userData = await UserData.findOne({ where: { userId } })
 
     if (!userData) {
-      return res.json({ researchData: [], tradeData: [], stockData: [], settings: null, lastSynced: null })
+      return res.json({ researchData: [], tradeData: [], stockData: [], settings: null, chatHistory: [], lastSynced: null })
     }
 
     const parsedData = JSON.parse(userData.data)
@@ -1476,6 +1476,96 @@ app.post('/api/scrape/stock-price', requireAuth, async (req, res) => {
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
+})
+
+// Unicron AI Endpoint
+app.post('/api/unicron-ai', requireAuth, async (req, res) => {
+  try {
+    const { message, userContext, history } = req.body
+
+    // Build the system prompt
+    let systemPrompt = `You are "Unicron AI", a highly advanced, intelligent trading assistant integrated into the user's Unicron financial dashboard.
+Your goal is to provide insightful, data-driven financial advice, analysis, and strategic thinking based on the user's specific data AND your general knowledge of the financial markets.
+
+PERSONALITY:
+- Be confident, professional, yet slightly futuristic and "flashy" in your tone (matching the "Unicron" aesthetic).
+- Use formatting (bullet points, bold text) to make responses easy to read.
+- Be proactive: if you see a risky trade in the context, mention it.
+
+CONTEXT AWARENESS:
+You have access to the user's live data. Use it to personalize your answers.
+`
+
+    if (userContext) {
+      if (userContext.portfolio) {
+        systemPrompt += `
+[PORTFOLIO]
+- Total Value: $${userContext.portfolio.totalValue?.toLocaleString() || 'N/A'}
+- Allocated: $${userContext.portfolio.allocated?.toLocaleString() || 'N/A'}
+- Active Trades: ${userContext.portfolio.activeTradesCount || 0}
+`
+      }
+
+      if (userContext.strategyNotes) {
+        systemPrompt += `
+[STRATEGY NOTES]
+"${userContext.strategyNotes.replace(/<[^>]*>/g, '')}"
+`
+      }
+
+      if (userContext.recentTrades && userContext.recentTrades.length > 0) {
+        systemPrompt += `
+[RECENT TRADES]
+${userContext.recentTrades.map(t => `- ${t.symbol} ${t.type} ${t.strike} exp ${t.expirationDate} (Premium: $${t.premium})`).join('\n')}
+`
+      }
+
+      if (userContext.researchSummary && userContext.researchSummary.length > 0) {
+        systemPrompt += `
+[RESEARCH FOCUS]
+${userContext.researchSummary.map(r => r.symbol).join(', ')}
+`
+      }
+    }
+
+    systemPrompt += `
+INSTRUCTIONS:
+- If the user asks "How is my portfolio?", analyze the metrics provided above.
+- If the user asks about a specific stock, check if it's in their Research or Trades list first. If not, use your general knowledge to provide a comprehensive answer about that stock or topic.
+- You are NOT restricted to the provided data. If the user asks about history, science, coding, or general market concepts, answer them fully and helpfuly.
+- Always be helpful and encouraging, but realistic about risk.
+`
+
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction: systemPrompt
+    })
+
+    const formattedHistory = (history || []).map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }))
+
+    const chat = model.startChat({
+      history: formattedHistory
+    })
+
+    const result = await chat.sendMessage(message)
+    const response = await result.response
+    const text = response.text()
+
+    res.json({
+      response: text,
+      model: 'gemini-2.5-flash'
+    })
+
+  } catch (error) {
+    console.error('Unicron AI Chat error:', error)
+    res.status(500).json({
+      error: 'Failed to generate response',
+      details: error.message
+    })
+  }
 })
 
 // Start server (only when not in Vercel serverless environment)

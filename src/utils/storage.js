@@ -6,7 +6,8 @@ export const STORAGE_KEYS = {
   TRADE_DATA: 'optionsTrading_tradeData',
   STOCK_DATA: 'optionsTrading_stockData',
   LAST_REFRESH: 'optionsTrading_lastRefresh',
-  STRATEGY_NOTES: 'optionsTrading_strategyNotes'
+  STRATEGY_NOTES: 'optionsTrading_strategyNotes',
+  CHAT_HISTORY: 'optionsTrading_chatHistory'
 }
 
 // Generic localStorage functions
@@ -110,6 +111,25 @@ export function loadTradeData() {
     return data ? JSON.parse(data) : []
   } catch (error) {
     console.error('Error loading trade data:', error)
+    return []
+  }
+}
+
+// Chat history
+export function saveChatHistory(data) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CHAT_HISTORY, JSON.stringify(data))
+  } catch (error) {
+    console.error('Error saving chat history:', error)
+  }
+}
+
+export function loadChatHistory() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.CHAT_HISTORY)
+    return data ? JSON.parse(data) : []
+  } catch (error) {
+    console.error('Error loading chat history:', error)
     return []
   }
 }

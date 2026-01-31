@@ -33,6 +33,7 @@ function App() {
     maxTradePercentage: 50
   })
   const [strategyNotes, setStrategyNotes] = useState('')
+  const [chatHistory, setChatHistory] = useState([])
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [theme, setTheme] = useState('dark')
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle') // 'idle', 'syncing', 'synced', 'error'
@@ -74,6 +75,10 @@ function App() {
       if (cloudData.strategyNotes !== undefined) {
         setStrategyNotes(cloudData.strategyNotes)
         saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, cloudData.strategyNotes)
+      }
+      if (cloudData.chatHistory !== undefined) {
+        setChatHistory(cloudData.chatHistory)
+        saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, cloudData.chatHistory)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -158,6 +163,8 @@ function App() {
     if (savedStocks) setStockData(savedStocks)
     const savedNotes = loadFromLocalStorage(STORAGE_KEYS.STRATEGY_NOTES)
     if (savedNotes) setStrategyNotes(savedNotes)
+    const savedChat = loadFromLocalStorage(STORAGE_KEYS.CHAT_HISTORY)
+    if (savedChat) setChatHistory(savedChat)
 
     // Then sync from cloud (will override local data if cloud has data)
     loadFromCloud(user.id || user.username)
@@ -183,7 +190,8 @@ function App() {
         tradeData,
         settings,
         stockData,
-        strategyNotes
+        strategyNotes,
+        chatHistory
       })
     }
 
@@ -193,7 +201,7 @@ function App() {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData, strategyNotes])
+  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData, strategyNotes, chatHistory])
 
   // Handle full data import
   const handleImportData = (importedData) => {
@@ -207,6 +215,7 @@ function App() {
         localStorage.setItem('settings', JSON.stringify(importedData.settings))
       }
       if (importedData.strategyNotes) setStrategyNotes(importedData.strategyNotes)
+      if (importedData.chatHistory) setChatHistory(importedData.chatHistory)
 
       // Force a save to cloud if user is logged in
       if (user) {
@@ -415,6 +424,11 @@ function App() {
             setStrategyNotes={(notes) => {
               setStrategyNotes(notes)
               saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+            }}
+            chatHistory={chatHistory}
+            setChatHistory={(history) => {
+              setChatHistory(history)
+              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
             }}
           />
         )}
