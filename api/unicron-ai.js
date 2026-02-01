@@ -91,10 +91,16 @@ INSTRUCTIONS:
 
         // Prepare chat history
         // filter out system messages if any, ensure roles are 'user' or 'model'
-        const formattedHistory = (history || []).map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : 'user', // Basic mapping, assume user if not assistant
-            parts: [{ text: msg.content }]
-        }))
+        const formattedHistory = (history || [])
+            .map(msg => ({
+                role: msg.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: msg.content }]
+            }))
+            .filter((msg, index, array) => {
+                // Gemini requires history to start with 'user'
+                if (index === 0 && msg.role === 'model') return false;
+                return true;
+            })
 
         const chat = model.startChat({
             history: formattedHistory

@@ -117,7 +117,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
                 body: JSON.stringify({
                     message: input,
                     userContext,
-                    history: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+                    history: messages.map(m => ({ role: m.role, content: m.content }))
                 })
             })
 

@@ -1541,10 +1541,15 @@ INSTRUCTIONS:
       systemInstruction: systemPrompt
     })
 
-    const formattedHistory = (history || []).map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }))
+    const formattedHistory = (history || [])
+      .map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      }))
+      .filter((msg, index) => {
+        if (index === 0 && msg.role === 'model') return false
+        return true
+      })
 
     const chat = model.startChat({
       history: formattedHistory
