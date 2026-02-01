@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
 import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
+import UnicronAI from './components/UnicronAI'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
 import { API_BASE_URL } from './config'
 
@@ -319,6 +320,7 @@ function App() {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'unicron-ai', label: 'Unicron AI', icon: Sparkles },
     { id: 'research', label: 'Company Research', icon: BarChart3 },
     { id: 'trades', label: 'Trades', icon: TrendingUp },
     { id: 'stocks', label: 'Stocks', icon: Briefcase },
@@ -434,7 +436,6 @@ function App() {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
           <Dashboard
-            user={user}
             researchData={researchData}
             setResearchData={setResearchData}
             tradeData={tradeData}
@@ -446,8 +447,18 @@ function App() {
               setStrategyNotes(notes)
               saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
             }}
+          />
+        )}
+        {activeTab === 'unicron-ai' && (
+          <UnicronAI
+            userName={user?.username || 'Trader'}
+            researchData={researchData}
+            tradeData={tradeData}
+            stockData={stockData}
+            settings={settings}
+            strategyNotes={strategyNotes}
             chatHistory={chatHistory}
-            setChatHistory={(history) => {
+            onUpdateHistory={(history) => {
               setChatHistory(history)
               saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
             }}
