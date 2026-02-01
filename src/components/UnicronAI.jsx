@@ -9,6 +9,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
     const [isListening, setIsListening] = useState(false)
     const messagesEndRef = useRef(null)
     const recognitionRef = useRef(null)
+    const isFirstRender = useRef(true)
 
     // Initialize chat history from props or start fresh
     useEffect(() => {
@@ -30,7 +31,11 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
 
     // Scroll to bottom on new message
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        if (isFirstRender.current) {
+            isFirstRender.current = false
+            return
+        }
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, [messages])
 
     // Voice Recognition Setup
@@ -124,7 +129,8 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
                 setMessages(finalMessages)
                 onUpdateHistory(finalMessages) // Sync to App.jsx -> Cloud
             } else {
-                throw new Error(data.error || 'Failed to get response')
+                const detailedError = data.details ? `${data.error}: ${data.details}` : data.error
+                throw new Error(detailedError || 'Failed to get response')
             }
         } catch (error) {
             console.error('Chat error:', error)
