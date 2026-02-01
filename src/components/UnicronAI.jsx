@@ -3,6 +3,7 @@ import { Send, Mic, Sparkles, MessageSquare, Trash2, X, ChevronRight, ChevronLef
 
 const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
     const [messages, setMessages] = useState([])
+    const [activeSessionId, setActiveSessionId] = useState(null)
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -12,22 +13,59 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
     const isFirstRender = useRef(true)
     const shouldScrollRef = useRef(false)
 
-    // Initialize chat history from props or start fresh
+    // Initialize active session
     useEffect(() => {
         if (chatHistory && chatHistory.length > 0) {
-            if (messages.length === 0) {
-                shouldScrollRef.current = false // Don't scroll on initial load
-                setMessages(chatHistory.slice(-50))
+            if (!activeSessionId) {
+                // Default to most recent session
+                const lastSession = [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))[0] || chatHistory[chatHistory.length - 1]
+                setActiveSessionId(lastSession.id)
+                setMessages(lastSession.messages)
+            } else {
+                // If activeSessionId is set, make sure messages are in sync with chatHistory (e.g. from cloud)
+                const currentSession = chatHistory.find(s => s.id === activeSessionId)
+                if (currentSession && JSON.stringify(currentSession.messages) !== JSON.stringify(messages)) {
+                    setMessages(currentSession.messages)
+                }
             }
-        } else if (messages.length === 0) {
-            shouldScrollRef.current = false // Don't scroll on welcome
-            setMessages([{
-                id: 'welcome',
-                role: 'assistant',
-                content: `I am Unicron AI. Greetings, ${userName}! I have access to your portfolio, trades, and strategy. How can I assist you today?`
-            }])
+        } else if (!activeSessionId) {
+            // No history, create first session
+            handleNewChat(true)
         }
-    }, [chatHistory, userName])
+    }, [chatHistory])
+
+    const handleNewChat = (isInitial = false) => {
+        const newId = `session-${Date.now()}`
+        const welcomeMessage = [{
+            id: 'welcome',
+            role: 'assistant',
+            content: `I am Unicron AI. Greetings, ${userName}! I have access to your portfolio, trades, and strategy. How can I assist you today?`
+        }]
+
+        setActiveSessionId(newId)
+        setMessages(welcomeMessage)
+
+        const newSession = {
+            id: newId,
+            title: 'New Chat',
+            messages: welcomeMessage,
+            lastModified: new Date().toISOString()
+        }
+
+        const updatedHistory = isInitial ? [newSession] : [...chatHistory, newSession]
+        onUpdateHistory(updatedHistory)
+        if (!isInitial) setIsSidebarOpen(false)
+    }
+
+    const handleSwitchSession = (sessionId) => {
+        const session = chatHistory.find(s => s.id === sessionId)
+        if (session) {
+            setActiveSessionId(sessionId)
+            setMessages(session.messages)
+            shouldScrollRef.current = true
+            if (window.innerWidth < 768) setIsSidebarOpen(false)
+        }
+    }
 
     // Scroll to bottom on new message
     useEffect(() => {
@@ -129,7 +167,21 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                 const finalMessages = [...updatedMessages, aiMessage]
                 shouldScrollRef.current = true // Allow scroll for AI response
                 setMessages(finalMessages)
-                onUpdateHistory(finalMessages) // Sync to App.jsx -> Cloud
+
+                // Update history item in the array
+                const updatedHistory = chatHistory.map(s => {
+                    if (s.id === activeSessionId) {
+                        const isNewChat = s.title === 'New Chat'
+                        return {
+                            ...s,
+                            messages: finalMessages,
+                            lastModified: new Date().toISOString(),
+                            title: isNewChat ? (input.substring(0, 30) + (input.length > 30 ? '...' : '')) : s.title
+                        }
+                    }
+                    return s
+                })
+                onUpdateHistory(updatedHistory)
             } else {
                 const detailedError = data.details ? `${data.error}: ${data.details}` : data.error
                 throw new Error(detailedError || 'Failed to get response')
@@ -138,20 +190,43 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
             console.error('Chat error:', error)
             const errorMessage = error.message || "I'm having trouble connecting to the neural network. Please try again."
             shouldScrollRef.current = true // Allow scroll for error message
-            setMessages(prev => [...prev, { id: Date.now(), role: 'assistant', content: `❌ **Error**: ${errorMessage}` }])
+            const errorMessages = [...updatedMessages, { id: Date.now().toString(), role: 'assistant', content: `❌ **Error**: ${errorMessage}` }]
+            setMessages(errorMessages)
+
+            // Still save the user message even if AI failed
+            const updatedHistory = chatHistory.map(s =>
+                s.id === activeSessionId
+                    ? { ...s, messages: errorMessages, lastModified: new Date().toISOString() }
+                    : s
+            )
+            onUpdateHistory(updatedHistory)
         } finally {
             setIsLoading(false)
         }
     }
 
+    const handleDeleteSession = (sessionId, e) => {
+        e.stopPropagation()
+        if (confirm('Delete this chat history?')) {
+            const updatedHistory = chatHistory.filter(s => s.id !== sessionId)
+            onUpdateHistory(updatedHistory)
+
+            if (activeSessionId === sessionId) {
+                if (updatedHistory.length > 0) {
+                    const last = updatedHistory[0]
+                    setActiveSessionId(last.id)
+                    setMessages(last.messages)
+                } else {
+                    handleNewChat(true)
+                }
+            }
+        }
+    }
+
     const handleClearHistory = () => {
-        if (confirm('Clear chat history? This cannot be undone.')) {
-            setMessages([{
-                id: 'welcome',
-                role: 'assistant',
-                content: "Chat history cleared. I am ready for new queries."
-            }])
+        if (confirm('Clear ALL chat sessions? This cannot be undone.')) {
             onUpdateHistory([])
+            handleNewChat(true)
         }
     }
 
@@ -165,28 +240,56 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                 {/* Sidebar (Chat History / Settings) */}
                 <div className={`
           ${isSidebarOpen ? 'w-64' : 'w-0'} 
-          bg-black/40 border-r border-white/5 transition-all duration-300 relative overflow-hidden flex flex-col
+          bg-[#0f172a]/95 backdrop-blur-xl border-r border-white/5 transition-all duration-300 relative overflow-hidden flex flex-col z-20
         `}>
-                    <div className="p-4 border-b border-white/5 whitespace-nowrap">
+                    <div className="p-4 border-b border-white/5 whitespace-nowrap space-y-4">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <MessageSquare className="h-3 w-3" /> History
                         </h3>
+                        <button
+                            onClick={() => handleNewChat()}
+                            className="w-full flex items-center justify-center gap-2 p-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 border border-white/10"
+                        >
+                            <Sparkles className="h-3 w-3" /> New Chat
+                        </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                        {/* Placeholder for session list - for now just one active session */}
-                        <div className="p-3 bg-white/5 rounded-lg border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                            <div className="text-xs font-bold text-white mb-1">Current Session</div>
-                            <div className="text-[10px] text-gray-500 truncate">
-                                {messages.length > 1 ? messages[messages.length - 1].content : 'New Chat'}
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide">
+                        {chatHistory && [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified)).map(session => (
+                            <div
+                                key={session.id}
+                                onClick={() => handleSwitchSession(session.id)}
+                                className={`p-3 rounded-xl border cursor-pointer hover:bg-white/10 transition-all group/item relative ${activeSessionId === session.id ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/5 border-white/5'
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className={`text-xs font-bold truncate ${activeSessionId === session.id ? 'text-blue-400' : 'text-gray-200'}`}>
+                                            {session.title}
+                                        </div>
+                                        <div className="text-[10px] text-gray-500 truncate mt-1">
+                                            {session.messages[session.messages.length - 1]?.content || 'Empty Chat'}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={(e) => handleDeleteSession(session.id, e)}
+                                        className="opacity-0 group-hover/item:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 transition-all"
+                                        title="Delete Session"
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </button>
+                                </div>
+                                {activeSessionId === session.id && (
+                                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                                )}
                             </div>
-                        </div>
+                        ))}
                     </div>
                     <div className="p-4 border-t border-white/5">
                         <button
                             onClick={handleClearHistory}
-                            className="w-full flex items-center justify-center gap-2 p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-xs font-bold uppercase tracking-wider"
+                            className="w-full flex items-center justify-center gap-2 p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-colors text-[10px] font-bold uppercase tracking-wider"
                         >
-                            <Trash2 className="h-3 w-3" /> Clear Chat
+                            <Trash2 className="h-3 w-3" /> Wipe All History
                         </button>
                     </div>
                 </div>

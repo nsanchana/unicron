@@ -42,6 +42,25 @@ function App() {
 
   const [initialCloudLoadComplete, setInitialCloudLoadComplete] = useState(false)
 
+  // Migration helper for chat history
+  const migrateChatHistory = useCallback((history) => {
+    if (!history || !Array.isArray(history)) return []
+    if (history.length === 0) return []
+
+    // If first item has no 'messages' property but has 'role', it's the old format
+    const isOldFormat = history[0] && !history[0].messages && history[0].role
+
+    if (isOldFormat) {
+      return [{
+        id: `session-${Date.now()}`,
+        title: 'Imported Chat',
+        messages: history,
+        lastModified: new Date().toISOString()
+      }]
+    }
+    return history
+  }, [])
+
   // Load data from cloud
   const loadFromCloud = useCallback(async (userId) => {
     try {
@@ -77,8 +96,9 @@ function App() {
         saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, cloudData.strategyNotes)
       }
       if (cloudData.chatHistory !== undefined) {
-        setChatHistory(cloudData.chatHistory)
-        saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, cloudData.chatHistory)
+        const migratedChat = migrateChatHistory(cloudData.chatHistory)
+        setChatHistory(migratedChat)
+        saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, migratedChat)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -164,7 +184,7 @@ function App() {
     const savedNotes = loadFromLocalStorage(STORAGE_KEYS.STRATEGY_NOTES)
     if (savedNotes) setStrategyNotes(savedNotes)
     const savedChat = loadFromLocalStorage(STORAGE_KEYS.CHAT_HISTORY)
-    if (savedChat) setChatHistory(savedChat)
+    if (savedChat) setChatHistory(migrateChatHistory(savedChat))
 
     // Then sync from cloud (will override local data if cloud has data)
     loadFromCloud(user.id || user.username)
