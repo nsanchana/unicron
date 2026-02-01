@@ -529,6 +529,32 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     alert(`Trade for ${trade.symbol} converted to EXECUTED on ${formatDateDDMMYYYY(trade.timestamp)}.`)
   }
 
+  const handleCloseTrade = (tradeId, result) => {
+    const updatedTradeData = tradeData.map(t => {
+      if (t.id === tradeId) {
+        return {
+          ...t,
+          closed: true,
+          result: result, // 'assigned' or 'worthless'
+          closedAt: new Date().toISOString()
+        }
+      }
+      return t
+    })
+    setTradeData(updatedTradeData)
+    saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+
+    // If current analysis is this trade, update it
+    if (analysis && analysis.id === tradeId) {
+      setAnalysis({
+        ...analysis,
+        closed: true,
+        result: result,
+        closedAt: new Date().toISOString()
+      })
+    }
+  }
+
   const getRecommendationColor = (action) => {
     switch (action) {
       case 'Strong Buy': return 'text-green-400 bg-green-900'
@@ -1059,17 +1085,18 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 if (historyFilter === 'planned') return (trade.status === 'planned' || !trade.status) && !isExpired
                 return true
               })
-              .slice(0, 10).map((trade, index) => {
+              .map((trade, index) => {
                 const displayPrice = trade.currentMarketPrice || trade.stockPrice
                 const priceDiff = displayPrice - trade.strikePrice
                 const daysLeft = Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
                 const isExpired = daysLeft < 0
 
                 return (
-                  <div key={index} className={`p-4 rounded-lg transition-all ${isExpired ? 'bg-gray-800/40 border border-gray-800 opacity-60 grayscale hover:grayscale-0 hover:opacity-100' :
-                    trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
-                      trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                        'bg-gray-700'
+                  <div key={index} className={`p-4 rounded-lg transition-all ${trade.closed ? 'opacity-50 grayscale bg-gray-900/40 border border-white/5' :
+                    isExpired ? 'bg-orange-900/10 border border-orange-500/20' :
+                      trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                        trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
+                          'bg-gray-700'
                     }`}>
                     {/* Top Row: Symbol, Type, and Status */}
                     <div className="flex justify-between items-start mb-3">
@@ -1110,11 +1137,32 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                             <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono">
                               Expires: <span className="text-gray-200 ml-1">{formatDateDDMMYYYY(trade.expirationDate)}</span>
                             </span>
+                            {trade.closed && (
+                              <span className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest ${trade.result === 'assigned' ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>
+                                Result: {trade.result}
+                              </span>
+                            )}
                           </div>
                         </h4>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {trade.status === 'planned' && (
+                        {isExpired && !trade.closed && (
+                          <div className="flex items-center space-x-2 mr-2">
+                            <button
+                              onClick={() => handleCloseTrade(trade.id, 'worthless')}
+                              className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-black uppercase tracking-widest transition-colors"
+                            >
+                              Expired Worthless
+                            </button>
+                            <button
+                              onClick={() => handleCloseTrade(trade.id, 'assigned')}
+                              className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 rounded text-[10px] font-black uppercase tracking-widest transition-colors"
+                            >
+                              Assigned Stock
+                            </button>
+                          </div>
+                        )}
+                        {trade.status === 'planned' && !trade.closed && (
                           <>
                             <button
                               onClick={() => handleEditTrade(trade)}

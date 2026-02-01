@@ -366,7 +366,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const yearlyTarget = { min: pSize * 0.25, max: pSize * 0.30 }
 
     // Portfolio allocation - Sum of Strike Price * 100 for active Cash Secured Puts
-    const activeTrades = executedTrades.filter(t => !t.closed)
+    const activeTrades = executedTrades.filter(t => {
+      if (t.closed) return false
+      const daysLeft = Math.ceil((new Date(t.expirationDate) - now) / (1000 * 60 * 60 * 24))
+      return daysLeft >= 0
+    })
     const totalAllocated = activeTrades
       .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
       .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
