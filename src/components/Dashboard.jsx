@@ -213,7 +213,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
 
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, strategyNotes, setStrategyNotes, chatHistory, setChatHistory }) => {
+const Dashboard = ({ user, researchData, setResearchData, tradeData, setTradeData, settings, stockData, strategyNotes, setStrategyNotes, chatHistory, setChatHistory }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -853,6 +853,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
       {/* Unicron AI - Context Aware Chat */}
       <UnicronAI
+        userName={user?.username || 'Trader'}
         researchData={researchData}
         tradeData={tradeData}
         stockData={stockData}

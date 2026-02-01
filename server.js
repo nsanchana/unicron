@@ -1494,6 +1494,9 @@ PERSONALITY:
 
 CONTEXT AWARENESS:
 You have access to the user's live data. Use it to personalize your answers.
+
+[USER INFO]
+- Name: ${userContext?.userName || 'Trader'}
 `
 
     if (userContext) {
@@ -1533,6 +1536,7 @@ INSTRUCTIONS:
 - If the user asks "How is my portfolio?", analyze the metrics provided above.
 - If the user asks about a specific stock, check if it's in their Research or Trades list first. If not, use your general knowledge to provide a comprehensive answer about that stock or topic.
 - You are NOT restricted to the provided data. If the user asks about history, science, coding, or general market concepts, answer them fully and helpfuly.
+- Address the user by their name (${userContext?.userName || 'Trader'}) in your opening greeting or when appropriate.
 - Always be helpful and encouraging, but realistic about risk.
 `
 

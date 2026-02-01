@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Send, Mic, Sparkles, MessageSquare, Trash2, X, ChevronRight, ChevronLeft, Volume2, StopCircle, RefreshCw } from 'lucide-react'
 
-const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
+const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -10,32 +10,31 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
     const messagesEndRef = useRef(null)
     const recognitionRef = useRef(null)
     const isFirstRender = useRef(true)
+    const shouldScrollRef = useRef(false)
 
     // Initialize chat history from props or start fresh
     useEffect(() => {
         if (chatHistory && chatHistory.length > 0) {
-            // Load the most recent conversation or empty/welcome state
-            // For now, we'll just start empty or load the last session if we had session management
-            // A simple approach is to load the last 20 messages if they exist
             if (messages.length === 0) {
-                setMessages(chatHistory.slice(-50)) // Load last 50 messages
+                shouldScrollRef.current = false // Don't scroll on initial load
+                setMessages(chatHistory.slice(-50))
             }
         } else if (messages.length === 0) {
+            shouldScrollRef.current = false // Don't scroll on welcome
             setMessages([{
                 id: 'welcome',
                 role: 'assistant',
-                content: "I am Unicron AI. I have access to your portfolio, trades, and strategy. How can I assist you today?"
+                content: `I am Unicron AI. Greetings, ${userName}! I have access to your portfolio, trades, and strategy. How can I assist you today?`
             }])
         }
-    }, [chatHistory])
+    }, [chatHistory, userName])
 
     // Scroll to bottom on new message
     useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false
-            return
+        if (shouldScrollRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+            shouldScrollRef.current = false // Reset
         }
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, [messages])
 
     // Voice Recognition Setup
@@ -79,6 +78,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
 
         const userMessage = { id: Date.now().toString(), role: 'user', content: input }
         const updatedMessages = [...messages, userMessage]
+        shouldScrollRef.current = true // Allow scroll for manual message
         setMessages(updatedMessages)
         setInput('')
         setIsLoading(true)
@@ -90,6 +90,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
 
         // Construct simplified context summary
         const userContext = {
+            userName,
             portfolio: {
                 totalValue: settings.portfolioSize,
                 allocated: tradeData.reduce((acc, t) => acc + (t.status !== 'Closed' ? (t.strike * 100) : 0), 0), // Rough estimate of exposure
@@ -126,6 +127,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
             if (response.ok) {
                 const aiMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: data.response }
                 const finalMessages = [...updatedMessages, aiMessage]
+                shouldScrollRef.current = true // Allow scroll for AI response
                 setMessages(finalMessages)
                 onUpdateHistory(finalMessages) // Sync to App.jsx -> Cloud
             } else {
@@ -135,6 +137,7 @@ const UnicronAI = ({ researchData, tradeData, stockData, settings, strategyNotes
         } catch (error) {
             console.error('Chat error:', error)
             const errorMessage = error.message || "I'm having trouble connecting to the neural network. Please try again."
+            shouldScrollRef.current = true // Allow scroll for error message
             setMessages(prev => [...prev, { id: Date.now(), role: 'assistant', content: `❌ **Error**: ${errorMessage}` }])
         } finally {
             setIsLoading(false)
