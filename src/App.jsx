@@ -7,6 +7,7 @@ import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
 import UnicronAI from './components/UnicronAI'
+import StrategySection from './components/StrategySection'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
 import { API_BASE_URL } from './config'
 
@@ -448,27 +449,33 @@ function App() {
             setTradeData={setTradeData}
             stockData={stockData}
             settings={settings}
-            strategyNotes={strategyNotes}
-            setStrategyNotes={(notes) => {
-              setStrategyNotes(notes)
-              saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
-            }}
           />
         )}
         {activeTab === 'unicron-ai' && (
-          <UnicronAI
-            userName={user?.username || 'Trader'}
-            researchData={researchData}
-            tradeData={tradeData}
-            stockData={stockData}
-            settings={settings}
-            strategyNotes={strategyNotes}
-            chatHistory={chatHistory}
-            onUpdateHistory={(history) => {
-              setChatHistory(history)
-              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-            }}
-          />
+          <div className="space-y-8 animate-slide-in-up">
+            <UnicronAI
+              userName={user?.username || 'Trader'}
+              researchData={researchData}
+              tradeData={tradeData}
+              stockData={stockData}
+              settings={settings}
+              strategyNotes={strategyNotes}
+              chatHistory={chatHistory}
+              onUpdateHistory={(history) => {
+                setChatHistory(history)
+                saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
+              }}
+            />
+            <div className="max-w-6xl mx-auto px-4 pb-12">
+              <StrategySection
+                notes={strategyNotes}
+                onSave={(notes) => {
+                  setStrategyNotes(notes)
+                  saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+                }}
+              />
+            </div>
+          </div>
         )}
         {activeTab === 'research' && (
           <CompanyResearch
