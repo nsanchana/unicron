@@ -1,17 +1,25 @@
 import { useState, useRef, useEffect } from 'react'
-import { Save, Bold, Italic, Underline, List, Highlighter, Type, Target, Brain, Sparkles, Check } from 'lucide-react'
+import { Save, Bold, Italic, Underline, List, Highlighter, Brain, Sparkles, Check } from 'lucide-react'
 
 const StrategySection = ({ notes, onSave }) => {
-    const [content, setContent] = useState(notes || '')
     const [isEditing, setIsEditing] = useState(false)
     const [saveStatus, setSaveStatus] = useState('idle') // idle, saving, saved
     const editorRef = useRef(null)
+    const lastSyncedNotesRef = useRef(notes || '')
+    const isInitiallySynced = useRef(false)
 
     useEffect(() => {
-        if (notes && editorRef.current && !isEditing) {
-            if (editorRef.current.innerHTML !== notes) {
-                editorRef.current.innerHTML = notes
+        if (!editorRef.current) return
+
+        const currentNotes = notes || ''
+        const shouldSync = !isEditing && (currentNotes !== lastSyncedNotesRef.current || !isInitiallySynced.current)
+
+        if (shouldSync) {
+            if (editorRef.current.innerHTML !== currentNotes) {
+                editorRef.current.innerHTML = currentNotes
             }
+            lastSyncedNotesRef.current = currentNotes
+            isInitiallySynced.current = true
         }
     }, [notes, isEditing])
 
@@ -40,22 +48,10 @@ const StrategySection = ({ notes, onSave }) => {
 
     const handleInput = () => {
         setIsEditing(true)
-        if (editorRef.current) {
-            // Check if text is actually empty (handling <br> remnants)
-            const text = editorRef.current.innerText.trim()
-            if (!text && !editorRef.current.querySelector('img')) {
-                setContent('')
-            } else {
-                setContent(editorRef.current.innerHTML)
-            }
-        }
     }
 
     const handleBlur = () => {
         setIsEditing(false)
-        if (editorRef.current) {
-            setContent(editorRef.current.innerHTML)
-        }
     }
 
     return (
@@ -135,6 +131,7 @@ const StrategySection = ({ notes, onSave }) => {
                     ref={editorRef}
                     contentEditable
                     onInput={handleInput}
+                    onFocus={() => setIsEditing(true)}
                     onBlur={handleBlur}
                     className="w-full h-full min-h-[300px] p-6 text-gray-200 focus:outline-none prose prose-invert max-w-none prose-headings:font-bold prose-headings:text-white prose-p:leading-relaxed prose-li:text-gray-300 strategy-editor"
                     suppressContentEditableWarning={true}
