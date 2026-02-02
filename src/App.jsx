@@ -202,8 +202,12 @@ function App() {
   useEffect(() => {
     if (!user || !initialCloudLoadComplete) return
 
-    // Don't save on initial load
-    const hasData = researchData.length > 0 || tradeData.length > 0 || stockData.length > 0
+    // Don't save on initial load if no data exists
+    const hasData = researchData.length > 0 ||
+      tradeData.length > 0 ||
+      stockData.length > 0 ||
+      (chatHistory && chatHistory.length > 0) ||
+      (strategyNotes && strategyNotes.trim().length > 0)
 
     if (hasData) {
       debouncedSaveToCloud(user.id || user.username, {
@@ -244,7 +248,9 @@ function App() {
           researchData: importedData.researchData || researchData,
           tradeData: importedData.tradeData || tradeData,
           stockData: importedData.stockData || stockData,
-          settings: importedData.settings || settings
+          settings: importedData.settings || settings,
+          strategyNotes: importedData.strategyNotes || strategyNotes,
+          chatHistory: importedData.chatHistory || chatHistory
         })
       }
       return true
