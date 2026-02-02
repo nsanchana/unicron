@@ -452,7 +452,7 @@ function App() {
           />
         )}
         {activeTab === 'unicron-ai' && (
-          <div className="space-y-8 animate-slide-in-up">
+          <div className="max-w-6xl mx-auto px-4 pb-12 space-y-8 animate-slide-in-up">
             <UnicronAI
               userName={user?.username || 'Trader'}
               researchData={researchData}
@@ -466,15 +466,13 @@ function App() {
                 saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
               }}
             />
-            <div className="max-w-6xl mx-auto px-4 pb-12">
-              <StrategySection
-                notes={strategyNotes}
-                onSave={(notes) => {
-                  setStrategyNotes(notes)
-                  saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
-                }}
-              />
-            </div>
+            <StrategySection
+              notes={strategyNotes}
+              onSave={(notes) => {
+                setStrategyNotes(notes)
+                saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+              }}
+            />
           </div>
         )}
         {activeTab === 'research' && (
