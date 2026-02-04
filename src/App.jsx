@@ -170,6 +170,10 @@ function App() {
     })
   }
 
+  const handleClearResearchQueue = () => {
+    setResearchQueue(prev => prev.filter(t => t.status === 'processing' || t.status === 'queued'))
+  }
+
   const handleGlobalPriceUpdate = async () => {
     if (refreshingPrices) return
     setRefreshingPrices(true)
@@ -741,6 +745,7 @@ function App() {
               onViewResearch={setSelectedResearch}
               researchQueue={researchQueue}
               onAddToQueue={handleAddToResearchQueue}
+              onClearQueue={handleClearResearchQueue}
             />
           )
         }

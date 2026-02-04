@@ -23,7 +23,7 @@ const formatTime = (dateString) => {
   return `${hours}:${minutes}:${seconds}`
 }
 
-function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch, researchQueue, onAddToQueue }) {
+function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch, researchQueue, onAddToQueue, onClearQueue }) {
   const [selectedSymbols, setSelectedSymbols] = useState(new Set())
   const [symbol, setSymbol] = useState('')
   const [loading, setLoading] = useState(false)
@@ -997,7 +997,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               disabled={selectedSymbols.size === 0}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center space-x-2"
             >
-              <RefreshCw className={`h-3 w-3 ${researchQueue.length > 0 ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 ${researchQueue.some(t => t.status === 'processing' || t.status === 'queued') ? 'animate-spin' : ''}`} />
               <span>Update Selected</span>
             </button>
           </div>
@@ -1005,8 +1005,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
           {researchQueue.length > 0 && (
             <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Research Queue</span>
-                <span className="text-[10px] font-bold text-gray-500">{researchQueue.filter(t => t.status === 'completed').length} / {researchQueue.length} Done</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Research Queue</span>
+                  <span className="text-[10px] font-bold text-gray-500">{researchQueue.filter(t => t.status === 'completed').length} / {researchQueue.length} Done</span>
+                </div>
+                <button
+                  onClick={onClearQueue}
+                  className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors flex items-center space-x-1"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>Clear</span>
+                </button>
               </div>
               <div className="space-y-2">
                 {researchQueue.map((task, i) => (
