@@ -570,129 +570,48 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                 const isRerunning = rerunningId === index
 
                 return (
-                  <div key={index} className="glass-item p-5 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/10 group relative overflow-hidden cursor-pointer" onClick={() => onViewResearch(item)}>
-                    {/* Background Glow Effect */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none transition-opacity opacity-50 group-hover:opacity-100"></div>
-
-                    {/* Header Row */}
-                    <div className="flex justify-between items-start mb-6 relative z-10">
-                      <div className="flex items-center space-x-4">
-                        {/* Company Logo */}
-                        <CompanyLogo symbol={item.symbol} className="w-14 h-14" textSize="text-xl" />
-
-                        <div>
-                          <h4 className="text-2xl font-black tracking-tight text-white mb-0.5">{item.symbol}</h4>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Research Report</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end space-y-1">
-                        {/* Action Buttons (Top Right) */}
-                        <div className="flex items-center space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity mb-1">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol, index); }}
-                            disabled={isRerunning}
-                            className={`p-1.5 rounded-lg transition-all ${isRerunning ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-blue-500/20 text-gray-400 hover:text-blue-400'}`}
-                            title="Rerun research"
-                          >
-                            <RefreshCw className={`h-3.5 w-3.5 ${isRerunning ? 'animate-spin' : ''}`} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteResearch(index); }}
-                            className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-all"
-                            title="Delete research"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        {/* Date & Rating Row */}
-                        <div className="flex items-center gap-4">
-                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest font-mono">
-                            {formatDateDDMMYYYY(item.date)}
-                          </span>
-
-                          <div className={`px-3 py-1 rounded-lg border flex items-center shadow-lg font-black tracking-wide ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.1)]' :
-                            item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)]' :
-                              'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
-                            }`}>
-                            <span className="text-[10px] font-black uppercase tracking-widest mr-2 opacity-70">Rating:</span>
-                            <span className="text-sm font-bold">{item.overallRating}/100</span>
-                          </div>
-                        </div>
-                      </div>
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                    onClick={() => onViewResearch(item)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <CompanyLogo symbol={item.symbol} className="w-6 h-6" textSize="text-[10px]" />
+                      <span className="font-black text-xs tracking-tight text-white">{item.symbol}</span>
                     </div>
 
-                    {/* Metrics Row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
-                      {/* Current Price Box */}
-                      <div className="bg-[#0f172a]/80 rounded-xl p-3 border border-white/5 shadow-inner">
-                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Current</div>
-                        <div className="text-xl font-bold text-white">
-                          {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : 'N/A'}
-                        </div>
-                      </div>
-
-                      {/* Target Price Box */}
-                      <div className="bg-[#1e293b]/50 rounded-xl p-3 border border-blue-500/10 shadow-inner group-hover:border-blue-500/20 transition-colors">
-                        <div className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mb-1">Target</div>
-                        <div className="text-xl font-bold text-blue-100">
-                          {targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : 'N/A'}
-                        </div>
-                      </div>
-
-                      {/* Potential Box */}
-                      <div className={`rounded-xl p-3 border shadow-inner transition-colors ${parseFloat(upsidePercent) >= 0
-                        ? 'bg-green-900/10 border-green-500/10 group-hover:border-green-500/20'
-                        : 'bg-red-900/10 border-red-500/10 group-hover:border-red-500/20'
+                    <div className="flex items-center space-x-4">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                          item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/10 border-red-500/20 text-red-400'
                         }`}>
-                        <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${parseFloat(upsidePercent) >= 0 ? 'text-green-400/70' : 'text-red-400/70'
-                          }`}>Potential</div>
-                        <div className={`text-xl font-bold ${parseFloat(upsidePercent) >= 0 ? 'text-green-100' : 'text-red-100'
-                          }`}>
-                          {upsidePercent !== null ? (
-                            <>
-                              {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
-                            </>
-                          ) : 'N/A'}
-                        </div>
-                      </div>
-                    </div>
+                        {item.overallRating}
+                      </span>
 
-                    {/* Detailed Ratings & Earnings */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 border-t border-white/5 pt-4">
-                      <div className="bg-white/5 rounded-lg p-2 text-center">
-                        <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Company</div>
-                        <div className={`text-sm font-bold ${(item.companyAnalysis?.rating || 0) >= 7 ? 'text-green-400' :
-                          (item.companyAnalysis?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
-                          }`}>
-                          {item.companyAnalysis?.rating || '-'}/10
-                        </div>
-                      </div>
-                      <div className="bg-white/5 rounded-lg p-2 text-center">
-                        <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Technical</div>
-                        <div className={`text-sm font-bold ${(item.technicalAnalysis?.rating || 0) >= 7 ? 'text-green-400' :
-                          (item.technicalAnalysis?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
-                          }`}>
-                          {item.technicalAnalysis?.rating || '-'}/10
-                        </div>
-                      </div>
-                      <div className="bg-white/5 rounded-lg p-2 text-center">
-                        <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Developments</div>
-                        <div className={`text-sm font-bold ${(item.recentDevelopments?.rating || 0) >= 7 ? 'text-green-400' :
-                          (item.recentDevelopments?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
-                          }`}>
-                          {item.recentDevelopments?.rating || '-'}/10
-                        </div>
-                      </div>
-                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center flex flex-col justify-center">
-                        <div className="text-[9px] text-blue-400/70 uppercase font-bold tracking-widest mb-1">Next Earnings</div>
-                        <div className="text-xs font-bold text-blue-100">
-                          {(() => {
-                            const dateStr = item.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date || item.recentDevelopments?.nextEarningsDate
-                            return dateStr ? formatDateDDMMYYYY(dateStr) : 'N/A'
-                          })()}
-                        </div>
+                      <span className={`text-[10px] font-bold w-12 text-right ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
+                      </span>
+
+                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter w-14 text-right">
+                        {formatDateDDMMYYYY(item.date)}
+                      </span>
+
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol, index); }}
+                          disabled={isRerunning}
+                          className="p-1 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded transition-all"
+                          title="Rerun"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${isRerunning ? 'animate-spin' : ''}`} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteResearch(index); }}
+                          className="p-1 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
                     </div>
                   </div>
