@@ -436,14 +436,6 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
 
-        <div className="stat-card-primary flex flex-col justify-center items-center group cursor-pointer hover:bg-white/10 transition-all active:scale-95" onClick={onGlobalRefresh}>
-          <div className={`p-4 rounded-2xl border transition-all ${isRefreshing ? 'bg-blue-500/20 border-blue-500/40' : 'bg-white/5 border-white/10 group-hover:border-blue-500/30'}`}>
-            <RefreshCw className={`h-8 w-8 ${isRefreshing ? 'animate-spin text-blue-400' : 'text-gray-400'}`} />
-          </div>
-          <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em] mt-3">
-            {isRefreshing ? 'Syncing Market...' : 'Refresh All Prices'}
-          </p>
-        </div>
 
         <div className="stat-card-success flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
