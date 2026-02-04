@@ -585,18 +585,18 @@ function App() {
       </div>
 
       {/* Header */}
-      <header className={`sticky top-0 z-50 glass-nav ${theme === 'light'
-        ? 'bg-white/70 border-gray-200'
+      <header className={`sticky top-0 z-50 glass-nav header-differentiated ${theme === 'light'
+        ? 'border-gray-200'
         : 'border-white/5'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-gray-800/50 rounded-xl border border-white/10 shadow-xl animate-float">
+              <div className="p-1 bg-gray-900/80 rounded-2xl logo-glow-premium overflow-hidden">
                 <img
                   src="/unicron-logo.jpg"
                   alt="Unicron Logo"
-                  className="h-10 w-10 object-contain rounded-lg"
+                  className="h-14 w-14 object-contain rounded-xl"
                 />
               </div>
               <div>
