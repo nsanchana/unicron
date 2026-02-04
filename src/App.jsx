@@ -711,6 +711,17 @@ function App() {
             onSaveStrategy={(notes) => {
               setStrategyNotes(notes)
               saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+              // Force immediate cloud save to prevent data loss
+              if (user) {
+                saveToCloud(user.id || user.username, {
+                  researchData,
+                  tradeData,
+                  settings,
+                  stockData,
+                  strategyNotes: notes,
+                  chatHistory
+                })
+              }
             }}
           />
         )}
