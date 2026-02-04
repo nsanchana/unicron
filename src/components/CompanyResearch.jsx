@@ -1034,13 +1034,16 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             </div>
           )}
           {/* Table Headers */}
-          <div className="hidden md:grid grid-cols-[40px_1fr_80px_100px_100px_80px_100px_80px] gap-4 px-4 py-2 mb-2 border-b border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+          <div className="hidden md:grid grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-4 px-4 py-2 mb-2 border-b border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
             <div></div>
             <div>Company</div>
             <div className="text-center">Rating</div>
             <div className="text-right">Current</div>
+            <div className="text-right">Support</div>
+            <div className="text-right">Resistance</div>
             <div className="text-right">Target</div>
             <div className="text-center">Potential</div>
+            <div className="text-center">Earnings</div>
             <div className="text-center">Date</div>
             <div className="text-right">Actions</div>
           </div>
@@ -1065,10 +1068,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 }
               }
 
+              const supportLevel = item.technicalAnalysis?.detailedTechnical?.supportResistance?.support?.[0]?.split(' - ')[0] ||
+                item.technicalAnalysis?.metrics?.find(m => m.label.includes('Support'))?.value || '-'
+              const resistanceLevel = item.technicalAnalysis?.detailedTechnical?.supportResistance?.resistance?.[0]?.split(' - ')[0] ||
+                item.technicalAnalysis?.metrics?.find(m => m.label.includes('Resistance'))?.value || '-'
+              const earningsDate = item.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date ||
+                item.recentDevelopments?.metrics?.find(m => m.label === 'Next Earnings' || m.label === 'Earnings Date')?.value || '-'
+
               return (
                 <div
                   key={itemKey}
-                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_80px_100px_100px_80px_100px_80px] gap-2 md:gap-4 items-center p-3 md:p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-2 md:gap-4 items-center p-3 md:p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
                   onClick={() => handleViewResearch(item)}
                 >
                   {/* Checkbox (Desktop only) */}
@@ -1095,8 +1105,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   {/* Rating */}
                   <div className="flex md:justify-center">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                        item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
-                          'bg-red-500/10 border-red-500/20 text-red-400'
+                      item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/10 border-red-500/20 text-red-400'
                       }`}>
                       {item.overallRating}
                     </span>
@@ -1106,6 +1116,15 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   <div className="hidden md:block text-right font-mono text-xs text-gray-300">
                     {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}
                   </div>
+
+                  {/* Support/Resistance [NEW] */}
+                  <div className="hidden md:block text-right font-mono text-xs text-orange-300/80">
+                    {supportLevel}
+                  </div>
+                  <div className="hidden md:block text-right font-mono text-xs text-purple-300/80">
+                    {resistanceLevel}
+                  </div>
+
                   <div className="hidden md:block text-right font-mono text-xs text-blue-300">
                     {targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : '-'}
                   </div>
@@ -1113,6 +1132,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   {/* Potential */}
                   <div className={`text-right md:text-center font-bold text-xs ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
+                  </div>
+
+                  {/* Earnings [NEW] */}
+                  <div className="hidden md:block text-center text-[10px] font-bold text-yellow-400/80 uppercase tracking-tighter">
+                    {earningsDate}
                   </div>
 
                   {/* Date */}
