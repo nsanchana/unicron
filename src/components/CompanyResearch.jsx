@@ -33,9 +33,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
   // Sync with global selectedResearch (e.g. from Dashboard)
   useEffect(() => {
-    const handleViewResearch = (item) => {
-      setCompanyData(item)
-      if (onViewResearch) onViewResearch(item)
+    if (selectedResearch) {
+      setCompanyData(selectedResearch)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [selectedResearch])
@@ -287,6 +286,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   const handleViewResearch = (research) => {
     // Display the saved research
     setCompanyData(research)
+    if (onViewResearch) onViewResearch(research)
     setSymbol(research.symbol)
     // Expand all sections when viewing saved research
     setExpandedSections({
