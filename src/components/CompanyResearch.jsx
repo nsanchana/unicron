@@ -936,34 +936,34 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         <div className="card">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Research History</h3>
-            <div className="flex space-x-2">
+            <div className="flex items-center space-x-1 overflow-x-auto pb-2 scrollbar-hide">
               <button
                 onClick={() => handleSort('date')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'date' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'date' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 Date {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('rating')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'rating' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'rating' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 Rating {sortBy === 'rating' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('currentPrice')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'currentPrice' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'currentPrice' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
-                Current Price {sortBy === 'currentPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
+                Price {sortBy === 'currentPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('targetPrice')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'targetPrice' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'targetPrice' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
-                Target Price {sortBy === 'targetPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
+                Target {sortBy === 'targetPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
               <button
                 onClick={() => handleSort('symbol')}
-                className={`px-3 py-1 rounded text-sm ${sortBy === 'symbol' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'symbol' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 Symbol {sortBy === 'symbol' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
@@ -1033,20 +1033,29 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               </div>
             </div>
           )}
-          <div className="space-y-4">
+          {/* Table Headers */}
+          <div className="hidden md:grid grid-cols-[40px_1fr_80px_100px_100px_80px_100px_80px] gap-4 px-4 py-2 mb-2 border-b border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+            <div></div>
+            <div>Company</div>
+            <div className="text-center">Rating</div>
+            <div className="text-right">Current</div>
+            <div className="text-right">Target</div>
+            <div className="text-center">Potential</div>
+            <div className="text-center">Date</div>
+            <div className="text-right">Actions</div>
+          </div>
+
+          <div className="space-y-1">
             {sortedResearchData.slice(0, 10).map((item) => {
               const itemKey = `${item.symbol}-${item.date}`
-              // Extract current price and target price from technical analysis
               let currentPrice = item.technicalAnalysis?.currentPrice ||
                 item.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
               let targetPrice = item.technicalAnalysis?.targetPrice ||
                 item.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
 
-              // Sanitize prices (remove trailing commas/spaces)
               if (currentPrice) currentPrice = currentPrice.replace(/,\s*$/, '').trim()
               if (targetPrice) targetPrice = targetPrice.replace(/,\s*$/, '').trim()
 
-              // Calculate upside percentage
               let upsidePercent = null
               if (currentPrice && targetPrice) {
                 const current = parseFloat(currentPrice.replace(/[$,]/g, ''))
@@ -1057,146 +1066,84 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               }
 
               return (
-                <div key={itemKey} className="glass-item p-5 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/10 group relative overflow-hidden cursor-pointer" onClick={() => handleViewResearch(item)}>
-                  {/* Background Glow Effect */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none transition-opacity opacity-50 group-hover:opacity-100"></div>
-
-                  {/* Header Row */}
-                  <div className="flex justify-between items-start mb-6 relative z-10">
-                    <div className="flex items-center space-x-4">
-                      {/* Selection Checkbox */}
-                      <div className="relative z-20" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedSymbols.has(item.symbol)}
-                          onChange={() => {
-                            const next = new Set(selectedSymbols)
-                            if (next.has(item.symbol)) next.delete(item.symbol)
-                            else next.add(item.symbol)
-                            setSelectedSymbols(next)
-                          }}
-                          className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
-                        />
-                      </div>
-
-                      {/* Company Logo */}
-                      <CompanyLogo symbol={item.symbol} className="w-14 h-14" textSize="text-xl" />
-
-                      <div>
-                        <h4 className="text-2xl font-black tracking-tight text-white mb-0.5">{item.symbol}</h4>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Research Report</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end space-y-2">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{formatDateDDMMYYYY(item.date)}</span>
-                        {/* Action Buttons */}
-                        <div className="flex items-center space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }}
-                            className="p-1.5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
-                            title="Rerun research"
-                          >
-                            <RefreshCw className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }}
-                            className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-all"
-                            title="Delete research"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className={`px-3 py-1 rounded-lg border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.1)]' :
-                        item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)]' :
-                          'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
-                        }`}>
-                        <span className="text-[10px] font-black uppercase tracking-widest mr-2 opacity-70">Rating:</span>
-                        <span className="text-sm font-bold">{item.overallRating}/100</span>
-                      </div>
-                    </div>
+                <div
+                  key={itemKey}
+                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_80px_100px_100px_80px_100px_80px] gap-2 md:gap-4 items-center p-3 md:p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                  onClick={() => handleViewResearch(item)}
+                >
+                  {/* Checkbox (Desktop only) */}
+                  <div className="hidden md:flex justify-center" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSymbols.has(item.symbol)}
+                      onChange={() => {
+                        const next = new Set(selectedSymbols)
+                        if (next.has(item.symbol)) next.delete(item.symbol)
+                        else next.add(item.symbol)
+                        setSelectedSymbols(next)
+                      }}
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
+                    />
                   </div>
 
-                  {/* Metrics Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
-                    {/* Current Price Box */}
-                    <div className="bg-[#0f172a]/80 rounded-xl p-3 border border-white/5 shadow-inner">
-                      <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Current</div>
-                      <div className="text-xl font-bold text-white">
-                        {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : 'N/A'}
-                      </div>
-                    </div>
+                  {/* Company */}
+                  <div className="flex items-center space-x-3">
+                    <CompanyLogo symbol={item.symbol} className="w-8 h-8 md:w-6 md:h-6" textSize="text-[10px]" />
+                    <span className="font-black text-sm tracking-tight text-white">{item.symbol}</span>
+                  </div>
 
-                    {/* Target Price Box */}
-                    <div className="bg-[#1e293b]/50 rounded-xl p-3 border border-blue-500/10 shadow-inner group-hover:border-blue-500/20 transition-colors">
-                      <div className="text-[10px] font-bold text-blue-400/70 uppercase tracking-widest mb-1">Target</div>
-                      <div className="text-xl font-bold text-blue-100">
-                        {targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : 'N/A'}
-                      </div>
-                    </div>
-
-                    {/* Potential Box */}
-                    <div className={`rounded-xl p-3 border shadow-inner transition-colors ${parseFloat(upsidePercent) >= 0
-                      ? 'bg-green-900/10 border-green-500/10 group-hover:border-green-500/20'
-                      : 'bg-red-900/10 border-red-500/10 group-hover:border-red-500/20'
+                  {/* Rating */}
+                  <div className="flex md:justify-center">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                        item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/10 border-red-500/20 text-red-400'
                       }`}>
-                      <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${parseFloat(upsidePercent) >= 0 ? 'text-green-400/70' : 'text-red-400/70'
-                        }`}>Potential</div>
-                      <div className={`text-xl font-bold ${parseFloat(upsidePercent) >= 0 ? 'text-green-100' : 'text-red-100'
-                        }`}>
-                        {upsidePercent !== null ? (
-                          <>
-                            {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
-                          </>
-                        ) : 'N/A'}
-                      </div>
-                    </div>
+                      {item.overallRating}
+                    </span>
                   </div>
 
-                  {/* Detailed Ratings & Earnings */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 border-t border-white/5 pt-4">
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Company</div>
-                      <div className={`text-sm font-bold ${(item.companyAnalysis?.rating || 0) >= 70 ? 'text-green-400' :
-                        (item.companyAnalysis?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
-                        {item.companyAnalysis?.rating || '-'}/100
-                      </div>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Technical</div>
-                      <div className={`text-sm font-bold ${(item.technicalAnalysis?.rating || 0) >= 70 ? 'text-green-400' :
-                        (item.technicalAnalysis?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
-                        {item.technicalAnalysis?.rating || '-'}/100
-                      </div>
-                    </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Developments</div>
-                      <div className={`text-sm font-bold ${(item.recentDevelopments?.rating || 0) >= 70 ? 'text-green-400' :
-                        (item.recentDevelopments?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
-                        }`}>
-                        {item.recentDevelopments?.rating || '-'}/100
-                      </div>
-                    </div>
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center flex flex-col justify-center">
-                      <div className="text-[9px] text-blue-400/70 uppercase font-bold tracking-widest mb-1">Next Earnings</div>
-                      <div className="text-xs font-bold text-blue-100">
-                        {item.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date || item.recentDevelopments?.nextEarningsDate || 'N/A'}
-                      </div>
-                    </div>
+                  {/* Prices */}
+                  <div className="hidden md:block text-right font-mono text-xs text-gray-300">
+                    {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}
+                  </div>
+                  <div className="hidden md:block text-right font-mono text-xs text-blue-300">
+                    {targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : '-'}
+                  </div>
+
+                  {/* Potential */}
+                  <div className={`text-right md:text-center font-bold text-xs ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
+                  </div>
+
+                  {/* Date */}
+                  <div className="hidden md:block text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    {formatDateDDMMYYYY(item.date)}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end space-x-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }}
+                      className="p-1 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded transition-all"
+                      title="Rerun"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }}
+                      className="p-1 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
               )
             })}
           </div>
         </div>
-      )
-      }
-    </div >
+      )}
+    </div>
   )
 }
 
