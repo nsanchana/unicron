@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Send, Mic, Sparkles, MessageSquare, Trash2, X, ChevronRight, ChevronLeft, Volume2, StopCircle, RefreshCw } from 'lucide-react'
+import { UNICRON_AI_VERSION } from '../config'
 
 const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
     const [messages, setMessages] = useState([])
@@ -314,6 +315,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                 <div>
                                     <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
                                         UNICRON AI <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">BETA</span>
+                                        <span className="text-[9px] text-gray-500 font-medium ml-1 opacity-50">{UNICRON_AI_VERSION}</span>
                                     </h2>
                                 </div>
                             </div>

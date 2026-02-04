@@ -97,7 +97,7 @@ function extractJson(text) {
 // Helper function to generate comprehensive company analysis using AI
 async function generateComprehensiveCompanyAnalysis(symbol, scrapedData = {}) {
   const apiKey = process.env.GEMINI_API_KEY
-  const cacheKey = `companyAnalysis_${symbol}`
+  const cacheKey = `v3_companyAnalysis_${symbol}`
 
   const cachedResult = await cache.get(cacheKey)
   if (cachedResult) {
@@ -139,35 +139,41 @@ Available Data:
 - Net Income: ${scrapedData.netIncome || 'Not available'}
 - PE Ratio: ${scrapedData.peRatio || 'Not available'}
 
-Provide a detailed analysis in the following JSON format. For each category, provide substantive analysis (3-5 sentences minimum) and a rating from 0-10:
+Provide a detailed analysis in the following JSON format. For each category, provide substantive analysis (3-5 sentences minimum) and a granular rating from 0-100 based on the following strict rubric:
+- 95-100: Generational/Elite (e.g. AAPL, MSFT - dominant moat, flawless financials)
+- 85-94: Strong/Outperforming (High growth, solid competitive advantage)
+- 70-84: Solid/Stable (Consistent performer, moderate competitive pressure)
+- 50-69: Fair/Neutral (Facing headwind, average fundamentals)
+- 30-49: Weak/Underperforming (Structural risks, declining share)
+- 0-29: Distressed/Failing (Significant existential risk)
 
 {
   "marketPosition": {
-    "analysis": "Detailed analysis of the company's position in the market, competitive advantages, industry dynamics, and market share...",
-    "rating": 7
+    "analysis": "Detailed analysis of the company's position in the market, competitive advantages, industry dynamics, and market share. Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
   "businessModel": {
-    "analysis": "Detailed evaluation of how the company generates revenue, key revenue streams, business model sustainability, and recurring revenue potential...",
-    "rating": 7
+    "analysis": "Detailed evaluation of revenue generation, sustainability, and recurring potential. Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
   "industryTrends": {
-    "analysis": "Analysis of industry trends, external factors impacting performance, regulatory environment, technological disruption, and macroeconomic influences...",
-    "rating": 7
+    "analysis": "Analysis of industry trends, disruption, and macro influences. Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
   "customerBase": {
-    "analysis": "Assessment of customer base composition, concentration risks, customer retention, geographic diversification, and dependency on key customers...",
-    "rating": 7
+    "analysis": "Assessment of customer concentration, retention, and diversification. Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
   "growthStrategy": {
-    "analysis": "Investigation of future growth plans, product development pipeline, expansion strategies, M&A activity, and long-term market success potential...",
-    "rating": 7
+    "analysis": "Investigation of future plans, pipeline, and M&A. Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
   "economicMoat": {
-    "analysis": "Economic moat analysis covering brand loyalty, barriers to entry, switching costs, network effects, economies of scale, patents/IP, and cost advantages...",
-    "rating": 7
+    "analysis": "Moat analysis (Brand, Switching Costs, Network Effects). Identify 2 Bull catalysts and 2 Bear risks.",
+    "rating": 75
   },
-  "overallRating": 7,
-  "summary": "2-3 sentence executive summary of the overall investment thesis..."
+  "overallRating": 75,
+  "summary": "2-3 sentence executive summary of the overall investment thesis including a specific 'Bottom Line' verdict."
 }
 
 Be specific, factual, and thorough. Use your knowledge of ${symbol} to provide meaningful insights. Return ONLY valid JSON.`
@@ -181,12 +187,36 @@ Be specific, factual, and thorough. Use your knowledge of ${symbol} to provide m
 
     let analysis = extractJson(responseText)
 
-    // Calculate overallRating as average of category ratings if not provided or valid
-    const categories = ['marketPosition', 'businessModel', 'industryTrends', 'customerBase', 'growthStrategy', 'economicMoat']
-    const ratings = categories.map(cat => analysis[cat]?.rating).filter(r => typeof r === 'number')
-    if (ratings.length > 0) {
-      analysis.overallRating = Math.round(ratings.reduce((sum, r) => sum + r, 0) / ratings.length)
+    // Calculate overallRating as weighted average of category ratings
+    const weights = {
+      businessModel: 0.25,
+      financialHealth: 0.20,
+      marketPosition: 0.15,
+      growthStrategy: 0.15,
+      economicMoat: 0.15,
+      industryTrends: 0.10
     }
+
+    let weightedSum = 0
+    let totalWeight = 0
+
+    Object.keys(weights).forEach(cat => {
+      const rating = analysis[cat]?.rating
+      if (typeof rating === 'number' && !isNaN(rating)) {
+        weightedSum += rating * weights[cat]
+        totalWeight += weights[cat]
+      }
+    })
+
+    if (totalWeight > 0) {
+      analysis.overallRating = Math.round(weightedSum / totalWeight)
+    }
+
+    // Final sanity check: ensure score is 0-100 and is a valid number
+    if (typeof analysis.overallRating !== 'number' || isNaN(analysis.overallRating)) {
+      analysis.overallRating = 50
+    }
+    analysis.overallRating = Math.min(100, Math.max(0, analysis.overallRating))
 
     await cache.set(cacheKey, analysis)
     return analysis
@@ -203,29 +233,29 @@ function generateFallbackCompanyAnalysis(symbol, scrapedData = {}) {
   return {
     marketPosition: {
       analysis: `${symbol} operates in the ${scrapedData.sector || 'broader'} sector within the ${scrapedData.industry || 'industry'}. Further research is needed to assess the company's competitive position, market share, and industry dynamics. Consider analyzing peer comparisons and market trends.`,
-      rating: 5
+      rating: 50
     },
     businessModel: {
       analysis: `${symbol}'s business model and revenue generation strategy requires deeper analysis. Key factors to evaluate include revenue diversification, recurring revenue streams, and business sustainability. Review annual reports for detailed segment breakdowns.`,
-      rating: 5
+      rating: 50
     },
     industryTrends: {
       analysis: `The ${scrapedData.industry || 'industry'} sector is subject to various external factors including regulatory changes, technological disruption, and macroeconomic conditions. Monitor industry reports and analyst coverage for trend analysis.`,
-      rating: 5
+      rating: 50
     },
     customerBase: {
       analysis: `Customer concentration and diversification analysis for ${symbol} requires review of revenue breakdown by customer segment. Key risks include dependency on major customers and geographic concentration. Check 10-K filings for customer details.`,
-      rating: 5
+      rating: 50
     },
     growthStrategy: {
       analysis: `${symbol}'s growth strategy and expansion plans should be evaluated through management guidance, investor presentations, and strategic initiatives. Consider product pipeline, market expansion, and M&A activity.`,
-      rating: 5
+      rating: 50
     },
     economicMoat: {
       analysis: `Economic moat analysis for ${symbol} should consider brand strength, barriers to entry, switching costs, network effects, and scale advantages. Competitive advantages vary by business segment and require detailed evaluation.`,
       rating: 5
     },
-    overallRating: 5,
+    overallRating: 50,
     summary: `${symbol} is a ${scrapedData.marketCap || ''} company in the ${scrapedData.sector || 'market'}. A comprehensive analysis requires reviewing financial statements, competitive positioning, and growth prospects.`
   }
 }
@@ -233,7 +263,7 @@ function generateFallbackCompanyAnalysis(symbol, scrapedData = {}) {
 // Helper function to generate AI insights using Gemini
 async function generateAIInsight(symbol, dataType, scrapedData = {}) {
   const apiKey = process.env.GEMINI_API_KEY
-  const cacheKey = `${dataType}_${symbol}`
+  const cacheKey = `v2_${dataType}_${symbol}`
 
   const cachedResult = await cache.get(cacheKey)
   if (cachedResult) {
@@ -273,12 +303,13 @@ ${JSON.stringify(scrapedData.metrics || [], null, 2)}
 
 Today's Date: ${currentDate}
 
-Provide a 2-3 sentence analysis focused on:
-1. Financial strength and stability for supporting options strategies
-2. Revenue/profit trends that suggest bullish or bearish positioning
-3. Specific recommendation on whether the financial health supports selling puts or covered calls
+Provide your analysis in the following JSON format:
+{
+  "analysis": "2-3 sentence analysis focused on financial strength and trends for options trading",
+  "rating": 70
+}
 
-Be concise and actionable for options traders.`,
+Be concise and actionable for options traders. Return ONLY valid JSON.`,
 
       technicalAnalysis: `You are a technical analyst. Provide a detailed technical analysis for ${symbol}.
 
@@ -294,7 +325,7 @@ Provide your analysis in the following JSON format:
   "trend30to60Days": "Detailed outlook for the next 30-60 days based on technical patterns, momentum indicators, and historical price action. Include specific price targets if the trend continues.",
   "targetPriceAnalysis": "Analysis of the analyst target price - what it implies for upside/downside potential and how it aligns with technical levels",
   "optionsStrategy": "Specific recommendation on whether to sell puts or covered calls based on the technical setup, with suggested strike price levels",
-  "rating": 7
+  "rating": 70
 }
 
 Use your knowledge of ${symbol}'s recent price history, chart patterns, moving averages (50-day, 200-day), RSI, MACD, and volume trends. Be specific with price levels. Return ONLY valid JSON.`,
@@ -333,7 +364,7 @@ Provide your analysis in the following JSON format:
   ],
   "catalysts": "Key upcoming catalysts that options traders should be aware of in 2026 (product launches, regulatory decisions, macro events, etc.)",
   "optionsImplication": "Whether current news environment favors selling premium or staying on sidelines",
-  "rating": 7
+  "rating": 70
 }
 
 CRITICAL: The 'Next Earnings Call' MUST be a future date relative to ${currentDate}. If unsure, provide an estimate based on typical cycles (e.g., 'Late March 2026'). Do NOT use dates from 2024.
@@ -475,7 +506,7 @@ async function scrapeCompanyAnalysis(symbol) {
 
   // Return comprehensive analysis structure
   return {
-    rating: comprehensiveAnalysis.overallRating || 5,
+    rating: comprehensiveAnalysis.overallRating || 50,
     analysis: comprehensiveAnalysis.summary || `Analysis for ${symbol}`,
     metrics,
     signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Company analysis completed' }],
@@ -484,32 +515,32 @@ async function scrapeCompanyAnalysis(symbol) {
       marketPosition: {
         title: 'Market Position & Competitive Advantage',
         content: comprehensiveAnalysis.marketPosition?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.marketPosition?.rating || 5
+        rating: comprehensiveAnalysis.marketPosition?.rating || 50
       },
       businessModel: {
         title: 'Business Model & Revenue Generation',
         content: comprehensiveAnalysis.businessModel?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.businessModel?.rating || 5
+        rating: comprehensiveAnalysis.businessModel?.rating || 50
       },
       industryTrends: {
         title: 'Industry Trends & External Factors',
         content: comprehensiveAnalysis.industryTrends?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.industryTrends?.rating || 5
+        rating: comprehensiveAnalysis.industryTrends?.rating || 50
       },
       customerBase: {
         title: 'Customer Base & Concentration Risk',
         content: comprehensiveAnalysis.customerBase?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.customerBase?.rating || 5
+        rating: comprehensiveAnalysis.customerBase?.rating || 50
       },
       growthStrategy: {
         title: 'Growth Strategy & Future Outlook',
         content: comprehensiveAnalysis.growthStrategy?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.growthStrategy?.rating || 5
+        rating: comprehensiveAnalysis.growthStrategy?.rating || 50
       },
       economicMoat: {
         title: 'Economic Moat Analysis',
         content: comprehensiveAnalysis.economicMoat?.analysis || 'Analysis not available',
-        rating: comprehensiveAnalysis.economicMoat?.rating || 5
+        rating: comprehensiveAnalysis.economicMoat?.rating || 50
       }
     }
   }
@@ -518,7 +549,7 @@ async function scrapeCompanyAnalysis(symbol) {
 async function scrapeFinancialHealth(symbol) {
   const metrics = []
   const signals = []
-  let rating = 6
+  let rating = 60
 
   try {
     // Try to fetch from stockanalysis.com for key metrics
@@ -544,7 +575,7 @@ async function scrapeFinancialHealth(symbol) {
       }
     })
 
-    if (metrics.length > 3) rating += 2
+    if (metrics.length > 3) rating += 20
   } catch (error) {
     console.log('Financial scraping failed, using generated insights')
   }
@@ -569,7 +600,7 @@ async function scrapeFinancialHealth(symbol) {
   }
 
   return {
-    rating: Math.min(rating, 10),
+    rating: Math.min(rating, 100),
     analysis,
     metrics,
     signals
@@ -579,7 +610,7 @@ async function scrapeFinancialHealth(symbol) {
 async function scrapeTechnicalAnalysis(symbol) {
   const metrics = []
   const signals = []
-  let rating = 6
+  let rating = 60
   let currentPrice = ''
   let targetPrice = ''
   let supportLevels = []
@@ -794,7 +825,7 @@ async function scrapeTechnicalAnalysis(symbol) {
     }
 
     return {
-      rating: Math.min(rating, 10),
+      rating: Math.min(rating, 100),
       analysis: technicalData.summary || 'Technical analysis completed',
       metrics,
       signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Technical analysis completed' }],
@@ -829,13 +860,6 @@ async function scrapeTechnicalAnalysis(symbol) {
 
   // Fallback if AI parsing failed
   return {
-    rating: Math.min(rating, 10),
-    analysis: typeof aiResponse === 'string' ? aiResponse : 'Technical analysis requires review of chart patterns and indicators.',
-    metrics: metrics.length > 0 ? metrics : [
-      { label: 'Price Trend', value: 'Monitor chart patterns' },
-      { label: 'Moving Averages', value: 'Compare 50 & 200 day' },
-      { label: 'Volume Analysis', value: 'Check accumulation/distribution' }
-    ],
     signals: [{ type: 'info', message: 'Use technical indicators to identify optimal entry and exit points' }],
     currentPrice: currentPrice || null,
     targetPrice: targetPrice || null
@@ -845,7 +869,7 @@ async function scrapeTechnicalAnalysis(symbol) {
 async function scrapeOptionsData(symbol) {
   const metrics = []
   const signals = []
-  let rating = 6
+  let rating = 60
 
   try {
     // Try to get basic options info
@@ -865,7 +889,7 @@ async function scrapeOptionsData(symbol) {
       }
     })
 
-    if (metrics.length > 0) rating += 2
+    if (metrics.length > 0) rating += 20
   } catch (error) {
     // console.log('Options scraping failed, using generated insights')
   }
@@ -890,7 +914,7 @@ async function scrapeOptionsData(symbol) {
   })
 
   return {
-    rating: Math.min(rating, 10),
+    rating: Math.min(rating, 100),
     analysis,
     metrics,
     signals
@@ -900,7 +924,7 @@ async function scrapeOptionsData(symbol) {
 async function scrapeRecentDevelopments(symbol) {
   const metrics = []
   const signals = []
-  let rating = 6
+  let rating = 60
 
   let scrapedNews = []
   let nextEarningsDate = null
@@ -945,7 +969,7 @@ async function scrapeRecentDevelopments(symbol) {
   }
 
   if (developmentsData) {
-    rating = developmentsData.rating || 6
+    rating = developmentsData.rating || 60
 
     // Add earnings info to metrics
     if (developmentsData.nextEarningsCall) {
@@ -963,7 +987,7 @@ async function scrapeRecentDevelopments(symbol) {
     }
 
     return {
-      rating: Math.min(rating, 10),
+      rating: Math.min(rating, 100),
       analysis: developmentsData.summary || 'Recent developments analysis completed',
       metrics,
       signals: signals.length > 0 ? signals : [{ type: 'info', message: 'Monitor upcoming events for trading opportunities' }],
@@ -992,7 +1016,7 @@ async function scrapeRecentDevelopments(symbol) {
 
   // Fallback if AI parsing failed
   return {
-    rating: Math.min(rating, 10),
+    rating: Math.min(rating, 100), // Standardize rating to 0-100
     analysis: typeof aiResponse === 'string' ? aiResponse : 'Recent developments analysis requires monitoring news and events.',
     metrics: [
       { label: 'Earnings Date', value: 'Check upcoming earnings calendar' },

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
+import { COMPANY_RESEARCH_VERSION } from '../config'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
 
@@ -216,7 +217,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           const allRatings = [...companyPillars, ...otherModules]
 
           if (allRatings.length > 0) {
-            updated.overallRating = Math.round((allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length) * 10)
+            updated.overallRating = Math.round(allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length)
           }
 
           return updated
@@ -416,16 +417,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
   }
 
   const getRatingColor = (rating) => {
-    const r = rating > 10 ? rating / 10 : rating
-    if (r >= 8) return 'text-green-400'
-    if (r >= 6) return 'text-yellow-400'
-    if (r >= 4) return 'text-orange-400'
+    // Handling 0-100 scale
+    if (rating >= 90) return 'text-emerald-400'
+    if (rating >= 75) return 'text-green-400'
+    if (rating >= 60) return 'text-yellow-400'
+    if (rating >= 40) return 'text-orange-400'
     return 'text-red-400'
   }
 
   const getRatingIcon = (rating) => {
-    if (rating >= 7) return <CheckCircle className="h-5 w-5 text-green-400" />
-    if (rating >= 5) return <AlertTriangle className="h-5 w-5 text-yellow-400" />
+    if (rating >= 75) return <CheckCircle className="h-5 w-5 text-green-400" />
+    if (rating >= 50) return <AlertTriangle className="h-5 w-5 text-yellow-400" />
     return <AlertTriangle className="h-5 w-5 text-red-400" />
   }
 
@@ -438,7 +440,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <h5 className="font-semibold text-primary-400">{subsection.title}</h5>
           <div className={`flex items-center space-x-1 ${getRatingColor(subsection.rating)}`}>
             <Star className="h-4 w-4 fill-current" />
-            <span className="font-bold text-sm">{subsection.rating}/10</span>
+            <span className="font-bold text-sm">{subsection.rating}/100</span>
           </div>
         </div>
         <p className="text-gray-300 text-sm leading-relaxed">{subsection.content}</p>
@@ -464,7 +466,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
             {rating && (
               <div className={`flex items-center space-x-1 ${getRatingColor(rating)}`}>
                 <Star className="h-4 w-4 fill-current" />
-                <span className="font-bold">{rating}/10</span>
+                <span className="font-bold">{rating}/100</span>
               </div>
             )}
           </div>
@@ -786,13 +788,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
           <div className="glass-card bg-gradient-to-r from-blue-600/10 to-transparent border-blue-500/20">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-black tracking-tight">{companyData.symbol} Analysis</h2>
+                <h2 className="text-3xl font-black tracking-tight flex items-baseline gap-3">
+                  {companyData.symbol} Analysis
+                  <span className="text-xs text-gray-600 font-medium opacity-50">{COMPANY_RESEARCH_VERSION}</span>
+                </h2>
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Deep Intelligence Report</p>
               </div>
               <div className="flex items-center space-x-8">
                 <div className="text-center">
                   <div className={`text-5xl font-black ${getRatingColor(companyData.overallRating)} text-shadow-glow`}>
                     {companyData.overallRating}
+                    <span className="text-xl opacity-50 font-medium lowercase ml-1">/100</span>
                   </div>
                   <div className="text-[10px] text-gray-500 font-black uppercase tracking-tighter mt-1">Global Score</div>
                 </div>

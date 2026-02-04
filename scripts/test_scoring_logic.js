@@ -23,41 +23,41 @@ function calculateGlobalScore(data) {
     const allRatings = [...companyPillars, ...otherModules]
 
     if (allRatings.length === 0) return 0
-    return Math.round((allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length) * 10)
+    return Math.round(allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length)
 }
 
 // Test Case 1: Strong Company (high variance)
 const strongCompany = {
     companyAnalysis: {
         detailedAnalysis: {
-            marketPosition: { rating: 9 },
-            businessModel: { rating: 8 },
-            industryTrends: { rating: 7 },
-            customerBase: { rating: 9 },
-            growthStrategy: { rating: 8 },
-            economicMoat: { rating: 9 }
+            marketPosition: { rating: 90 },
+            businessModel: { rating: 85 },
+            industryTrends: { rating: 75 },
+            customerBase: { rating: 95 },
+            growthStrategy: { rating: 80 },
+            economicMoat: { rating: 90 }
         }
     },
-    financialHealth: { rating: 9 },
-    technicalAnalysis: { rating: 8 },
-    recentDevelopments: { rating: 7 }
+    financialHealth: { rating: 92 },
+    technicalAnalysis: { rating: 85 },
+    recentDevelopments: { rating: 70 }
 }
 
 // Test Case 2: Struggling Company (low ratings)
 const weakCompany = {
     companyAnalysis: {
         detailedAnalysis: {
-            marketPosition: { rating: 3 },
-            businessModel: { rating: 4 },
-            industryTrends: { rating: 2 },
-            customerBase: { rating: 5 },
-            growthStrategy: { rating: 3 },
-            economicMoat: { rating: 2 }
+            marketPosition: { rating: 30 },
+            businessModel: { rating: 40 },
+            industryTrends: { rating: 25 },
+            customerBase: { rating: 50 },
+            growthStrategy: { rating: 35 },
+            economicMoat: { rating: 20 }
         }
     },
-    financialHealth: { rating: 2 },
-    technicalAnalysis: { rating: 4 },
-    recentDevelopments: { rating: 3 }
+    financialHealth: { rating: 25 },
+    technicalAnalysis: { rating: 40 },
+    recentDevelopments: { rating: 30 }
 }
 
 const strongScore = calculateGlobalScore(strongCompany)
