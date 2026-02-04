@@ -338,6 +338,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
         aValue = aTarget ? parseFloat(aTarget.replace(/[$,]/g, '')) : 0
         bValue = bTarget ? parseFloat(bTarget.replace(/[$,]/g, '')) : 0
         break
+      case 'symbol':
+        aValue = a.symbol
+        bValue = b.symbol
+        break
       default:
         return 0
     }
@@ -947,6 +951,12 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
               >
                 Target Price {sortBy === 'targetPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
               </button>
+              <button
+                onClick={() => handleSort('symbol')}
+                className={`px-3 py-1 rounded text-sm ${sortBy === 'symbol' ? 'bg-blue-600 text-white' : 'glass-button text-gray-300'}`}
+              >
+                Symbol {sortBy === 'symbol' && (sortOrder === 'desc' ? '↓' : '↑')}
+              </button>
             </div>
           </div>
           <div className="space-y-4">
@@ -1061,26 +1071,26 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 border-t border-white/5 pt-4">
                     <div className="bg-white/5 rounded-lg p-2 text-center">
                       <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Company</div>
-                      <div className={`text-sm font-bold ${(item.companyAnalysis?.rating || 0) >= 7 ? 'text-green-400' :
-                        (item.companyAnalysis?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      <div className={`text-sm font-bold ${(item.companyAnalysis?.rating || 0) >= 70 ? 'text-green-400' :
+                        (item.companyAnalysis?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
                         }`}>
-                        {item.companyAnalysis?.rating || '-'}/10
+                        {item.companyAnalysis?.rating || '-'}/100
                       </div>
                     </div>
                     <div className="bg-white/5 rounded-lg p-2 text-center">
                       <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Technical</div>
-                      <div className={`text-sm font-bold ${(item.technicalAnalysis?.rating || 0) >= 7 ? 'text-green-400' :
-                        (item.technicalAnalysis?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      <div className={`text-sm font-bold ${(item.technicalAnalysis?.rating || 0) >= 70 ? 'text-green-400' :
+                        (item.technicalAnalysis?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
                         }`}>
-                        {item.technicalAnalysis?.rating || '-'}/10
+                        {item.technicalAnalysis?.rating || '-'}/100
                       </div>
                     </div>
                     <div className="bg-white/5 rounded-lg p-2 text-center">
                       <div className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-1">Developments</div>
-                      <div className={`text-sm font-bold ${(item.recentDevelopments?.rating || 0) >= 7 ? 'text-green-400' :
-                        (item.recentDevelopments?.rating || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'
+                      <div className={`text-sm font-bold ${(item.recentDevelopments?.rating || 0) >= 70 ? 'text-green-400' :
+                        (item.recentDevelopments?.rating || 0) >= 50 ? 'text-yellow-400' : 'text-red-400'
                         }`}>
-                        {item.recentDevelopments?.rating || '-'}/10
+                        {item.recentDevelopments?.rating || '-'}/100
                       </div>
                     </div>
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center flex flex-col justify-center">
