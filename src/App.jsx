@@ -478,154 +478,164 @@ function App() {
             </div>
 
             <div className="flex items-center space-x-6">
-              {/* Cloud Sync Status */}
-              <div className="hidden md:flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/5" title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}>
-                {cloudSyncStatus === 'syncing' ? (
-                  <div className="flex items-center space-x-2 text-yellow-400">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Syncing</span>
-                  </div>
-                ) : cloudSyncStatus === 'synced' ? (
-                  <div className="flex items-center space-x-2 text-emerald-400">
-                    <Cloud className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Securely Synced</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 text-gray-500">
-                    <CloudOff className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Offline</span>
-                  </div>
                 )}
+            </div>
+
+            {/* Update Prices Button */}
+            <button
+              onClick={handleGlobalPriceUpdate}
+              disabled={refreshingPrices}
+              className={`hidden md:flex items-center space-x-2 px-4 py-2 rounded-2xl border transition-all active:scale-95 ${refreshingPrices
+                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-400'
+                  : 'bg-white/5 border-white/5 hover:border-white/10 text-gray-400 hover:text-white'
+                }`}
+              title="Update market prices for all active trades and stocks"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshingPrices ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {refreshingPrices ? 'Updating...' : 'Update Prices'}
+              </span>
+            </button>
+
+            <div className="flex items-center space-x-4">
+              <div className="text-right hidden sm:block">
+                <div className="text-xs font-black text-blue-400 uppercase tracking-wider">{user.username}</div>
+                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active Session</div>
               </div>
 
-              <div className="flex items-center space-x-4">
-                <div className="text-right hidden sm:block">
-                  <div className="text-xs font-black text-blue-400 uppercase tracking-wider">{user.username}</div>
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active Session</div>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all active:scale-95"
-                  title="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all active:scale-95"
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Navigation Tabs */}
-      <nav className={`sticky top-20 z-40 glass-nav ${theme === 'light'
-        ? 'bg-gray-50/50 border-gray-200'
-        : 'border-white/5'
-        }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center space-x-2 py-5 px-6 font-bold text-sm transition-all duration-300 ${isActive
-                    ? 'text-blue-400'
-                    : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                  <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
-                  <span className="uppercase tracking-widest">{tab.label}</span>
-                  {isActive && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {activeTab === 'dashboard' && (
-          <Dashboard
-            researchData={researchData}
-            setResearchData={setResearchData}
-            tradeData={tradeData}
-            setTradeData={setTradeData}
-            stockData={stockData}
-            settings={settings}
-            onViewResearch={handleViewResearch}
-            onGlobalRefresh={handleGlobalPriceUpdate}
-            isRefreshing={refreshingPrices}
-          />
-        )}
-        {activeTab === 'unicron-ai' && (
-          <div className="max-w-6xl mx-auto px-4 pb-12 space-y-8 animate-slide-in-up">
-            <UnicronAI
-              userName={user?.username || 'Trader'}
-              researchData={researchData}
-              tradeData={tradeData}
-              stockData={stockData}
-              settings={settings}
-              strategyNotes={strategyNotes}
-              chatHistory={chatHistory}
-              onUpdateHistory={(history) => {
-                setChatHistory(history)
-                saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-              }}
-            />
-            <StrategySection
-              notes={strategyNotes}
-              onSave={(notes) => {
-                setStrategyNotes(notes)
-                saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
-              }}
-            />
-          </div>
-        )}
-        {activeTab === 'research' && (
-          <CompanyResearch
-            researchData={researchData}
-            setResearchData={setResearchData}
-            lastRefresh={lastRefresh}
-            selectedResearch={selectedResearch}
-            onViewResearch={setSelectedResearch}
-          />
-        )}
-        {activeTab === 'trades' && (
-          <TradeReview
-            tradeData={tradeData}
-            setTradeData={setTradeData}
-            portfolioSettings={settings}
-            researchData={researchData}
-            lastRefresh={lastRefresh}
-          />
-        )}
-        {activeTab === 'stocks' && (
-          <StockPortfolio
-            stockData={stockData}
-            onUpdate={(newData) => {
-              setStockData(newData)
-              saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
-            }}
-          />
-        )}
-        {activeTab === 'settings' && (
-          <SettingsPanel
-            settings={settings}
-            onSettingsUpdate={handleSettingsUpdate}
-            theme={theme}
-            onThemeToggle={handleThemeToggle}
-            onImportData={handleImportData}
-            onExportData={handleExportData}
-          />
-        )}
-      </main>
     </div>
+      </header >
+
+    {/* Navigation Tabs */ }
+    < nav className = {`sticky top-20 z-40 glass-nav ${theme === 'light'
+      ? 'bg-gray-50/50 border-gray-200'
+      : 'border-white/5'
+      }`
+}>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex space-x-1">
+      {tabs.map((tab) => {
+        const Icon = tab.icon
+        const isActive = activeTab === tab.id
+        return (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`relative flex items-center space-x-2 py-5 px-6 font-bold text-sm transition-all duration-300 ${isActive
+              ? 'text-blue-400'
+              : 'text-gray-500 hover:text-gray-300'
+              }`}
+          >
+            <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
+            <span className="uppercase tracking-widest">{tab.label}</span>
+            {isActive && (
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+            )}
+          </button>
+        )
+      })}
+    </div>
+  </div>
+      </nav >
+
+  {/* Main Content */ }
+  < main className = "max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8" >
+    { activeTab === 'dashboard' && (
+      <Dashboard
+        researchData={researchData}
+        setResearchData={setResearchData}
+        tradeData={tradeData}
+        setTradeData={setTradeData}
+        stockData={stockData}
+        settings={settings}
+        onViewResearch={handleViewResearch}
+        onGlobalRefresh={handleGlobalPriceUpdate}
+        isRefreshing={refreshingPrices}
+      />
+    )}
+{
+  activeTab === 'unicron-ai' && (
+    <div className="max-w-6xl mx-auto px-4 pb-12 space-y-8 animate-slide-in-up">
+      <UnicronAI
+        userName={user?.username || 'Trader'}
+        researchData={researchData}
+        tradeData={tradeData}
+        stockData={stockData}
+        settings={settings}
+        strategyNotes={strategyNotes}
+        chatHistory={chatHistory}
+        onUpdateHistory={(history) => {
+          setChatHistory(history)
+          saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
+        }}
+      />
+      <StrategySection
+        notes={strategyNotes}
+        onSave={(notes) => {
+          setStrategyNotes(notes)
+          saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+        }}
+      />
+    </div>
+  )
+}
+{
+  activeTab === 'research' && (
+    <CompanyResearch
+      researchData={researchData}
+      setResearchData={setResearchData}
+      lastRefresh={lastRefresh}
+      selectedResearch={selectedResearch}
+      onViewResearch={setSelectedResearch}
+    />
+  )
+}
+{
+  activeTab === 'trades' && (
+    <TradeReview
+      tradeData={tradeData}
+      setTradeData={setTradeData}
+      portfolioSettings={settings}
+      researchData={researchData}
+      lastRefresh={lastRefresh}
+    />
+  )
+}
+{
+  activeTab === 'stocks' && (
+    <StockPortfolio
+      stockData={stockData}
+      onUpdate={(newData) => {
+        setStockData(newData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
+      }}
+    />
+  )
+}
+{
+  activeTab === 'settings' && (
+    <SettingsPanel
+      settings={settings}
+      onSettingsUpdate={handleSettingsUpdate}
+      theme={theme}
+      onThemeToggle={handleThemeToggle}
+      onImportData={handleImportData}
+      onExportData={handleExportData}
+    />
+  )
+}
+      </main >
+    </div >
   )
 }
 
