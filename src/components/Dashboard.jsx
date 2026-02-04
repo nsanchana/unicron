@@ -211,7 +211,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
 
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData }) => {
+const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -569,7 +569,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                 const isRerunning = rerunningId === index
 
                 return (
-                  <div key={index} className="glass-item p-5 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/10 group relative overflow-hidden">
+                  <div key={index} className="glass-item p-5 hover:bg-white/5 transition-all duration-300 border border-white/5 hover:border-white/10 group relative overflow-hidden cursor-pointer" onClick={() => onViewResearch(item)}>
                     {/* Background Glow Effect */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none transition-opacity opacity-50 group-hover:opacity-100"></div>
 

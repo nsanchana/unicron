@@ -23,13 +23,22 @@ const formatTime = (dateString) => {
   return `${hours}:${minutes}:${seconds}`
 }
 
-function CompanyResearch({ researchData, setResearchData, lastRefresh }) {
+function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch }) {
   const [symbol, setSymbol] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [currentLoadingSection, setCurrentLoadingSection] = useState('')
   const [companyData, setCompanyData] = useState(null)
   const [error, setError] = useState('')
+
+  // Sync with global selectedResearch (e.g. from Dashboard)
+  useEffect(() => {
+    const handleViewResearch = (item) => {
+      setCompanyData(item)
+      if (onViewResearch) onViewResearch(item)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [selectedResearch])
   const [expandedSections, setExpandedSections] = useState({
     companyAnalysis: true,
     financialHealth: true,

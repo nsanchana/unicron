@@ -40,7 +40,13 @@ function App() {
   const [theme, setTheme] = useState('dark')
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle') // 'idle', 'syncing', 'synced', 'error'
   const [lastCloudSync, setLastCloudSync] = useState(null)
+  const [selectedResearch, setSelectedResearch] = useState(null)
   const saveTimeoutRef = useRef(null)
+
+  const handleViewResearch = (item) => {
+    setSelectedResearch(item)
+    setActiveTab('research')
+  }
 
   const [initialCloudLoadComplete, setInitialCloudLoadComplete] = useState(false)
 
@@ -443,12 +449,8 @@ function App() {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
           <Dashboard
-            researchData={researchData}
-            setResearchData={setResearchData}
-            tradeData={tradeData}
-            setTradeData={setTradeData}
-            stockData={stockData}
             settings={settings}
+            onViewResearch={handleViewResearch}
           />
         )}
         {activeTab === 'unicron-ai' && (
@@ -480,6 +482,8 @@ function App() {
             researchData={researchData}
             setResearchData={setResearchData}
             lastRefresh={lastRefresh}
+            selectedResearch={selectedResearch}
+            onViewResearch={setSelectedResearch}
           />
         )}
         {activeTab === 'trades' && (
