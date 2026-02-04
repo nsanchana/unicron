@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { DollarSign, TrendingUp, TrendingDown, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit, RefreshCw } from 'lucide-react'
 import {
   startOfWeek, endOfWeek,
@@ -8,8 +8,8 @@ import {
 } from 'date-fns'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import { scrapeCompanyData } from '../services/webScraping'
-import { useState } from 'react'
 import CompanyLogo from './CompanyLogo'
+import StrategySection from './StrategySection'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -211,7 +211,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
 
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch, onGlobalRefresh, isRefreshing }) => {
+const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch, onGlobalRefresh, isRefreshing, strategyNotes, onSaveStrategy }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -539,235 +539,12 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         </div>
       )}
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Research */}
-        <div className="glass-card">
-          <h3 className="text-lg font-semibold mb-4">Recent Research</h3>
-          {dashboardStats.recentResearch.length > 0 ? (
-            <div className="space-y-3">
-              {dashboardStats.recentResearch.map((item, index) => {
-                // Extract current price and target price from technical analysis
-                let currentPrice = item.technicalAnalysis?.currentPrice ||
-                  item.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
-                let targetPrice = item.technicalAnalysis?.targetPrice ||
-                  item.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
-
-                // Sanitize prices (remove trailing commas/spaces)
-                if (currentPrice) currentPrice = currentPrice.replace(/,\s*$/, '').trim()
-                if (targetPrice) targetPrice = targetPrice.replace(/,\s*$/, '').trim()
-
-                // Calculate upside
-                let upsidePercent = null
-                if (currentPrice && targetPrice) {
-                  const current = parseFloat(currentPrice.replace(/[$,]/g, ''))
-                  const target = parseFloat(targetPrice.replace(/[$,]/g, ''))
-                  if (!isNaN(current) && !isNaN(target) && current > 0) {
-                    upsidePercent = ((target - current) / current * 100).toFixed(1)
-                  }
-                }
-
-                const isRerunning = rerunningId === index
-
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
-                    onClick={() => onViewResearch(item)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <CompanyLogo symbol={item.symbol} className="w-6 h-6" textSize="text-[10px]" />
-                      <span className="font-black text-xs tracking-tight text-white">{item.symbol}</span>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                          item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/10 border-red-500/20 text-red-400'
-                        }`}>
-                        {item.overallRating}
-                      </span>
-
-                      <span className={`text-[10px] font-bold w-12 text-right ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
-                      </span>
-
-                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter w-14 text-right">
-                        {formatDateDDMMYYYY(item.date)}
-                      </span>
-
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol, index); }}
-                          disabled={isRerunning}
-                          className="p-1 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded transition-all"
-                          title="Rerun"
-                        >
-                          <RefreshCw className={`h-3 w-3 ${isRerunning ? 'animate-spin' : ''}`} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteResearch(index); }}
-                          className="p-1 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-all"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-400">No research data available</p>
-          )}
-        </div>
-
-        {/* Recent Trades */}
-        <div className="glass-card">
-          <h3 className="text-lg font-semibold mb-4">Recent Trades</h3>
-          {tradeData.filter(t => {
-            const daysLeft = Math.ceil((new Date(t.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
-            return !t.closed && daysLeft >= 0
-          }).length > 0 ? (
-            <div className="space-y-3">
-              {tradeData
-                .filter(t => {
-                  const daysLeft = Math.ceil((new Date(t.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
-                  return !t.closed && daysLeft >= 0
-                })
-                .slice(0, 5).map((item, index) => {
-                  const currentPrice = item.currentMarketPrice || item.stockPrice || 0
-                  const strikePrice = item.strikePrice || 0
-                  const variance = currentPrice > 0 && strikePrice > 0 ? (currentPrice - strikePrice) : 0
-                  const variancePct = strikePrice > 0 ? (variance / strikePrice) * 100 : 0
-                  // For Cash Secured Put: You sell a put. You want Stock > Strike so it expires worthless.
-                  // So (Stock - Strike) > 0 is GOOD (Green). < 0 is BAD (Red/ITM - Assignment risk).
-                  // So Positive Variance = Green.
-
-                  return (
-                    <div key={index} className={`glass-item block ${item.status === 'executed' ? 'border-green-500/30 bg-green-900/10' :
-                      item.status === 'planned' ? 'border-blue-500/30 bg-blue-900/10' :
-                        item.status === 'expired' ? 'border-gray-500/30 bg-gray-900/10' :
-                          ''
-                      }`}>
-                      <div className="flex justify-between items-start mb-4">
-                        {/* Left: Title & Badges */}
-                        <div className="flex items-center flex-wrap gap-3">
-                          <div className="flex items-center">
-                            <CompanyLogo symbol={item.symbol} className="w-10 h-10 mr-3" />
-                            <h4 className="font-bold text-lg text-white">
-                              {item.symbol} {item.type === 'put' || item.tradeType === 'cashSecuredPut' ? 'Cash-Secured Put' : 'Covered Call'}
-                            </h4>
-                          </div>
-
-                          {item.status === 'planned' && (
-                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-blue-600 text-white rounded">
-                              PLANNED
-                            </span>
-                          )}
-                          {item.status === 'expired' && (
-                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-gray-600 text-white rounded">
-                              EXPIRED
-                            </span>
-                          )}
-
-                          {item.recommendation?.action && item.recommendation.action !== 'Quick Save' && (
-                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${getRecommendationColor(item.recommendation.action)}`}>
-                              {item.recommendation.action}
-                            </span>
-                          )}
-
-                          <div className="flex items-center space-x-2 hidden sm:flex ml-2">
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono">
-                              {item.status === 'executed' ? 'Executed:' : 'Planned:'} <span className="text-gray-200 ml-1">{formatDateDDMMYYYY(item.status === 'executed' ? item.executionDate : item.timestamp)}</span>
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono">
-                              Expires: <span className="text-gray-200 ml-1">{formatDateDDMMYYYY(item.expirationDate)}</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Right: Actions */}
-                        <div className="flex items-center space-x-1">
-                          {item.status === 'planned' && (
-                            <button
-                              onClick={() => handleEditTrade(item)}
-                              className="p-1.5 hover:bg-blue-500/20 rounded-lg transition-colors border border-transparent hover:border-blue-500/30 group"
-                              title="Edit"
-                            >
-                              <Edit className="h-4 w-4 text-blue-400 group-hover:text-blue-300" />
-                            </button>
-                          )}
-                          {item.status === 'planned' && (
-                            <button
-                              onClick={() => handleConvertToExecuted(item)}
-                              className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors border border-transparent hover:border-green-500/30 group"
-                              title="Convert"
-                            >
-                              <CheckCircle className="h-4 w-4 text-green-400 group-hover:text-green-300" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteTrade(item.id)}
-                            className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30 group"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-400 group-hover:text-red-300" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Metrics Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        {/* Stock Price Card */}
-                        <div className="bg-[#0f172a]/60 rounded-lg p-2.5 border border-white/5">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Stock Price</div>
-                          <div className="text-sm font-bold text-white">
-                            ${currentPrice.toFixed(2)}
-                          </div>
-                        </div>
-
-                        {/* Strike Price Card */}
-                        <div className="bg-[#0f172a]/60 rounded-lg p-2.5 border border-white/5">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Strike Price</div>
-                          <div className="text-sm font-bold text-white">
-                            ${strikePrice.toFixed(2)}
-                          </div>
-                        </div>
-
-                        {/* Variance Card */}
-                        <div className="bg-[#0f172a]/60 rounded-lg p-2.5 border border-white/5">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Variance</div>
-                          <div className={`text-sm font-bold ${variance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            ${variance.toFixed(2)} <span className="text-[10px] opacity-70">({variancePct.toFixed(1)}%)</span>
-                          </div>
-                        </div>
-
-                        {/* Premium Card */}
-                        <div className="bg-[#0f172a]/60 rounded-lg p-2.5 border border-white/5">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Premium</div>
-                          <div className="text-sm font-bold text-emerald-400">
-                            ${item.premium || '0.00'}
-                          </div>
-                        </div>
-
-                        {/* Days Left Card */}
-                        <div className="bg-[#0f172a]/60 rounded-lg p-2.5 border border-white/5">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Days Left</div>
-                          <div className="text-sm font-bold text-blue-200">
-                            {getDaysLeft(item.expirationDate)}d
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          ) : (
-            <p className="text-gray-400">No trade data available</p>
-          )}
-        </div>
+      {/* Strategy Board - Moved from Unicron AI */}
+      <div className="animate-slide-in-up">
+        <StrategySection
+          notes={strategyNotes}
+          onSave={onSaveStrategy}
+        />
       </div>
     </div>
   )

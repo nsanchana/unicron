@@ -707,6 +707,11 @@ function App() {
             onViewResearch={handleViewResearch}
             onGlobalRefresh={handleGlobalPriceUpdate}
             isRefreshing={refreshingPrices}
+            strategyNotes={strategyNotes}
+            onSaveStrategy={(notes) => {
+              setStrategyNotes(notes)
+              saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
+            }}
           />
         )}
         {
@@ -723,13 +728,6 @@ function App() {
                 onUpdateHistory={(history) => {
                   setChatHistory(history)
                   saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-                }}
-              />
-              <StrategySection
-                notes={strategyNotes}
-                onSave={(notes) => {
-                  setStrategyNotes(notes)
-                  saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
                 }}
               />
             </div>
