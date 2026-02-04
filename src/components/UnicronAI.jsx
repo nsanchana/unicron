@@ -236,7 +236,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
             {/* "Flashy" Background Glows */}
             <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-blue-600 to-emerald-600 rounded-2xl opacity-20 blur-xl group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
 
-            <div className="relative glass-card border border-white/10 overflow-hidden flex flex-col md:flex-row h-[600px] transition-all duration-500">
+            <div className="relative glass-card border border-white/10 overflow-hidden flex flex-col md:flex-row h-[800px] transition-all duration-500">
 
                 {/* Sidebar (Chat History / Settings) */}
                 <div className={`
