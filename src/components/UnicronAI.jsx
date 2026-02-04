@@ -346,7 +346,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                         <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${msg.role === 'user' ? 'text-blue-300 text-right' : 'text-purple-300'}`}>
                                             {msg.role === 'user' ? 'You' : 'Unicron AI'}
                                         </span>
-                                        <div className="prose prose-invert prose-sm max-w-none leading-relaxed" dangerouslySetInnerHTML={{
+                                        <div className="prose prose-invert text-[12px] leading-relaxed max-w-none tracking-tight" dangerouslySetInnerHTML={{
                                             // Simple formatted text rendering if model returns markdown-like syntax
                                             // For production, use a library like ReactMarkdown. handling basic spacing here.
                                             __html: msg.content.replace(/\n/g, '<br />').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
@@ -377,7 +377,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                     placeholder="Ask about your portfolio, specific trades, or market strategy..."
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 h-12 text-sm"
+                                    className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 h-12 text-xs"
                                     disabled={isLoading}
                                 />
 
