@@ -81,15 +81,17 @@ User is researching: ${userContext.researchSummary.map(r => r.symbol).join(', ')
 
         systemPrompt += `
 INSTRUCTIONS:
+- You are a research-first AI. If the user asks for data that is NOT in the [DATA SUMMARY] above (like current stock prices, recent news, or market sentiment), you MUST use your Google Search tool to find the most up-to-date information.
 - If the user asks "How is my portfolio?", analyze the metrics provided above.
-- If the user asks about a specific stock, check if it's in their Research or Trades list first. If not, use your general knowledge to provide a comprehensive answer about that stock or topic.
-- You are NOT restricted to the provided data. If the user asks about history, science, coding, or general market concepts, answer them fully and helpfuly.
+- If the user asks about a specific stock, check if it's in their Research or Trades list first. If not, OR if you need fresher data, use Google Search to provide a comprehensive answer.
+- You are NOT restricted to the provided data. You function like Gemini with full internet access + your internal platform context.
 - Address the user by their name (${userContext?.userName || 'Trader'}) in your opening greeting or when appropriate.
 - Always be helpful and encouraging, but realistic about risk.
 `
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
+            tools: [{ googleSearch: {} }],
             systemInstruction: systemPrompt
         })
 
@@ -116,7 +118,7 @@ INSTRUCTIONS:
 
         return res.status(200).json({
             response: text,
-            model: 'gemini-2.5-flash'
+            model: 'gemini-2.0-flash'
         })
 
     } catch (error) {
