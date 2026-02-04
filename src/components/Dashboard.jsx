@@ -211,7 +211,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 
 
 
-const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch }) => {
+const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch, onGlobalRefresh, isRefreshing }) => {
   const [rerunningId, setRerunningId] = useState(null)
 
   const handleDeleteTrade = (tradeId) => {
@@ -434,6 +434,15 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">at start of year</p>
           </div>
+        </div>
+
+        <div className="stat-card-primary flex flex-col justify-center items-center group cursor-pointer hover:bg-white/10 transition-all active:scale-95" onClick={onGlobalRefresh}>
+          <div className={`p-4 rounded-2xl border transition-all ${isRefreshing ? 'bg-blue-500/20 border-blue-500/40' : 'bg-white/5 border-white/10 group-hover:border-blue-500/30'}`}>
+            <RefreshCw className={`h-8 w-8 ${isRefreshing ? 'animate-spin text-blue-400' : 'text-gray-400'}`} />
+          </div>
+          <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em] mt-3">
+            {isRefreshing ? 'Syncing Market...' : 'Refresh All Prices'}
+          </p>
         </div>
 
         <div className="stat-card-success flex flex-col justify-between">

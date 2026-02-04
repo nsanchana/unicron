@@ -41,7 +41,110 @@ function App() {
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle') // 'idle', 'syncing', 'synced', 'error'
   const [lastCloudSync, setLastCloudSync] = useState(null)
   const [selectedResearch, setSelectedResearch] = useState(null)
+  const [refreshingPrices, setRefreshingPrices] = useState(false)
   const saveTimeoutRef = useRef(null)
+
+  const handleGlobalPriceUpdate = async () => {
+    if (refreshingPrices) return
+    setRefreshingPrices(true)
+
+    try {
+      // 1. Identify unique symbols that need updating
+      const activeTradeSymbols = tradeData.filter(t => !t.closed).map(t => t.symbol)
+      const activeStockSymbols = stockData.filter(s => !s.soldPrice).map(s => s.symbol)
+      const uniqueSymbols = [...new Set([...activeTradeSymbols, ...activeStockSymbols])].filter(Boolean)
+
+      if (uniqueSymbols.length === 0) {
+        alert('No active trades or stocks to update.')
+        setRefreshingPrices(false)
+        return
+      }
+
+      // 2. Fetch prices concurrently
+      const priceMap = {}
+      await Promise.all(uniqueSymbols.map(async (symbol) => {
+        try {
+          const response = await fetch('/api/scrape/stock-price', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ symbol })
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data.price) {
+              priceMap[symbol] = parseFloat(data.price)
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching price for ${symbol}:`, error)
+        }
+      }))
+
+      const now = new Date().toISOString()
+      let updatedCount = 0
+
+      // 3. Update Trade Data
+      const updatedTradeData = tradeData.map(trade => {
+        if (!trade.closed && priceMap[trade.symbol]) {
+          updatedCount++
+          return {
+            ...trade,
+            currentMarketPrice: priceMap[trade.symbol],
+            lastPriceUpdate: now
+          }
+        }
+        return trade
+      })
+
+      // 4. Update Stock Data
+      const updatedStockData = stockData.map(stock => {
+        if (!stock.soldPrice && priceMap[stock.symbol]) {
+          updatedCount++
+          return {
+            ...stock,
+            currentPrice: priceMap[stock.symbol],
+            lastPriceUpdate: now
+          }
+        }
+        return stock
+      })
+
+      // 5. Update State if changes and Persist
+      if (updatedCount > 0) {
+        setTradeData(updatedTradeData)
+        setStockData(updatedStockData)
+        saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+        saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedStockData)
+
+        // Final sync attempt
+        if (user) {
+          try {
+            await axios.post('/api/user-data', {
+              trades: updatedTradeData,
+              stocks: updatedStockData
+            }, { withCredentials: true })
+            setCloudSyncStatus('synced')
+            setLastCloudSync(new Date())
+          } catch (e) {
+            console.error('Manual sync failed:', e)
+            setCloudSyncStatus('error')
+          }
+        }
+
+        alert(`Successfully updated prices for ${Object.keys(priceMap).length} symbols.`)
+      } else {
+        alert('No prices were updated. Please check symbols or try again later.')
+      }
+
+    } catch (error) {
+      console.error('Global price update failed:', error)
+      alert('An error occurred during the global price update.')
+    } finally {
+      setRefreshingPrices(false)
+    }
+  }
 
   const handleViewResearch = (item) => {
     setSelectedResearch(item)
@@ -456,6 +559,8 @@ function App() {
             stockData={stockData}
             settings={settings}
             onViewResearch={handleViewResearch}
+            onGlobalRefresh={handleGlobalPriceUpdate}
+            isRefreshing={refreshingPrices}
           />
         )}
         {activeTab === 'unicron-ai' && (
