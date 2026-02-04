@@ -23,7 +23,8 @@ const formatTime = (dateString) => {
   return `${hours}:${minutes}:${seconds}`
 }
 
-function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch }) {
+function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch, researchQueue, onAddToQueue }) {
+  const [selectedSymbols, setSelectedSymbols] = useState(new Set())
   const [symbol, setSymbol] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
@@ -968,6 +969,61 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               </button>
             </div>
           </div>
+
+          <div className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-xl border border-white/5">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={selectedSymbols.size === researchData.slice(0, 10).length && researchData.length > 0}
+                onChange={() => {
+                  if (selectedSymbols.size === researchData.slice(0, 10).length) {
+                    setSelectedSymbols(new Set())
+                  } else {
+                    setSelectedSymbols(new Set(researchData.slice(0, 10).map(r => r.symbol)))
+                  }
+                }}
+                className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-500 focus:ring-blue-500/20"
+              />
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                {selectedSymbols.size} Selected
+              </span>
+            </div>
+
+            <button
+              onClick={() => {
+                onAddToQueue([...selectedSymbols])
+                setSelectedSymbols(new Set())
+              }}
+              disabled={selectedSymbols.size === 0}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center space-x-2"
+            >
+              <RefreshCw className={`h-3 w-3 ${researchQueue.length > 0 ? 'animate-spin' : ''}`} />
+              <span>Update Selected</span>
+            </button>
+          </div>
+
+          {researchQueue.length > 0 && (
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Research Queue</span>
+                <span className="text-[10px] font-bold text-gray-500">{researchQueue.filter(t => t.status === 'completed').length} / {researchQueue.length} Done</span>
+              </div>
+              <div className="space-y-2">
+                {researchQueue.map((task, i) => (
+                  <div key={i} className="flex items-center justify-between text-[10px] text-gray-400">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${task.status === 'processing' ? 'bg-blue-400 animate-pulse' : task.status === 'queued' ? 'bg-gray-600' : 'bg-green-400'}`}></div>
+                      <span className="font-bold text-white w-12">{task.symbol}</span>
+                      <span className="opacity-60">{task.section || 'In Queue'}</span>
+                    </div>
+                    {task.status === 'processing' && <span>{task.progress}%</span>}
+                    {task.status === 'completed' && <CheckCircle className="h-3 w-3 text-green-400" />}
+                    {task.status === 'error' && <AlertTriangle className="h-3 w-3 text-red-400" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-4">
             {sortedResearchData.slice(0, 10).map((item) => {
               const itemKey = `${item.symbol}-${item.date}`
@@ -999,6 +1055,21 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   {/* Header Row */}
                   <div className="flex justify-between items-start mb-6 relative z-10">
                     <div className="flex items-center space-x-4">
+                      {/* Selection Checkbox */}
+                      <div className="relative z-20" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSymbols.has(item.symbol)}
+                          onChange={() => {
+                            const next = new Set(selectedSymbols)
+                            if (next.has(item.symbol)) next.delete(item.symbol)
+                            else next.add(item.symbol)
+                            setSelectedSymbols(next)
+                          }}
+                          className="w-5 h-5 rounded-lg border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
+                        />
+                      </div>
+
                       {/* Company Logo */}
                       <CompanyLogo symbol={item.symbol} className="w-14 h-14" textSize="text-xl" />
 
@@ -1114,8 +1185,9 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             })}
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
 

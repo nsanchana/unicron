@@ -42,7 +42,133 @@ function App() {
   const [lastCloudSync, setLastCloudSync] = useState(null)
   const [selectedResearch, setSelectedResearch] = useState(null)
   const [refreshingPrices, setRefreshingPrices] = useState(false)
+  const [researchQueue, setResearchQueue] = useState([]) // Array of { symbol, status, progress, section }
   const saveTimeoutRef = useRef(null)
+
+  // Research Queue Worker
+  useEffect(() => {
+    const processQueue = async () => {
+      const pendingTaskIndex = researchQueue.findIndex(t => t.status === 'queued' || t.status === 'processing')
+      if (pendingTaskIndex === -1) return
+
+      const task = researchQueue[pendingTaskIndex]
+      if (task.status === 'processing') return // Already being handled
+
+      // Mark as processing
+      const updateTask = (updates) => {
+        setResearchQueue(prev => {
+          const next = [...prev]
+          next[pendingTaskIndex] = { ...next[pendingTaskIndex], ...updates }
+          return next
+        })
+      }
+
+      updateTask({ status: 'processing', progress: 0, section: 'Initializing' })
+
+      try {
+        const { symbol } = task
+        const sections = ['companyAnalysis', 'financialHealth', 'technicalAnalysis', 'recentDevelopments']
+        const results = {}
+        const startTime = new Date()
+
+        for (let i = 0; i < sections.length; i++) {
+          const section = sections[i]
+          const sectionDisplayName = section.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+
+          updateTask({ section: sectionDisplayName, progress: Math.round((i / sections.length) * 100) })
+
+          let sectionData = null
+          let attempts = 0
+          const maxAttempts = 2
+
+          while (attempts < maxAttempts && !sectionData) {
+            try {
+              const { scrapeCompanyData } = await import('./services/webScraping')
+              sectionData = await scrapeCompanyData(symbol, section)
+            } catch (err) {
+              attempts++
+              if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 2000))
+            }
+          }
+
+          if (sectionData) {
+            results[section] = sectionData
+          }
+
+          // Small delay between sections
+          await new Promise(r => setTimeout(r, 1000))
+        }
+
+        // Finalize Research Object
+        const companyPillars = [
+          results.companyAnalysis?.detailedAnalysis?.marketPosition?.rating || 0,
+          results.companyAnalysis?.detailedAnalysis?.businessModel?.rating || 0,
+          results.companyAnalysis?.detailedAnalysis?.industryTrends?.rating || 0,
+          results.companyAnalysis?.detailedAnalysis?.customerBase?.rating || 0,
+          results.companyAnalysis?.detailedAnalysis?.growthStrategy?.rating || 0,
+          results.companyAnalysis?.detailedAnalysis?.economicMoat?.rating || 0
+        ].filter(r => r > 0)
+
+        const otherModules = [
+          results.financialHealth?.rating || 0,
+          results.technicalAnalysis?.rating || 0,
+          results.recentDevelopments?.rating || 0
+        ].filter(r => r > 0)
+
+        const allRatings = [...companyPillars, ...otherModules]
+        const overallRating = allRatings.length > 0
+          ? Math.round(allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length)
+          : 0
+
+        const newResearch = {
+          symbol,
+          date: startTime.toISOString(),
+          ...results,
+          overallRating,
+          lastRefresh: startTime.toISOString(),
+          saved: true,
+          chatHistory: []
+        }
+
+        // Update Research Data
+        setResearchData(prev => {
+          const filtered = prev.filter(r => r.symbol !== symbol)
+          const next = [newResearch, ...filtered]
+          saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, next)
+          return next
+        })
+
+        updateTask({ status: 'completed', progress: 100, section: 'Done' })
+
+        // Auto-remove completed tasks after 5 seconds
+        setTimeout(() => {
+          setResearchQueue(prev => prev.filter(t => t.symbol !== symbol))
+        }, 5000)
+
+      } catch (error) {
+        console.error(`Research queue error for ${task.symbol}:`, error)
+        updateTask({ status: 'error', section: 'Failed' })
+      }
+    }
+
+    processQueue()
+  }, [researchQueue, researchData])
+
+  const handleAddToResearchQueue = (symbols) => {
+    const symbolsArray = Array.isArray(symbols) ? symbols : [symbols]
+    const newTasks = symbolsArray.map(s => ({
+      symbol: s.toUpperCase(),
+      status: 'queued',
+      progress: 0,
+      section: 'Waiting'
+    }))
+
+    setResearchQueue(prev => {
+      const existingSymbols = new Set(prev.map(t => t.symbol))
+      const filtered = newTasks.filter(t => !existingSymbols.has(t.symbol))
+      return [...prev, ...filtered]
+    })
+  }
 
   const handleGlobalPriceUpdate = async () => {
     if (refreshingPrices) return
@@ -613,6 +739,8 @@ function App() {
               lastRefresh={lastRefresh}
               selectedResearch={selectedResearch}
               onViewResearch={setSelectedResearch}
+              researchQueue={researchQueue}
+              onAddToQueue={handleAddToResearchQueue}
             />
           )
         }
