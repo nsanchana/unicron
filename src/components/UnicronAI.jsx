@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Send, Mic, Sparkles, MessageSquare, Trash2, X, ChevronRight, ChevronLeft, Volume2, StopCircle, RefreshCw } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { UNICRON_AI_VERSION } from '../config'
 
 const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
@@ -346,11 +348,11 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                         <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${msg.role === 'user' ? 'text-blue-300 text-right' : 'text-purple-300'}`}>
                                             {msg.role === 'user' ? 'You' : 'Unicron AI'}
                                         </span>
-                                        <div className="prose prose-invert text-[12px] leading-relaxed max-w-none tracking-tight" dangerouslySetInnerHTML={{
-                                            // Simple formatted text rendering if model returns markdown-like syntax
-                                            // For production, use a library like ReactMarkdown. handling basic spacing here.
-                                            __html: msg.content.replace(/\n/g, '<br />').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-                                        }} />
+                                        <div className="text-[13px] leading-relaxed max-w-none tracking-tight prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-img:rounded-xl prose-img:shadow-2xl prose-img:border prose-img:border-white/10">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
