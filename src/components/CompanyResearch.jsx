@@ -39,6 +39,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [selectedResearch])
+
+  // Handle URL-based ticker trigger
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const ticker = searchParams.get('ticker')
+    if (ticker && !loading && !companyData) {
+      const upperTicker = ticker.toUpperCase()
+      setSymbol(upperTicker)
+      handleSearch(null, upperTicker)
+    }
+  }, [])
   const [expandedSections, setExpandedSections] = useState({
     companyAnalysis: true,
     financialHealth: true,
@@ -143,9 +154,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     }))
   }
 
-  const handleSearch = async (e) => {
-    e.preventDefault()
-    if (!symbol.trim()) return
+  const handleSearch = async (e, symbolOverride = null) => {
+    if (e) e.preventDefault()
+    const targetSymbol = symbolOverride || symbol
+    if (!targetSymbol.trim()) return
 
     setLoading(true)
     setLoadingProgress(0)
@@ -165,7 +177,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
       // Initialize with skeleton data to allow incremental updates
       setCompanyData({
-        symbol: symbol.toUpperCase(),
+        symbol: targetSymbol.toUpperCase(),
         date: lastRefresh.toISOString(),
         lastRefresh: lastRefresh.toISOString(),
         overallRating: 0,
@@ -175,7 +187,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
       for (let i = 0; i < sections.length; i++) {
         const section = sections[i]
         setCurrentLoadingSection(section.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()))
-        console.log(`Scraping ${section} for ${symbol}...`)
+        console.log(`Scraping ${section} for ${targetSymbol}...`)
 
         let sectionData = null
         let attempts = 0
@@ -183,7 +195,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
         while (attempts < maxAttempts && !sectionData) {
           try {
-            sectionData = await scrapeCompanyData(symbol.toUpperCase(), section)
+            sectionData = await scrapeCompanyData(targetSymbol.toUpperCase(), section)
             console.log(`Successfully scraped ${section} on attempt ${attempts + 1}`)
           } catch (err) {
             attempts++
@@ -501,13 +513,15 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {data.metrics && data.metrics.length > 0 && isTechnicalAnalysis && (
               <div>
                 <h4 className="font-medium mb-3">Key Metrics</h4>
+                <h4 className="font-medium mb-3 text-[var(--text-primary)]">Key Metrics</h4>
                 {/* Current Price - Prominent Display */}
                 {data.metrics.find(m => m.label === 'Current Price') && (
                   <div className="bg-gradient-to-r from-primary-900 to-primary-800 rounded-lg p-4 mb-4 border border-primary-600">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">Current Price</span>
-                      <span className="text-3xl font-bold text-white">
-                        ${data.metrics.find(m => m.label === 'Current Price')?.value}
+                      <span className="text-[var(--text-secondary)] text-sm">Current Price</span>
+                      {/* Root symbol or local state fallback */}
+                      <span className="text-3xl font-black text-[var(--text-primary)]">
+                        {(companyData?.symbol || symbol || 'SYMBOL').toUpperCase()} ${data.metrics.find(m => m.label === 'Current Price')?.value || '0.00'}
                       </span>
                     </div>
                   </div>
@@ -519,11 +533,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.targetPriceAnalysis.title}</h5>
                     {data.detailedTechnical.targetPriceAnalysis.targetPrice && (
                       <div className="flex items-center mb-3">
-                        <span className="text-gray-400 text-sm mr-2">Analyst Target:</span>
+                        <span className="text-[var(--text-secondary)] text-sm mr-2">Analyst Target:</span>
                         <span className="text-2xl font-bold text-blue-300">{data.detailedTechnical.targetPriceAnalysis.targetPrice}</span>
                       </div>
                     )}
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.targetPriceAnalysis.content}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.targetPriceAnalysis.content}</p>
                   </div>
                 )}
 
@@ -543,13 +557,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                             <div className="text-green-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-gray-400 text-sm mt-1">
+                            <div className="text-[var(--text-secondary)] text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
                         ))}
                       {data.metrics.filter(m => m.label.includes('Support')).length === 0 && (
-                        <p className="text-gray-500 text-sm">No support levels identified</p>
+                        <p className="text-[var(--text-secondary)] text-sm">No support levels identified</p>
                       )}
                     </div>
                   </div>
@@ -568,13 +582,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                             <div className="text-red-300 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-gray-400 text-sm mt-1">
+                            <div className="text-[var(--text-secondary)] text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
                         ))}
                       {data.metrics.filter(m => m.label.includes('Resistance')).length === 0 && (
-                        <p className="text-gray-500 text-sm">No resistance levels identified</p>
+                        <p className="text-[var(--text-secondary)] text-sm">No resistance levels identified</p>
                       )}
                     </div>
                   </div>
@@ -585,12 +599,12 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Key Metrics - Standard rendering for other sections */}
             {data.metrics && data.metrics.length > 0 && !isTechnicalAnalysis && (
               <div>
-                <h4 className="font-medium mb-2">Key Metrics</h4>
+                <h4 className="font-medium mb-2 text-[var(--text-primary)]">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {data.metrics.map((metric, index) => (
                     <div key={index} className="flex justify-between text-sm glass-item p-2">
-                      <span className="text-gray-400">{metric.label}:</span>
-                      <span className="font-medium">{metric.value}</span>
+                      <span className="text-[var(--text-secondary)]">{metric.label}:</span>
+                      <span className="font-medium text-[var(--text-primary)]">{metric.value}</span>
                     </div>
                   ))}
                 </div>
@@ -600,7 +614,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Analysis Sections - Only for Company Analysis */}
             {isCompanyAnalysis && data.detailedAnalysis && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Detailed Analysis</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Detailed Analysis</h4>
                 {renderDetailedSubsection(data.detailedAnalysis.marketPosition)}
                 {renderDetailedSubsection(data.detailedAnalysis.businessModel)}
                 {renderDetailedSubsection(data.detailedAnalysis.industryTrends)}
@@ -613,13 +627,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Technical Analysis */}
             {isTechnicalAnalysis && data.detailedTechnical && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Technical Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Technical Details</h4>
 
                 {/* 30-60 Day Trend Outlook */}
                 {data.detailedTechnical.trend30to60Days && (
                   <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.trend30to60Days.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
                   </div>
                 )}
 
@@ -629,7 +643,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 {data.detailedTechnical.optionsStrategy && (
                   <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.optionsStrategy.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
                   </div>
                 )}
               </div>
@@ -638,17 +652,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Recent Developments */}
             {isRecentDevelopments && data.detailedDevelopments && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2">Event Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Event Details</h4>
 
                 {/* Next Earnings Call */}
                 {data.detailedDevelopments.nextEarningsCall && (
                   <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.nextEarningsCall.title}</h5>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-400 font-medium mr-2">Date:</span>
-                      <span className="text-gray-200">{data.detailedDevelopments.nextEarningsCall.date}</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[var(--text-secondary)]">Next Earnings</span>
+                      <span className="text-[var(--text-primary)]">{data.detailedDevelopments.nextEarningsCall.date}</span>
                     </div>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
                   </div>
                 )}
 
@@ -660,11 +674,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                       {data.detailedDevelopments.majorEvents.events.map((event, i) => (
                         <div key={i} className="border-l-2 border-primary-500 pl-3">
                           <div className="flex justify-between items-start">
-                            <span className="font-medium text-gray-200">{event.event}</span>
-                            {event.date && <span className="text-xs text-gray-400 ml-2">{event.date}</span>}
+                            <span className="font-medium text-[var(--text-primary)]">{event.event}</span>
+                            {event.date && <span className="text-xs text-[var(--text-secondary)] ml-2">{event.date}</span>}
                           </div>
                           {event.expectedImpact && (
-                            <p className="text-sm text-gray-400 mt-1">{event.expectedImpact}</p>
+                            <p className="text-sm text-[var(--text-secondary)] mt-1">{event.expectedImpact}</p>
                           )}
                         </div>
                       ))}
@@ -676,7 +690,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 {data.detailedDevelopments.catalysts && (
                   <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.catalysts.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
                   </div>
                 )}
 
@@ -684,7 +698,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 {data.detailedDevelopments.optionsImplication && (
                   <div className="glass-card mb-3">
                     <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.optionsImplication.title}</h5>
-                    <p className="text-gray-300 text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
+                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
                   </div>
                 )}
               </div>
@@ -693,7 +707,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Signals */}
             {data.signals && data.signals.length > 0 && (
               <div>
-                <h4 className="font-medium mb-2">Signals</h4>
+                <h4 className="font-medium mb-2 text-[var(--text-primary)]">Signals</h4>
                 <div className="space-y-1">
                   {data.signals.map((signal, index) => (
                     <div key={index} className={`text-sm p-2 rounded ${signal.type === 'positive' ? 'bg-green-900 text-green-300' :
@@ -720,14 +734,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         <form onSubmit={handleSearch} className="flex gap-4">
           <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+              <Search className="h-5 w-5 text-[var(--text-secondary)] group-focus-within:text-blue-400 transition-colors" />
             </div>
             <input
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
               placeholder="SEARCH ASSET (E.G. AAPL, TSLA, NVDA)"
-              className="glass-input w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-gray-700"
+              className="glass-input w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-[var(--text-secondary)]"
             />
           </div>
           <button
@@ -736,7 +750,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center space-x-3"
           >
             {loading ? (
-              <RefreshCw className="h-5 w-5 animate-spin" />
+              <RefreshCw className="h-5 w-5" />
             ) : (
               <Search className="h-5 w-5" />
             )}
@@ -754,8 +768,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     <Loader2 className="h-5 w-5 text-primary-400 animate-spin" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Analyzing {symbol.toUpperCase()}</h3>
-                    <p className="text-sm text-gray-400">Current step: <span className="text-primary-400 font-medium">{currentLoadingSection || 'Initializing...'}</span></p>
+                    <h3 className="font-semibold text-[var(--text-primary)]">Analyzing {symbol.toUpperCase()}</h3>
+                    <p className="text-sm text-[var(--text-secondary)]">Current step: <span className="text-primary-400 font-medium">{currentLoadingSection || 'Initializing...'}</span></p>
                   </div>
                 </div>
                 <span className="text-2xl font-bold text-primary-400">{loadingProgress}%</span>

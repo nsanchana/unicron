@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { UNICRON_AI_VERSION } from '../config'
 
-const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory }) => {
+const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory, theme }) => {
     const [messages, setMessages] = useState([])
     const [activeSessionId, setActiveSessionId] = useState(null)
     const [input, setInput] = useState('')
@@ -243,10 +243,10 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                 {/* Sidebar (Chat History / Settings) */}
                 <div className={`
           ${isSidebarOpen ? 'w-64' : 'w-0'} 
-          bg-[#0f172a]/95 backdrop-blur-xl border-r border-white/5 transition-all duration-300 relative overflow-hidden flex flex-col z-20
+          bg-[var(--bg-primary)] backdrop-blur-xl border-r border-white/5 transition-all duration-300 relative overflow-hidden flex flex-col z-20
         `}>
                     <div className="p-4 border-b border-white/5 whitespace-nowrap space-y-4">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
                             <MessageSquare className="h-3 w-3" /> History
                         </h3>
                         <button
@@ -266,10 +266,10 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                        <div className={`text-xs font-bold truncate ${activeSessionId === session.id ? 'text-blue-400' : 'text-gray-200'}`}>
+                                        <div className={`text-xs font-bold truncate ${activeSessionId === session.id ? 'text-blue-400' : 'text-[var(--text-primary)]'}`}>
                                             {session.title}
                                         </div>
-                                        <div className="text-[10px] text-gray-500 truncate mt-1">
+                                        <div className="text-[10px] text-[var(--text-secondary)] truncate mt-1">
                                             {session.messages[session.messages.length - 1]?.content || 'Empty Chat'}
                                         </div>
                                     </div>
@@ -298,14 +298,14 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                 </div>
 
                 {/* Main Chat Area */}
-                <div className="flex-1 flex flex-col h-full bg-gradient-to-b from-[#0f172a]/50 to-black/50">
+                <div className="flex-1 flex flex-col h-full bg-[var(--bg-primary)]">
 
                     {/* Header */}
-                    <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20 backdrop-blur-md">
+                    <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/5 backdrop-blur-md">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"
+                                className="p-2 hover:bg-white/10 rounded-lg text-[var(--text-secondary)] transition-colors"
                                 title="Toggle Sidebar"
                             >
                                 {isSidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
@@ -315,9 +315,9 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                     <Sparkles className="h-5 w-5 text-white animate-pulse" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                                    <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
                                         UNICRON AI <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">BETA</span>
-                                        <span className="text-[9px] text-gray-500 font-medium ml-1 opacity-50">{UNICRON_AI_VERSION}</span>
+                                        <span className="text-[9px] text-[var(--text-secondary)] font-medium ml-1 opacity-50">{UNICRON_AI_VERSION}</span>
                                     </h2>
                                 </div>
                             </div>
@@ -339,16 +339,16 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div className={`
-                  max-w-[85%] rounded-2xl p-4 shadow-xl backdrop-blur-sm
+                  max-w-[85%] rounded-2xl p-5 shadow-xl backdrop-blur-sm
                   ${msg.role === 'user'
-                                        ? 'bg-blue-600/20 border border-blue-500/30 text-blue-50 rounded-tr-md'
-                                        : 'bg-[#1e293b]/80 border border-white/10 text-gray-100 rounded-tl-md'}
+                                        ? 'bg-blue-600/10 border border-blue-500/30 text-[var(--text-primary)] rounded-tr-md'
+                                        : 'bg-[var(--inner-card-bg)] border border-white/10 text-[var(--text-primary)] rounded-tl-md'}
                 `}>
                                     <div className="flex flex-col gap-1">
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${msg.role === 'user' ? 'text-blue-300 text-right' : 'text-purple-300'}`}>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${msg.role === 'user' ? 'text-blue-500 text-right' : 'text-purple-400'}`}>
                                             {msg.role === 'user' ? 'You' : 'Unicron AI'}
                                         </span>
-                                        <div className="text-[13px] leading-relaxed max-w-none tracking-tight prose prose-invert prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-img:rounded-xl prose-img:shadow-2xl prose-img:border prose-img:border-white/10">
+                                        <div className={`text-[15px] leading-relaxed max-w-none tracking-tight prose ${theme === 'dark' ? 'prose-invert' : 'prose-slate'} prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-img:rounded-xl prose-img:shadow-2xl prose-img:border prose-img:border-white/10 prose-headings:mb-3 prose-p:mb-4 last:prose-p:mb-0`}>
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                 {msg.content}
                                             </ReactMarkdown>
@@ -370,7 +370,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-4 bg-black/20 border-t border-white/10 backdrop-blur-md">
+                    <div className="p-4 bg-black/5 border-t border-white/10 backdrop-blur-md">
                         <div className="flex items-end gap-3 max-w-4xl mx-auto">
                             <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-1 pl-4 flex items-center focus-within:bg-white/10 focus-within:border-white/20 transition-all shadow-inner">
                                 <input
@@ -379,7 +379,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                     placeholder="Ask about your portfolio, specific trades, or market strategy..."
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 h-12 text-xs"
+                                    className="flex-1 bg-transparent border-none focus:ring-0 text-[var(--text-primary)] placeholder-gray-500 h-12 text-sm"
                                     disabled={isLoading}
                                 />
 

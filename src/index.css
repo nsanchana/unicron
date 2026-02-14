@@ -13,22 +13,47 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Premium Design Tokens */
+  /* Theme variables - Default (Dark) */
+  --bg-primary: #030712;
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.5);
   --glass-bg: rgba(17, 24, 39, 0.7);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.03);
-
+  --input-bg: rgba(17, 24, 39, 0.5);
+  --input-focus-bg: rgba(17, 24, 39, 0.7);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --card-hover-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+  --header-bg: linear-gradient(to bottom, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.85) 100%);
+  --nav-bg: rgba(3, 7, 18, 0.6);
   --primary-glow: rgba(59, 130, 246, 0.15);
   --success-glow: rgba(16, 185, 129, 0.15);
   --warning-glow: rgba(245, 158, 11, 0.15);
   --danger-glow: rgba(239, 68, 68, 0.15);
+  --inner-card-bg: rgba(15, 23, 42, 0.6);
 }
 
 .light-mode {
-  color: rgba(17, 24, 39, 0.9);
-  background-color: #f9fafb;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --bg-primary: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-focus-bg: #ffffff;
+  --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --card-hover-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.12);
+  --header-bg: linear-gradient(to bottom, rgba(248, 250, 252, 0.98) 0%, rgba(248, 250, 252, 0.9) 100%);
+  --nav-bg: rgba(248, 250, 252, 0.7);
+  --primary-glow: rgba(59, 130, 246, 0.08);
+  --success-glow: rgba(16, 185, 129, 0.08);
+  --warning-glow: rgba(245, 158, 11, 0.08);
+  --danger-glow: rgba(239, 68, 68, 0.08);
+  --inner-card-bg: rgba(255, 255, 255, 0.8);
+
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 body {
@@ -50,38 +75,44 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(155, 155, 155, 0.2);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(155, 155, 155, 0.3);
 }
 
 /* Glassmorphism Card System */
 .card {
-  @apply backdrop-blur-md rounded-2xl p-6 transition-all duration-300;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: var(--card-shadow);
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
-}
-
-.light-mode .card {
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  box-shadow: var(--card-hover-shadow);
 }
 
 /* Glass Card - Enhanced version */
 .glass-card {
-  @apply backdrop-blur-xl rounded-2xl p-6 transition-all duration-300 relative overflow-hidden;
-  background: linear-gradient(145deg, rgba(17, 24, 39, 0.7) 0%, rgba(17, 24, 39, 0.4) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow), inset 0 1px 0 0 var(--glass-highlight);
 }
 
 .glass-card::before {
@@ -91,51 +122,39 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
   opacity: 0.5;
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: var(--card-hover-shadow), inset 0 1px 0 0 var(--glass-highlight);
   transform: translateY(-2px);
-}
-
-.light-mode .glass-card {
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
 }
 
 /* Glass Input */
 .glass-input {
-  @apply backdrop-blur-md rounded-xl px-4 py-2.5 transition-all duration-300 outline-none;
-  background: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  background: var(--input-bg);
   border: 1px solid var(--glass-border);
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary);
 }
 
 .glass-input:focus {
   border-color: rgba(59, 130, 246, 0.5);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 16px 0 rgba(59, 130, 246, 0.2);
-  background: rgba(17, 24, 39, 0.7);
+  background: var(--input-focus-bg);
 }
 
 .glass-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.light-mode .glass-input {
-  background: rgba(255, 255, 255, 0.7);
-  color: rgba(17, 24, 39, 0.9);
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-.light-mode .glass-input:focus {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(59, 130, 246, 0.5);
-}
-
-.light-mode .glass-input::placeholder {
-  color: rgba(17, 24, 39, 0.4);
+  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 /* Glass Button */
@@ -143,13 +162,14 @@ body {
   @apply backdrop-blur-md rounded-xl px-6 py-3 font-bold transition-all duration-300;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
 }
 
 .glass-button:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.15);
 }
 
 .glass-button:active {
@@ -162,6 +182,7 @@ h2,
 h3,
 h4 {
   @apply tracking-tight font-bold;
+  color: var(--text-primary);
 }
 
 /* Animations */
@@ -231,13 +252,12 @@ h4 {
 }
 
 .header-differentiated {
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.85) 100%);
+  background: var(--header-bg);
   border-bottom: 2px solid rgba(59, 130, 246, 0.25);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
 
 .light-mode .header-differentiated {
-  background: linear-gradient(to bottom, rgba(248, 250, 252, 0.98) 0%, rgba(248, 250, 252, 0.9) 100%);
   border-bottom: 2px solid rgba(59, 130, 246, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
@@ -292,10 +312,11 @@ h4 {
 
 .input-primary {
   @apply bg-gray-900/50 border border-gray-700/50 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all;
+  color: var(--text-primary);
 }
 
 .light-mode .input-primary {
-  @apply bg-white border-gray-200 text-gray-900;
+  @apply bg-white border-gray-200;
 }
 
 /* Stat Card Variants */
@@ -332,32 +353,49 @@ h4 {
   @apply border-b border-white/10;
 }
 
+.light-mode .glass-table thead {
+  @apply border-gray-200;
+}
+
 .glass-table th {
   @apply px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-400;
 }
 
+.light-mode .glass-table th {
+  @apply text-slate-500;
+}
+
 .glass-table td {
   @apply px-4 py-4 text-sm;
+  color: var(--text-primary);
 }
 
 .glass-table tbody tr {
   @apply border-b border-white/5 transition-colors duration-200;
 }
 
+.light-mode .glass-table tbody tr {
+  @apply border-gray-100;
+}
+
 .glass-table tbody tr:hover {
   @apply bg-white/5;
+}
+
+.light-mode .glass-table tbody tr:hover {
+  @apply bg-blue-50/50;
 }
 
 /* Glass Item - For list items and nested cards */
 .glass-item {
   @apply backdrop-blur-md rounded-xl p-4 transition-all duration-300 border border-white/5;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+  background: var(--inner-card-bg);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .glass-item:hover {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
+  border-color: rgba(59, 130, 246, 0.2);
   transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
@@ -365,22 +403,13 @@ h4 {
 /* Glass Navigation */
 .glass-nav {
   @apply backdrop-blur-xl border-b border-white/5 transition-all duration-300;
-  background: rgba(3, 7, 18, 0.6);
+  background: var(--nav-bg);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .glass-nav.scrolled {
-  background: rgba(3, 7, 18, 0.85);
+  background: var(--nav-bg);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-}
-
-.light-mode .glass-item {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 0, 0, 0.05);
-}
-
-.light-mode .glass-item:hover {
-  background: rgba(255, 255, 255, 0.8);
 }
 
 /* Explicit Custom Scrollbar for Chat */
@@ -389,15 +418,15 @@ h4 {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(155, 155, 155, 0.3);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(155, 155, 155, 0.5);
 }

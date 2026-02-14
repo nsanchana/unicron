@@ -48,7 +48,7 @@ A comprehensive options trading analysis tool with web scraping, portfolio manag
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd options-trading-ai-enhanced
+   cd unicron
    ```
 
 2. **Install dependencies**

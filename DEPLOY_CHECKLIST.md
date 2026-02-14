@@ -7,12 +7,12 @@
 
 ### 2. Import Project
 - Click **"Add New..." → "Project"**
-- Find: `nsanchana/git-practice`
+- Find: `nsanchana/unicron`
 - Click **"Import"**
 
 ### 3. Configure Root Directory
 - Click **"Edit"** next to Root Directory
-- Select: `options-trading-ai-enhanced`
+- Select: `unicron` (root)
 - Framework: Vite ✅ (auto-detected)
 - Build Command: `npm run build` ✅ (auto-filled)
 - Output: `dist` ✅ (auto-filled)
@@ -30,7 +30,7 @@
 
 **To find your API key:**
 ```bash
-cat /Users/nareshsanchana/git-practice/options-trading-ai-enhanced/.env
+cat c:\Users\nsanc\.gemini\antigravity\scratch\unicron\.env
 ```
 
 ### 5. Deploy

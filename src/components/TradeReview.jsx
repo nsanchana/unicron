@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react'
+import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
@@ -21,11 +21,14 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   const [tradeType, setTradeType] = useState('cashSecuredPut') // cashSecuredPut or coveredCall
   const [currentPrice, setCurrentPrice] = useState('')
   const [premium, setPremium] = useState('')
+  const [quantity, setQuantity] = useState('1')
   const [fetchingPrice, setFetchingPrice] = useState(false)
   const [priceError, setPriceError] = useState('')
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(false)
   const [historyFilter, setHistoryFilter] = useState('all') // 'all', 'planned', 'executed', 'expired'
+  const [sortBy, setSortBy] = useState('newest') // newest, symbol, expiry, variance, premium
+  const [editingId, setEditingId] = useState(null)
 
   // Chat state
   const [chatOpen, setChatOpen] = useState(false)
@@ -210,6 +213,63 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     }
 
     checkAndRefreshPrices()
+
+    // Handle /log URL trigger
+    const path = window.location.pathname
+    if (path === '/log') {
+      const params = new URLSearchParams(window.location.search)
+      const ticker = params.get('ticker')
+      const type = params.get('type')
+      const strike = params.get('strike')
+      const expiry = params.get('expiry')
+      const prem = params.get('premium')
+
+      if (ticker && type && strike && expiry && prem) {
+        const createAutoTrade = async () => {
+          setLoading(true)
+          const price = await getPrice(ticker.toUpperCase())
+          setLoading(false)
+
+          if (price) {
+            const stPrice = parseFloat(strike)
+            const timestamp = new Date().toISOString()
+            const quickTrade = {
+              id: Date.now(),
+              symbol: ticker.toUpperCase(),
+              tradeType: type,
+              type: type,
+              optionType: type === 'cashSecuredPut' ? 'put' : 'call',
+              strikePrice: stPrice,
+              expirationDate: expiry,
+              stockPrice: parseFloat(price),
+              premium: parseFloat(prem),
+              quantity: 1,
+              closed: false,
+              executed: false,
+              planned: true,
+              status: 'planned',
+              timestamp,
+              rating: 5,
+              riskAssessment: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
+              riskMetrics: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
+              recommendation: { action: 'Auto Log', confidence: 0, rationale: 'Automatically logged from URL trigger.', rating: 5 },
+              hasResearchData: false,
+              quickSave: true
+            }
+
+            setTradeData(prev => {
+              const next = [quickTrade, ...prev]
+              saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, next)
+              return next
+            })
+            alert(`Trade for ${ticker.toUpperCase()} automatically logged as PLANNED!`)
+            // Clear URL to prevent re-creation on refresh
+            window.history.replaceState({}, document.title, '/trades')
+          }
+        }
+        createAutoTrade()
+      }
+    }
   }, []) // Run once on mount
 
   // Fetch price when symbol changes
@@ -224,10 +284,15 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   }
 
   const handleQuickSave = (tradeStatus) => {
-    if (!selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium || !tradeDate) {
+    if (!selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium || !tradeDate || !quantity) {
       alert('Please fill in all required fields before saving.')
       return
     }
+
+    const sPrice = parseFloat(currentPrice)
+    const stPrice = parseFloat(strikePrice)
+    const prem = parseFloat(premium)
+    const qty = parseInt(quantity) || 1
 
     // Create timestamp from selected trade date
     // Set time to noon to avoid timezone issues shifting the date
@@ -235,55 +300,86 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     timestamp.setHours(12, 0, 0, 0)
     const timestampIso = timestamp.toISOString()
 
-    // Create a minimal trade record without full analysis
-    const quickTrade = {
-      id: Date.now(),
-      symbol: selectedSymbol.toUpperCase(),
-      tradeType,
-      type: tradeType,
-      optionType,
-      strikePrice: parseFloat(strikePrice),
-      expirationDate,
-      stockPrice: parseFloat(currentPrice),
-      premium: parseFloat(premium),
-      quantity: 1,
-      closed: false,
-      executed: tradeStatus === 'executed',
-      planned: tradeStatus === 'planned',
-      status: tradeStatus,
-      timestamp: timestampIso,
-      executionDate: tradeStatus === 'executed' ? timestampIso : null,
-      // Minimal data for quick save (no full analysis)
-      rating: 5, // Neutral rating
-      riskAssessment: {
-        overallRisk: 'Medium',
-        maxLoss: parseFloat(strikePrice) * 100,
-        factors: []
-      },
-      riskMetrics: {
-        overallRisk: 'Medium',
-        maxLoss: parseFloat(strikePrice) * 100,
-        factors: []
-      },
-      recommendation: {
-        action: 'Quick Save',
-        confidence: 0,
-        rationale: 'This trade was saved without full analysis.',
-        rating: 5
-      },
-      hasResearchData: false,
-      quickSave: true // Flag to indicate this was a quick save
+    // Calculate risk metrics for quick save
+    const maxLoss = stPrice * 100
+    const riskAssessment = {
+      overallRisk: 'Medium',
+      maxLoss: maxLoss,
+      factors: []
     }
 
-    // Add to trade data
-    setTradeData(prev => [quickTrade, ...prev])
-    saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, [quickTrade, ...tradeData])
+    // Create/Update trade record
+    if (editingId) {
+      const updatedTradeData = tradeData.map(trade => {
+        if (trade.id === editingId) {
+          return {
+            ...trade,
+            symbol: selectedSymbol.toUpperCase(),
+            tradeType,
+            type: tradeType,
+            optionType,
+            strikePrice: stPrice,
+            expirationDate,
+            stockPrice: sPrice,
+            premium: prem,
+            quantity: qty,
+            executed: tradeStatus === 'executed',
+            planned: tradeStatus === 'planned',
+            status: tradeStatus,
+            timestamp: timestampIso,
+            executionDate: tradeStatus === 'executed' ? timestampIso : null,
+            riskAssessment: {
+              ...trade.riskAssessment,
+              maxLoss: maxLoss
+            },
+            riskMetrics: {
+              ...trade.riskMetrics,
+              maxLoss: maxLoss
+            }
+          }
+        }
+        return trade
+      })
 
-    // Show success message
-    const message = tradeStatus === 'executed'
-      ? `${selectedSymbol} trade saved as EXECUTED on ${formatDateDDMMYYYY(timestampIso)}!`
-      : `${selectedSymbol} trade saved as PLANNED for ${formatDateDDMMYYYY(timestampIso)}!`
-    alert(message)
+      setTradeData(updatedTradeData)
+      saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+      setEditingId(null)
+      alert(`Trade for ${selectedSymbol} updated successfully!`)
+    } else {
+      const quickTrade = {
+        id: Date.now(),
+        symbol: selectedSymbol.toUpperCase(),
+        tradeType,
+        type: tradeType,
+        optionType,
+        strikePrice: stPrice,
+        expirationDate,
+        stockPrice: sPrice,
+        premium: prem,
+        quantity: qty,
+        closed: false,
+        executed: tradeStatus === 'executed',
+        planned: tradeStatus === 'planned',
+        status: tradeStatus,
+        timestamp: timestampIso,
+        executionDate: tradeStatus === 'executed' ? timestampIso : null,
+        rating: 5,
+        riskAssessment,
+        riskMetrics: riskAssessment,
+        recommendation: {
+          action: 'Quick Save',
+          confidence: 0,
+          rationale: 'This trade was saved without full analysis.',
+          rating: 5
+        },
+        hasResearchData: false,
+        quickSave: true
+      }
+
+      setTradeData(prev => [quickTrade, ...prev])
+      saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, [quickTrade, ...tradeData])
+      alert(tradeStatus === 'executed' ? `${selectedSymbol} trade saved as EXECUTED!` : `${selectedSymbol} trade saved as PLANNED!`)
+    }
 
     // Clear the form
     setSelectedSymbol('')
@@ -291,6 +387,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     setExpirationDate('')
     setCurrentPrice('')
     setPremium('')
+    setQuantity('1')
     setPriceError('')
     // Keep the date as is, user might be entering multiple historic trades
   }
@@ -454,10 +551,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
     // Persist to localStorage
     saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+    setEditingId(null)
 
     // Show success message
     const message = tradeStatus === 'executed'
-      ? `Trade for ${analysis.symbol} saved as EXECUTED on ${formatDateDDMMYYYY(analysis.timestamp)}!`
+      ? `Trade for ${analysis.symbol} saved as EXECUTED!`
       : `Trade for ${analysis.symbol} saved as PLANNED!`
     alert(message)
   }
@@ -473,6 +571,9 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     if (analysis && analysis.id === tradeId) {
       setAnalysis(null)
     }
+    if (editingId === tradeId) {
+      setEditingId(null)
+    }
   }
 
   const handleEditTrade = (trade) => {
@@ -483,6 +584,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     setTradeType(trade.tradeType)
     setCurrentPrice(trade.stockPrice.toString())
     setPremium(trade.premium.toString())
+    setQuantity((trade.quantity || 1).toString())
 
     // Set timestamp/date - check if it's a valid date string
     if (trade.timestamp) {
@@ -496,6 +598,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
     // Set the analysis to the trade so it can be updated
     setAnalysis(trade)
+    setEditingId(trade.id)
 
     // Scroll to top of page
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -722,6 +825,23 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             <CheckCircle className="h-4 w-4" />
             <span>Quick Save as Executed</span>
           </button>
+
+          {editingId && (
+            <button
+              onClick={() => {
+                setEditingId(null)
+                setSelectedSymbol('')
+                setStrikePrice('')
+                setExpirationDate('')
+                setCurrentPrice('')
+                setPremium('')
+                setAnalysis(null)
+              }}
+              className="flex-1 min-w-[120px] flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <span>Cancel Edit</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -985,24 +1105,21 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
                         }`}
                     >
-                      {msg.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'assistant' ? 'bg-primary-600' : 'bg-gray-600'}`}>
+                        {msg.role === 'assistant' ? (
                           <Bot className="h-5 w-5 text-white" />
-                        </div>
-                      )}
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
-                          ? 'bg-primary-600 text-white'
-                          : 'glass-item text-gray-200'
-                          }`}
-                      >
+                        ) : (
+                          <User className="h-5 w-5 text-white" />
+                        )}
+                      </div>
+                      <div className={`
+                          flex-1 px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed
+                          ${msg.role === 'assistant'
+                          ? 'bg-[var(--inner-card-bg)] border border-white/5 text-[var(--text-primary)]'
+                          : 'bg-blue-600/10 border border-blue-500/20 text-[var(--text-primary)]'}
+                        `}>
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
-                      {msg.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                          <User className="h-5 w-5 text-white" />
-                        </div>
-                      )}
                     </div>
                   ))}
                   {chatLoading && (
@@ -1057,20 +1174,38 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             </button>
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex space-x-2 mb-4">
-            {['all', 'planned', 'executed', 'expired'].map(filter => (
-              <button
-                key={filter}
-                onClick={() => setHistoryFilter(filter)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${historyFilter === filter
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-                  }`}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            {/* Filter Buttons */}
+            <div className="flex space-x-2">
+              {['all', 'planned', 'executed', 'expired'].map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => setHistoryFilter(filter)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${historyFilter === filter
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'bg-[var(--inner-card-bg)] text-[var(--text-secondary)] hover:bg-white/10 hover:text-[var(--text-primary)]'
+                    }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {/* Sorting Select */}
+            <div className="flex items-center space-x-3">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">Sort By:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-gray-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {filter}
-              </button>
-            ))}
+                <option value="newest">Newest First</option>
+                <option value="symbol">Symbol (A-Z)</option>
+                <option value="expiry">Days to Expiry</option>
+                <option value="variance">Variance ($)</option>
+                <option value="premium">Premium Amount</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -1084,6 +1219,24 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 if (historyFilter === 'executed') return trade.status === 'executed' && !isExpired
                 if (historyFilter === 'planned') return (trade.status === 'planned' || !trade.status) && !isExpired
                 return true
+              })
+              .sort((a, b) => {
+                switch (sortBy) {
+                  case 'symbol':
+                    return a.symbol.localeCompare(b.symbol)
+                  case 'expiry':
+                    const daysA = Math.ceil((new Date(a.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
+                    const daysB = Math.ceil((new Date(b.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
+                    return daysA - daysB
+                  case 'variance':
+                    const varA = (a.currentMarketPrice || a.stockPrice) - a.strikePrice
+                    const varB = (b.currentMarketPrice || b.stockPrice) - b.strikePrice
+                    return varB - varA // Higher variance first
+                  case 'premium':
+                    return (b.premium * (b.quantity || 1)) - (a.premium * (a.quantity || 1))
+                  default: // newest
+                    return new Date(b.timestamp) - new Date(a.timestamp)
+                }
               })
               .map((trade, index) => {
                 const displayPrice = trade.currentMarketPrice || trade.stockPrice
@@ -1131,12 +1284,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           </span>
 
                           <div className="flex items-center space-x-2 ml-2 hidden md:flex">
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono">
-                              {trade.status === 'executed' ? 'Executed' : 'Planned'}: <span className="text-gray-200 ml-1">{formatDateDDMMYYYY(trade.status === 'executed' ? trade.executionDate : trade.timestamp)}</span>
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-gray-400 font-mono">
-                              Expires: <span className="text-gray-200 ml-1">{formatDateDDMMYYYY(trade.expirationDate)}</span>
-                            </span>
+                            <div className="flex flex-col text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">
+                              {trade.status === 'executed' ? 'Executed' : 'Planned'}: <span className="text-[var(--text-primary)] ml-1 font-black">{formatDateDDMMYYYY(trade.status === 'executed' ? trade.executionDate : trade.timestamp)}</span>
+                            </div>
+                            <div className="flex flex-col text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">
+                              Expires: <span className="text-[var(--text-primary)] ml-1 font-black">{formatDateDDMMYYYY(trade.expirationDate)}</span>
+                            </div>
                             {trade.closed && (
                               <span className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest ${trade.result === 'assigned' ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>
                                 Result: {trade.result}
@@ -1162,15 +1315,17 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                             </button>
                           </div>
                         )}
-                        {trade.status === 'planned' && !trade.closed && (
-                          <>
+                        <div className="flex items-center space-x-2 mr-2">
+                          {!trade.closed && (
                             <button
                               onClick={() => handleEditTrade(trade)}
-                              className="p-2 hover:bg-blue-900/50 rounded-lg transition-colors"
-                              title="Edit planned trade"
+                              className={`p-2 rounded-lg transition-colors ${editingId === trade.id ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/10 text-blue-400'}`}
+                              title="Edit trade"
                             >
-                              <Edit className="h-4 w-4 text-blue-400" />
+                              <Edit2 className="h-4 w-4" />
                             </button>
+                          )}
+                          {trade.status === 'planned' && !trade.closed && (
                             <button
                               onClick={() => handleConvertToExecuted(trade)}
                               className="p-2 hover:bg-green-900/50 rounded-lg transition-colors"
@@ -1178,9 +1333,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                             >
                               <CheckCircle className="h-4 w-4 text-green-400" />
                             </button>
-                          </>
-                        )}
-                        {(trade.status === 'planned' || trade.status === 'executed') && (
+                          )}
                           <button
                             onClick={() => handleDeleteTrade(trade.id)}
                             className="p-2 hover:bg-red-900/50 rounded-lg transition-colors"
@@ -1188,24 +1341,21 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           >
                             <Trash2 className="h-4 w-4 text-red-400" />
                           </button>
-                        )}
+                        </div>
                       </div>
                     </div>
 
                     {/* Trade Details Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                      <div className="glass-item">
-                        <div className="text-xs text-gray-400 mb-1">Stock Price</div>
-                        <div className="text-lg font-bold text-white">
-                          ${displayPrice?.toFixed(2) || 'N/A'}
-                          {trade.currentMarketPrice && (
-                            <span className="text-[10px] text-blue-400 ml-1 font-normal">(Live)</span>
-                          )}
+                      <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="text-[10px] text-[var(--text-secondary)] uppercase font-black tracking-widest mb-1">Current Price</span>
+                        <div className="text-lg font-black text-[var(--text-primary)] font-mono leading-none">
+                          ${displayPrice.toFixed(2)}
                         </div>
                       </div>
-                      <div className="glass-item">
-                        <div className="text-xs text-gray-400 mb-1">Strike Price</div>
-                        <div className="text-lg font-bold text-white">${trade.strikePrice?.toFixed(2)}</div>
+                      <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="text-[10px] text-[var(--text-secondary)] uppercase font-black tracking-widest mb-1">Strike</span>
+                        <div className="text-lg font-black text-[var(--text-primary)] font-mono leading-none">${trade.strikePrice?.toFixed(2)}</div>
                       </div>
                       <div className="glass-item">
                         <div className="text-xs text-gray-400 mb-1">Variance</div>

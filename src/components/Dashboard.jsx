@@ -70,34 +70,34 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
         <div className={`p-2 rounded-lg ${isMaxAchieved ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
           <Icon className={`h-5 w-5 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`} />
         </div>
-        <h3 className="text-sm font-black tracking-[0.2em] text-gray-300 uppercase">{label} Earnings</h3>
+        <h3 className="text-sm font-black tracking-[0.2em] text-[var(--text-secondary)] uppercase">{label} Earnings</h3>
       </div>
 
       <div className="flex-1 flex flex-col justify-between relative z-10">
         {/* New 3-Column Metrics Grid */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {/* Target Card */}
-          <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group/card">
+          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group/card shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 to-emerald-500/50"></div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Target</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2">Target</p>
             <span className="text-lg lg:text-xl font-black text-emerald-400 font-mono tracking-tight">
               ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
 
           {/* Current Card */}
-          <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden">
+          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white/10 to-white/30"></div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2">Current</p>
-            <span className="text-lg lg:text-xl font-black text-white font-mono tracking-tight">
+            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2">Current</p>
+            <span className="text-lg lg:text-xl font-black text-[var(--text-primary)] font-mono tracking-tight">
               ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
 
           {/* % Target Card */}
-          <div className="bg-[#0f172a]/60 rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden">
+          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/20 to-yellow-500/50"></div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
             <span className={`text-lg lg:text-xl font-black font-mono tracking-tight ${isMinAchieved ? 'text-yellow-400' : 'text-orange-400'}`}>
               {((current / max) * 100).toFixed(0)}%
             </span>
@@ -210,6 +210,116 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
 }
 
 
+
+
+// New Monthly Performance Tracker Component
+const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
+  const months = [
+    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+  ]
+
+  const currentMonthIdx = new Date().getMonth()
+
+  return (
+    <div className="glass-card !p-8 animate-slide-in-up">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+            <Calendar className="h-5 w-5 text-purple-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black tracking-[0.2em] text-[var(--text-primary)] uppercase">Annual Performance Roadmap</h3>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">Month-by-month target achievement</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+          <div className="flex items-center space-x-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Goal Reached</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Min Reached</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">On Track</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {months.map((name, idx) => {
+          const stats = history[idx] || { premium: 0 }
+          const isAchieved = stats.premium >= monthlyTarget.max
+          const isMinAchieved = stats.premium >= monthlyTarget.min
+          const isCurrentMonth = idx === currentMonthIdx
+          const isFutureMonth = idx > currentMonthIdx
+          const achievementPercent = Math.min((stats.premium / monthlyTarget.max) * 100, 100)
+
+          return (
+            <div
+              key={name}
+              className={`relative p-4 rounded-2xl border transition-all duration-300 group/month ${isFutureMonth ? 'bg-gray-900/5 border-white/5 opacity-50' :
+                isCurrentMonth ? 'bg-blue-500/5 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]' :
+                  isAchieved ? 'bg-emerald-500/5 border-emerald-500/20' :
+                    'bg-[var(--inner-card-bg)] border-white/5'
+                }`}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <span className={`text-xs font-black tracking-widest ${isCurrentMonth ? 'text-blue-400' : 'text-[var(--text-secondary)]'}`}>
+                  {name}
+                </span>
+                <div className="flex items-center space-x-2">
+                  {isAchieved ? (
+                    <CheckCircle className="h-3 w-3 text-emerald-400" />
+                  ) : isMinAchieved ? (
+                    <div className="flex items-center space-x-1">
+                      <CheckCircle className="h-3 w-3 text-yellow-400" />
+                      <span className="text-[8px] font-black text-yellow-500 uppercase">MIN</span>
+                    </div>
+                  ) : !isFutureMonth && (
+                    <AlertCircle className="h-3 w-3 text-gray-400" />
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-sm font-black text-[var(--text-primary)] font-mono">
+                  ${stats.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </div>
+                <div className="w-full bg-gray-900 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-1000 ease-out ${isAchieved ? 'bg-emerald-500' :
+                      isMinAchieved ? 'bg-yellow-500' :
+                        isCurrentMonth ? 'bg-blue-500' : 'bg-gray-700'
+                      }`}
+                    style={{ width: `${achievementPercent}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter">
+                  <span className={isAchieved ? 'text-emerald-500' : isMinAchieved ? 'text-yellow-500' : 'text-gray-500'}>
+                    {achievementPercent.toFixed(0)}%
+                  </span>
+                  <span className="text-gray-600">
+                    Min ${Math.round(monthlyTarget.min / 1000)}k | Goal ${Math.round(monthlyTarget.max / 1000)}k
+                  </span>
+                </div>
+              </div>
+
+              {isCurrentMonth && (
+                <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-blue-500 text-[8px] font-black rounded-lg uppercase tracking-tighter shadow-lg">
+                  Active
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, settings, stockData, onViewResearch, onGlobalRefresh, isRefreshing, strategyNotes, onSaveStrategy }) => {
   const [rerunningId, setRerunningId] = useState(null)
@@ -393,6 +503,18 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const daysElapsed = Math.max(msElapsed / (1000 * 60 * 60 * 24), 1)
     const yearlyProjection = (yearlyPremium / daysElapsed) * 365
 
+
+    // Calculate Monthly History for Tracker
+    const monthlyHistory = Array.from({ length: 12 }, (_, i) => {
+      const monthStart = startOfMonth(new Date(now.getFullYear(), i, 1))
+      const monthEnd = endOfMonth(monthStart)
+      const interval = { start: monthStart, end: monthEnd }
+      return {
+        monthIndex: i,
+        premium: calculatePremium(interval)
+      }
+    })
+
     return {
       portfolioSize: pSize,
       weeklyPremium,
@@ -409,7 +531,8 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       highRiskTrades: executedTrades.filter(t => (t.riskMetrics?.allocationPercentage || 0) > settings.maxTradePercentage).length,
       totalResearch: researchData.length,
       totalTrades: tradeData.length,
-      totalStockPnL
+      totalStockPnL,
+      monthlyHistory
     }
   }, [researchData, tradeData, settings, stockData])
 
@@ -428,11 +551,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
               <DollarSign className="h-6 w-6 text-blue-400" />
             </div>
-            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Portfolio Size</p>
+            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Portfolio Size</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">at start of year</p>
+            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">at start of year</p>
           </div>
         </div>
 
@@ -442,11 +565,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400">
               <TrendingUp className="h-6 w-6" />
             </div>
-            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
+            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
+            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
           </div>
         </div>
 
@@ -455,13 +578,13 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
               <Target className="h-6 w-6 text-purple-400" />
             </div>
-            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Allocated Capital</p>
+            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Allocated Capital</p>
           </div>
           <div>
             <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
               ${dashboardStats.totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
           </div>
         </div>
 
@@ -470,11 +593,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
               <Calendar className="h-6 w-6 text-orange-400" />
             </div>
-            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Active Trades</p>
+            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Active Trades</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-white font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
+            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
           </div>
         </div>
 
@@ -487,13 +610,13 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                 <TrendingDown className="h-6 w-6 text-red-400" />
               )}
             </div>
-            <p className="text-[11px] text-gray-500 uppercase font-black tracking-[0.2em]">Stock P&L</p>
+            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Stock P&L</p>
           </div>
           <div>
             <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.totalStockPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {dashboardStats.totalStockPnL >= 0 ? '+' : ''}${dashboardStats.totalStockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
+            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
           </div>
         </div>
       </div>
@@ -523,6 +646,13 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           projection={dashboardStats.yearlyProjection}
         />
       </div>
+
+
+      {/* Monthly Performance Tracker */}
+      <MonthlyPerformanceTracker
+        history={dashboardStats.monthlyHistory}
+        monthlyTarget={dashboardStats.monthlyTarget}
+      />
 
       {/* Risk Alerts */}
       {dashboardStats.highRiskTrades > 0 && (

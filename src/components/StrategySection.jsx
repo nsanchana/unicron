@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Save, Bold, Italic, Underline, List, Highlighter, Brain, Sparkles, Check } from 'lucide-react'
 
-const StrategySection = ({ notes, onSave }) => {
+const StrategySection = ({ notes, onSave, theme }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [saveStatus, setSaveStatus] = useState('idle') // idle, saving, saved
     const editorRef = useRef(null)
@@ -64,13 +64,13 @@ const StrategySection = ({ notes, onSave }) => {
             <div className="relative z-10 flex items-center justify-between mb-6 border-b border-white/10 pb-4">
                 <div className="flex items-center space-x-3">
                     <div className="p-2.5 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl border border-white/10 shadow-lg">
-                        <Brain className="h-6 w-6 text-purple-300" />
+                        <Brain className="h-6 w-6 text-purple-400" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                            Strategy Board <Sparkles className="h-4 w-4 text-yellow-400" />
+                        <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+                            Tactical Strategy Board <Sparkles className="h-4 w-4 text-yellow-500" />
                         </h3>
-                        <p className="text-xs text-gray-400 font-medium tracking-wide">MASTER PLAN & TRADING IDEAS</p>
+                        <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">Master Directives & Execution Alpha</p>
                     </div>
                 </div>
 
@@ -78,10 +78,10 @@ const StrategySection = ({ notes, onSave }) => {
                     onClick={handleSave}
                     disabled={saveStatus === 'saving'}
                     className={`
-            flex items-center space-x-2 px-4 py-2 rounded-lg font-bold text-sm transition-all duration-300
+            flex items-center space-x-2 px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300
             ${saveStatus === 'saved'
-                            ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                            : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:border-white/20 shadow-lg hover:shadow-purple-500/20'}
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white border border-blue-400 shadow-lg shadow-blue-500/20 active:scale-95'}
           `}
                 >
                     {saveStatus === 'saving' ? (
@@ -91,67 +91,67 @@ const StrategySection = ({ notes, onSave }) => {
                     ) : (
                         <Save className="h-4 w-4" />
                     )}
-                    <span>{saveStatus === 'saved' ? 'Saved' : 'Save Plan'}</span>
+                    <span>{saveStatus === 'saved' ? 'Synced' : 'Save'}</span>
                 </button>
             </div>
 
             {/* Toolbar */}
-            <div className="relative z-10 bg-[#0f172a]/80 backdrop-blur-md rounded-t-xl border border-white/10 p-2 flex flex-wrap gap-2 items-center mb-0">
-                <div className="flex items-center space-x-1 border-r border-white/10 pr-2 mr-1">
-                    <button onClick={() => handleHeading('heading')} className="p-2 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 hover:text-white" title="Heading">H1</button>
-                    <button onClick={() => handleHeading('subheading')} className="p-2 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 hover:text-white" title="Sub-heading">H2</button>
-                    <button onClick={() => handleHeading('body')} className="p-2 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 hover:text-white" title="Body Text">Body</button>
+            <div className="relative z-10 bg-[var(--inner-card-bg)] backdrop-blur-md rounded-t-2xl border border-white/5 p-2.5 flex flex-wrap gap-2 items-center">
+                <div className="flex items-center space-x-1 border-r border-white/5 pr-3 mr-1">
+                    <button onClick={() => handleHeading('heading')} className="px-3 py-1.5 hover:bg-white/5 rounded-lg text-[10px] font-black text-[var(--text-secondary)] hover:text-[var(--text-primary)] uppercase tracking-widest" title="Heading">H1</button>
+                    <button onClick={() => handleHeading('subheading')} className="px-3 py-1.5 hover:bg-white/5 rounded-lg text-[10px] font-black text-[var(--text-secondary)] hover:text-[var(--text-primary)] uppercase tracking-widest" title="Sub-heading">H2</button>
+                    <button onClick={() => handleHeading('body')} className="px-3 py-1.5 hover:bg-white/5 rounded-lg text-[10px] font-black text-[var(--text-secondary)] hover:text-[var(--text-primary)] uppercase tracking-widest" title="Body Text">Txt</button>
                 </div>
 
-                <div className="flex items-center space-x-1 border-r border-white/10 pr-2 mr-1">
-                    <button onClick={() => handleFormat('bold')} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white" title="Bold">
+                <div className="flex items-center space-x-1 border-r border-white/5 pr-3 mr-1">
+                    <button onClick={() => handleFormat('bold')} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-secondary)] hover:text-blue-400 transition-colors" title="Bold">
                         <Bold className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleFormat('italic')} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white" title="Italic">
+                    <button onClick={() => handleFormat('italic')} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-secondary)] hover:text-blue-400 transition-colors" title="Italic">
                         <Italic className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleFormat('underline')} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white" title="Underline">
+                    <button onClick={() => handleFormat('underline')} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-secondary)] hover:text-blue-400 transition-colors" title="Underline">
                         <Underline className="h-4 w-4" />
                     </button>
                 </div>
 
                 <div className="flex items-center space-x-1">
-                    <button onClick={() => handleFormat('insertUnorderedList')} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white" title="Bullet List">
+                    <button onClick={() => handleFormat('insertUnorderedList')} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-secondary)] hover:text-blue-400 transition-colors" title="Bullet List">
                         <List className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleFormat('hiliteColor', '#facc1550')} className="p-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-yellow-400" title="Highlight">
+                    <button onClick={() => handleFormat('hiliteColor', '#3b82f630')} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-secondary)] hover:text-yellow-500 transition-colors" title="Highlight">
                         <Highlighter className="h-4 w-4" />
                     </button>
                 </div>
             </div>
 
             {/* Editor Area */}
-            <div className="relative z-10 bg-black/40 rounded-b-xl border-x border-b border-white/10 min-h-[300px]">
+            <div className="relative z-10 bg-[var(--inner-card-bg)] !bg-opacity-40 rounded-b-2xl border-x border-b border-white/5 min-h-[400px]">
                 <div
                     ref={editorRef}
                     contentEditable
                     onInput={handleInput}
                     onFocus={() => setIsEditing(true)}
                     onBlur={handleBlur}
-                    className="w-full h-full min-h-[300px] p-6 text-gray-200 focus:outline-none prose prose-invert max-w-none prose-headings:font-bold prose-headings:text-white prose-p:leading-relaxed prose-li:text-gray-300 strategy-editor"
+                    className={`
+                        w-full h-full min-h-[400px] p-8 text-[var(--text-primary)] focus:outline-none 
+                        prose ${theme === 'dark' ? 'prose-invert' : 'prose-slate'} max-w-none 
+                        prose-headings:font-black prose-headings:tracking-tight prose-headings:text-[var(--text-primary)]
+                        prose-p:leading-relaxed prose-li:text-[var(--text-secondary)] strategy-editor
+                    `}
                     suppressContentEditableWarning={true}
-                    style={{
-                        textShadow: '0 0 1px rgba(0,0,0,0.5)'
-                    }}
                 />
-
-
             </div>
 
             <style>{`
-        .strategy-editor h3 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #e2e8f0; }
-        .strategy-editor h4 { font-size: 1.25rem; margin-bottom: 0.5rem; color: #94a3b8; }
-        .strategy-editor p { margin-bottom: 0.75rem; }
-        .strategy-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
-        .strategy-editor b, .strategy-editor strong { color: #fff; font-weight: 700; }
-        .strategy-editor i, .strategy-editor em { color: #cbd5e1; }
-        .strategy-editor span[style*="background-color"] { padding: 0 4px; border-radius: 4px; color: #fff; }
-      `}</style>
+                .strategy-editor h3 { font-size: 1.5rem; margin-bottom: 0.75rem; font-weight: 900; letter-spacing: -0.025em; }
+                .strategy-editor h4 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+                .strategy-editor p { margin-bottom: 1rem; font-size: 0.95rem; }
+                .strategy-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+                .strategy-editor b, .strategy-editor strong { color: var(--text-primary); font-weight: 900; }
+                .strategy-editor i, .strategy-editor em { color: var(--text-secondary); opacity: 0.9; }
+                .strategy-editor span[style*="background-color"] { padding: 2px 6px; border-radius: 6px; }
+            `}</style>
         </div>
     )
 }

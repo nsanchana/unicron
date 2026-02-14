@@ -26,10 +26,10 @@ Before deploying, ensure you have:
 
 ### Step 2: Import Your Project
 
-1.  **Find your repository** in the list: `nsanchana/git-practice`
+1.  **Find your repository** in the list: `nsanchana/unicron`
 2.  **Click "Import"**
 3.  **Configure the project:**
-    -   **Root Directory:** Click "Edit" and select `options-trading-ai-enhanced`
+    -   **Root Directory:** Leave as default (root)
     -   **Framework Preset:** Vite (auto-detected)
     -   **Build Command:** `npm run build` (auto-filled)
     -   **Output Directory:** `dist` (auto-filled)
@@ -98,7 +98,7 @@ If you prefer command-line deployment:
 ```bash
 npm install -g vercel
 vercel login
-cd /Users/nareshsanchana/git-practice/options-trading-ai-enhanced
+cd c:\Users\nsanc\.gemini\antigravity\scratch\unicron
 vercel
 ```
 

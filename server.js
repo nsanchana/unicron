@@ -1424,76 +1424,108 @@ app.post('/api/scrape/earnings-events', requireAuth, async (req, res) => {
   }
 })
 
-// Stock price endpoint - scrapes from stockanalysis.com
-app.post('/api/scrape/stock-price', requireAuth, async (req, res) => {
+// Helper to scrape Google Finance for real-time prices
+async function scrapeGoogleFinance(symbol) {
   try {
-    const { symbol } = req.body
-
-    if (!symbol) {
-      return res.status(400).json({ error: 'Symbol is required' })
-    }
-
-    // Scrape stock price from stockanalysis.com
-    const url = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/`
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
-      },
-      timeout: 10000
-    })
-
-    const $ = cheerio.load(response.data)
-
-    // Try multiple selectors to find the price
+    // Try primary US exchanges
+    const exchanges = ['NASDAQ', 'NYSE']
     let price = null
 
-    // Method 1: Look for price in specific div with data-test attribute
-    price = $('[data-test="stock-price"]').first().text().trim()
-
-    // Method 2: Look for price in the main price display area
-    if (!price || price === '') {
-      price = $('.text-3xl, .text-4xl').first().text().trim()
-    }
-
-    // Method 3: Look for any element with price-like text
-    if (!price || price === '') {
-      $('div, span').each((i, elem) => {
-        const text = $(elem).text().trim()
-        if (text.match(/^\$\d+\.\d{2}$/)) {
-          price = text
-          return false // break
-        }
-      })
-    }
-
-    // Clean up the price
-    if (price) {
-      price = price.replace('$', '').replace(',', '').trim()
-      const priceNum = parseFloat(price)
-
-      if (!isNaN(priceNum) && priceNum > 0) {
-        return res.json({
-          price: priceNum,
-          symbol: symbol.toUpperCase(),
-          source: 'stockanalysis.com'
+    for (const exchange of exchanges) {
+      try {
+        const url = `https://www.google.com/finance/quote/${symbol.toUpperCase()}:${exchange}`
+        const response = await axios.get(url, {
+          headers: { 'User-Agent': USER_AGENT },
+          timeout: 5000
         })
+        const $ = cheerio.load(response.data)
+
+        // Google Finance uses specific classes for price info
+        // The main price is usually in a div with class that contains 'YMlKec' and 'fxKbKc'
+        const priceText = $('.YMlKec.fxKbKc').first().text().trim()
+
+        if (priceText && priceText.includes('$')) {
+          price = parseFloat(priceText.replace('$', '').replace(',', ''))
+          if (!isNaN(price) && price > 0) break
+        }
+      } catch (e) {
+        continue
       }
     }
 
-    // If we couldn't find the price, return error
-    return res.status(404).json({
-      error: 'Price not found',
-      message: 'Unable to fetch stock price from stockanalysis.com'
-    })
+    if (price) return price
 
-  } catch (error) {
-    console.error('Error fetching stock price:', error.message)
-    res.status(500).json({
-      error: 'Failed to fetch stock price',
-      details: error.message
+    // Fallback search
+    const searchUrl = `https://www.google.com/search?q=stock+price+${symbol}`
+    const searchResponse = await axios.get(searchUrl, {
+      headers: { 'User-Agent': USER_AGENT },
+      timeout: 5000
     })
+    const $search = cheerio.load(searchResponse.data)
+
+    // Look for price in Google search results (often in specific span)
+    const spanPrice = $search('span[jsname="vW7973"], span.I66fCc').first().text().trim()
+    if (spanPrice) {
+      const p = parseFloat(spanPrice.replace(',', ''))
+      if (!isNaN(p) && p > 0) return p
+    }
+
+    return null
+  } catch (error) {
+    console.error(`Google Finance scrape failed for ${symbol}:`, error.message)
+    return null
+  }
+}
+
+// Batch price update endpoint
+app.post('/api/scrape/batch-prices', requireAuth, async (req, res) => {
+  try {
+    const { symbols } = req.body
+
+    if (!symbols || !Array.isArray(symbols)) {
+      return res.status(400).json({ error: 'Array of symbols is required' })
+    }
+
+    const priceMap = {}
+    const results = await Promise.all(symbols.map(async (symbol) => {
+      // 1. Try Google Finance (Primary)
+      let price = await scrapeGoogleFinance(symbol)
+      let source = 'google_finance'
+
+      // 2. Try StockAnalysis (Fallback)
+      if (!price) {
+        try {
+          const url = `https://stockanalysis.com/stocks/${symbol.toLowerCase()}/`
+          const response = await axios.get(url, {
+            headers: { 'User-Agent': USER_AGENT },
+            timeout: 5000
+          })
+          const $ = cheerio.load(response.data)
+          const saPrice = $('[data-test="stock-price"]').first().text().trim() ||
+            $('.text-3xl, .text-4xl').first().text().trim()
+
+          if (saPrice) {
+            price = parseFloat(saPrice.replace('$', '').replace(',', '').trim())
+            source = 'stockanalysis.com'
+          }
+        } catch (e) {
+          // Both failed
+        }
+      }
+
+      if (price) {
+        priceMap[symbol.toUpperCase()] = { price, source }
+      }
+      return { symbol, price }
+    }))
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      prices: priceMap
+    })
+  } catch (error) {
+    console.error('Batch price update failed:', error.message)
+    res.status(500).json({ error: 'Failed to fetch batch prices' })
   }
 })
 

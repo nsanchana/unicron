@@ -22,10 +22,38 @@ const formatDateTime = (date) => {
   return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`
 }
 
+// Check if current time is within US Trading Hours (9:30 AM - 4:00 PM ET, Mon-Fri)
+const isUSTradingHours = () => {
+  const now = new Date()
+
+  // Convert current time to ET (it's simpler to use intl for TZ conversion)
+  const etTimeStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' })
+  const etDate = new Date(etTimeStr)
+
+  const day = etDate.getDay() // 0 = Sun, 6 = Sat
+  const hours = etDate.getHours()
+  const minutes = etDate.getMinutes()
+
+  // 0 (Sunday) or 6 (Saturday) are closed
+  if (day === 0 || day === 6) return false
+
+  const timeInMinutes = hours * 60 + minutes
+  const marketOpen = 9 * 60 + 30 // 9:30 AM
+  const marketClose = 16 * 60    // 4:00 PM
+
+  return timeInMinutes >= marketOpen && timeInMinutes < marketClose
+}
+
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState(() => {
+    const path = window.location.pathname
+    const searchParams = new URLSearchParams(window.location.search)
+    if (path === '/log') return 'trades'
+    if (searchParams.has('ticker')) return 'research'
+    return 'dashboard'
+  })
   const [researchData, setResearchData] = useState([])
   const [tradeData, setTradeData] = useState([])
   const [stockData, setStockData] = useState([])
@@ -174,7 +202,7 @@ function App() {
     setResearchQueue(prev => prev.filter(t => t.status === 'processing' || t.status === 'queued'))
   }
 
-  const handleGlobalPriceUpdate = async () => {
+  const handleGlobalPriceUpdate = async (isAutoRefresh = false) => {
     if (refreshingPrices) return
     setRefreshingPrices(true)
 
@@ -185,44 +213,37 @@ function App() {
       const uniqueSymbols = [...new Set([...activeTradeSymbols, ...activeStockSymbols])].filter(Boolean)
 
       if (uniqueSymbols.length === 0) {
-        alert('No active trades or stocks to update.')
+        if (!isAutoRefresh) alert('No active trades or stocks to update.')
         setRefreshingPrices(false)
         return
       }
 
-      // 2. Fetch prices concurrently
-      const priceMap = {}
-      await Promise.all(uniqueSymbols.map(async (symbol) => {
-        try {
-          const response = await fetch('/api/scrape/stock-price', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ symbol })
-          })
+      // 2. Fetch prices in batch (Optimized)
+      const response = await fetch('/api/scrape/batch-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ symbols: uniqueSymbols })
+      })
 
-          if (response.ok) {
-            const data = await response.json()
-            if (data.price) {
-              priceMap[symbol] = parseFloat(data.price)
-            }
-          }
-        } catch (error) {
-          console.error(`Error fetching price for ${symbol}:`, error)
-        }
-      }))
+      if (!response.ok) throw new Error('Batch price fetch failed')
+
+      const data = await response.json()
+      const priceMap = data.prices || {}
 
       const now = new Date().toISOString()
       let updatedCount = 0
 
       // 3. Update Trade Data
       const updatedTradeData = tradeData.map(trade => {
-        if (!trade.closed && priceMap[trade.symbol]) {
+        const priceInfo = priceMap[trade.symbol.toUpperCase()]
+        if (!trade.closed && priceInfo) {
           updatedCount++
           return {
             ...trade,
-            currentMarketPrice: priceMap[trade.symbol],
-            lastPriceUpdate: now
+            currentMarketPrice: priceInfo.price,
+            lastPriceUpdate: now,
+            priceSource: priceInfo.source
           }
         }
         return trade
@@ -230,12 +251,14 @@ function App() {
 
       // 4. Update Stock Data
       const updatedStockData = stockData.map(stock => {
-        if (!stock.soldPrice && priceMap[stock.symbol]) {
+        const priceInfo = priceMap[stock.symbol.toUpperCase()]
+        if (!stock.soldPrice && priceInfo) {
           updatedCount++
           return {
             ...stock,
-            currentPrice: priceMap[stock.symbol],
-            lastPriceUpdate: now
+            currentPrice: priceInfo.price,
+            lastPriceUpdate: now,
+            priceSource: priceInfo.source
           }
         }
         return stock
@@ -248,29 +271,26 @@ function App() {
         saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
         saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, updatedStockData)
 
-        // Final sync attempt
+        // Final sync attempt - Use existing saveToCloud helper
         if (user) {
-          try {
-            await axios.post('/api/user-data', {
-              trades: updatedTradeData,
-              stocks: updatedStockData
-            }, { withCredentials: true })
-            setCloudSyncStatus('synced')
-            setLastCloudSync(new Date())
-          } catch (e) {
-            console.error('Manual sync failed:', e)
-            setCloudSyncStatus('error')
-          }
+          await saveToCloud(user.id || user.username, {
+            researchData,
+            tradeData: updatedTradeData,
+            settings,
+            stockData: updatedStockData,
+            strategyNotes,
+            chatHistory
+          })
         }
 
-        alert(`Successfully updated prices for ${Object.keys(priceMap).length} symbols.`)
+        if (!isAutoRefresh) alert(`Successfully updated prices for ${Object.keys(priceMap).length} symbols.`)
       } else {
-        alert('No prices were updated. Please check symbols or try again later.')
+        if (!isAutoRefresh) alert('No prices were updated. Please check symbols or try again later.')
       }
 
     } catch (error) {
       console.error('Global price update failed:', error)
-      alert('An error occurred during the global price update.')
+      if (!isAutoRefresh) alert(`An error occurred during the global price update: ${error.message}`)
     } finally {
       setRefreshingPrices(false)
     }
@@ -279,6 +299,27 @@ function App() {
   const handleViewResearch = (item) => {
     setSelectedResearch(item)
     setActiveTab('research')
+  }
+
+  const handleSettingsUpdate = (newSettings) => {
+    setSettings(newSettings)
+    saveToLocalStorage(STORAGE_KEYS.PORTFOLIO_SETTINGS, newSettings)
+    if (user) {
+      debouncedSaveToCloud(user.id || user.username, {
+        researchData,
+        tradeData,
+        settings: newSettings,
+        stockData,
+        strategyNotes,
+        chatHistory
+      })
+    }
+  }
+
+  const handleThemeToggle = (newTheme) => {
+    setTheme(newTheme)
+    localStorage.setItem('unicron_theme', newTheme)
+    document.documentElement.classList.toggle('light-mode', newTheme === 'light')
   }
 
   const [initialCloudLoadComplete, setInitialCloudLoadComplete] = useState(false)
@@ -430,10 +471,16 @@ function App() {
     // Then sync from cloud (will override local data if cloud has data)
     loadFromCloud(user.id || user.username)
 
-    // Auto-refresh every 10 minutes
+    // Auto-refresh logic
     const refreshInterval = setInterval(() => {
       setLastRefresh(new Date())
-    }, 10 * 60 * 1000) // 10 minutes
+
+      // If within US trading hours, trigger active price update
+      if (isUSTradingHours()) {
+        console.log('[Auto-Refresh] Market is open, updating prices...')
+        handleGlobalPriceUpdate(true)
+      }
+    }, 60 * 1000) // 1 minute
 
     return () => clearInterval(refreshInterval)
   }, [user, loadFromCloud])
@@ -574,14 +621,20 @@ function App() {
   ]
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br text-white transition-colors duration-300 relative ${theme === 'light'
-      ? 'from-gray-50 via-white to-blue-50'
-      : 'from-[#0f172a] via-[#1e293b] to-[#0f172a]'
+    <div className={`min-h-screen transition-colors duration-500 relative ${theme === 'light'
+      ? 'bg-slate-50'
+      : 'bg-[#030712]'
       }`}>
       {/* Background Glows */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]"></div>
+        <div className={`absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-all duration-1000 ${theme === 'light'
+          ? 'bg-blue-400/15'
+          : 'bg-blue-600/10'
+          }`}></div>
+        <div className={`absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-all duration-1000 ${theme === 'light'
+          ? 'bg-purple-400/15'
+          : 'bg-purple-600/10'
+          }`}></div>
       </div>
 
       {/* Header */}
@@ -618,7 +671,7 @@ function App() {
                 ) : cloudSyncStatus === 'synced' ? (
                   <div className="flex items-center space-x-2 text-emerald-400">
                     <Cloud className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Securely Synced</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Securely Synced</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 text-gray-500">
@@ -628,12 +681,20 @@ function App() {
                 )}
               </div>
 
+              {/* Live Market Indicator */}
+              {isUSTradingHours() && (
+                <div className="hidden lg:flex items-center space-x-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                  <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Market Open (Live)</span>
+                </div>
+              )}
+
               {/* Update Prices Button */}
               <button
-                onClick={handleGlobalPriceUpdate}
+                onClick={() => handleGlobalPriceUpdate()}
                 disabled={refreshingPrices}
                 className={`hidden md:flex items-center space-x-2 px-4 py-2 rounded-2xl border transition-all active:scale-95 ${refreshingPrices
-                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-400'
+                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-400 animate-glow-pulse'
                   : 'bg-white/5 border-white/5 hover:border-white/10 text-gray-400 hover:text-white'
                   }`}
                 title="Update market prices for all active trades and stocks"
@@ -736,6 +797,7 @@ function App() {
                 settings={settings}
                 strategyNotes={strategyNotes}
                 chatHistory={chatHistory}
+                theme={theme}
                 onUpdateHistory={(history) => {
                   setChatHistory(history)
                   saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
