@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2 } from 'lucide-react'
+import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
 import { COMPANY_RESEARCH_VERSION } from '../config'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
@@ -21,6 +21,25 @@ const formatTime = (dateString) => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
   return `${hours}:${minutes}:${seconds}`
+}
+
+// Format date as relative time
+const formatRelativeDate = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return '1d ago'
+  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  return `${Math.floor(diffDays / 30)}mo ago`
+}
+
+// Get sentiment from score
+const getSentiment = (rating) => {
+  if (rating >= 75) return { label: 'Bullish', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25', text: 'text-emerald-400', accent: 'bg-emerald-500' }
+  if (rating >= 50) return { label: 'Neutral', bg: 'bg-amber-500/10', border: 'border-amber-500/25', text: 'text-amber-400', accent: 'bg-amber-500' }
+  return { label: 'Bearish', bg: 'bg-rose-500/10', border: 'border-rose-500/25', text: 'text-rose-400', accent: 'bg-rose-500' }
 }
 
 function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedResearch, onViewResearch, researchQueue, onAddToQueue, onClearQueue }) {
@@ -966,47 +985,52 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         </div>
       )}
 
-      {/* Previous Research */}
+      {/* Research History */}
       {researchData.length > 0 && (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Research History</h3>
-            <div className="flex items-center space-x-1 overflow-x-auto pb-2 scrollbar-hide">
-              <button
-                onClick={() => handleSort('date')}
-                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'date' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-              >
-                Date {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
-              <button
-                onClick={() => handleSort('rating')}
-                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'rating' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-              >
-                Rating {sortBy === 'rating' && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
-              <button
-                onClick={() => handleSort('currentPrice')}
-                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'currentPrice' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-              >
-                Price {sortBy === 'currentPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
-              <button
-                onClick={() => handleSort('targetPrice')}
-                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'targetPrice' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-              >
-                Target {sortBy === 'targetPrice' && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
-              <button
-                onClick={() => handleSort('symbol')}
-                className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === 'symbol' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-              >
-                Symbol {sortBy === 'symbol' && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <TrendingUp className="h-4 w-4 text-blue-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-white/90">Research History</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/40">{researchData.length}</span>
+                </div>
+                <p className="text-[11px] text-white/40 mt-0.5">{researchData.length === 1 ? '1 company' : `${researchData.length} companies`} analysed · tap to view full report</p>
+              </div>
+            </div>
+            {/* Sort pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-shrink-0 pb-0.5">
+              {[
+                { key: 'date', label: 'Recent' },
+                { key: 'rating', label: 'Score' },
+                { key: 'currentPrice', label: 'Price' },
+                { key: 'targetPrice', label: 'Target' },
+                { key: 'symbol', label: 'A–Z' },
+              ].map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => handleSort(s.key)}
+                  className={`flex-none flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                    sortBy === s.key
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.10] border border-white/[0.08]'
+                  }`}
+                >
+                  {s.label}
+                  {sortBy === s.key && <span className="text-[9px] opacity-70">{sortOrder === 'desc' ? '↓' : '↑'}</span>}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4 bg-white/5 p-3 rounded-xl border border-white/5">
-            <div className="flex items-center space-x-3">
+          {/* Select toolbar */}
+          <div className="flex items-center justify-between px-5 py-2 bg-white/[0.02] border-b border-white/[0.04]">
+            <div className="flex items-center gap-2.5">
               <input
                 type="checkbox"
                 checked={selectedSymbols.size === researchData.slice(0, 10).length && researchData.length > 0}
@@ -1017,73 +1041,66 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     setSelectedSymbols(new Set(researchData.slice(0, 10).map(r => r.symbol)))
                   }
                 }}
-                className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-500 focus:ring-blue-500/20"
+                className="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                {selectedSymbols.size} Selected
+              <span className="text-[11px] font-medium text-white/40">
+                {selectedSymbols.size > 0 ? `${selectedSymbols.size} selected` : 'Select all'}
               </span>
             </div>
-
             <button
-              onClick={() => {
-                onAddToQueue([...selectedSymbols])
-                setSelectedSymbols(new Set())
-              }}
+              onClick={() => { onAddToQueue([...selectedSymbols]); setSelectedSymbols(new Set()) }}
               disabled={selectedSymbols.size === 0}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-gray-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center space-x-2"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-medium rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <RefreshCw className={`h-3 w-3 ${researchQueue.some(t => t.status === 'processing' || t.status === 'queued') ? 'animate-spin' : ''}`} />
-              <span>Update Selected</span>
+              Refresh Selected
             </button>
           </div>
 
+          {/* Research Queue */}
           {researchQueue.length > 0 && (
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <div className="mx-5 my-3 p-3 bg-blue-500/[0.08] border border-blue-500/20 rounded-2xl">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Research Queue</span>
-                  <span className="text-[10px] font-bold text-gray-500">{researchQueue.filter(t => t.status === 'completed').length} / {researchQueue.length} Done</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-blue-400">Queue</span>
+                  <span className="text-[11px] text-white/30">{researchQueue.filter(t => t.status === 'completed').length}/{researchQueue.length} done</span>
                 </div>
-                <button
-                  onClick={onClearQueue}
-                  className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors flex items-center space-x-1"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  <span>Clear</span>
+                <button onClick={onClearQueue} className="text-[11px] text-white/30 hover:text-white/60 flex items-center gap-1 transition-all">
+                  <Trash2 className="h-3 w-3" /> Clear
                 </button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {researchQueue.map((task, i) => (
-                  <div key={i} className="flex items-center justify-between text-[10px] text-gray-400">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${task.status === 'processing' ? 'bg-blue-400 animate-pulse' : task.status === 'queued' ? 'bg-gray-600' : 'bg-green-400'}`}></div>
-                      <span className="font-bold text-white w-12">{task.symbol}</span>
-                      <span className="opacity-60">{task.section || 'In Queue'}</span>
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${task.status === 'processing' ? 'bg-blue-400 animate-pulse' : task.status === 'queued' ? 'bg-white/20' : 'bg-emerald-400'}`} />
+                      <span className="text-[11px] font-semibold text-white/70">{task.symbol}</span>
+                      <span className="text-[10px] text-white/30">{task.section || 'Waiting'}</span>
                     </div>
-                    {task.status === 'processing' && <span>{task.progress}%</span>}
-                    {task.status === 'completed' && <CheckCircle className="h-3 w-3 text-green-400" />}
-                    {task.status === 'error' && <AlertTriangle className="h-3 w-3 text-red-400" />}
+                    {task.status === 'processing' && <span className="text-[10px] text-blue-400">{task.progress}%</span>}
+                    {task.status === 'completed' && <CheckCircle className="h-3 w-3 text-emerald-400" />}
+                    {task.status === 'error' && <AlertTriangle className="h-3 w-3 text-rose-400" />}
                   </div>
                 ))}
               </div>
             </div>
           )}
-          {/* Table Headers */}
-          <div className="hidden md:grid grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-4 px-4 py-2 mb-2 border-b border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">
+
+          {/* Desktop column headers */}
+          <div className="hidden md:grid grid-cols-[32px_1fr_90px_60px_140px_75px_100px_75px_52px] gap-3 px-5 py-2 text-[10px] font-medium text-white/30 border-b border-white/[0.05]">
             <div></div>
             <div>Company</div>
-            <div className="text-center">Rating</div>
-            <div className="text-right">Current</div>
-            <div className="text-right">Support</div>
-            <div className="text-right">Resistance</div>
-            <div className="text-right">Target</div>
-            <div className="text-center">Potential</div>
+            <div>Sentiment</div>
+            <div className="text-center">Score</div>
+            <div>Price → Target</div>
+            <div className="text-center">Upside</div>
             <div className="text-center">Earnings</div>
-            <div className="text-center">Date</div>
-            <div className="text-right">Actions</div>
+            <div className="text-center">Analysed</div>
+            <div></div>
           </div>
 
-          <div className="space-y-1">
+          {/* Rows */}
+          <div className="divide-y divide-white/[0.04]">
             {sortedResearchData.slice(0, 10).map((item) => {
               const itemKey = `${item.symbol}-${item.date}`
               let currentPrice = item.technicalAnalysis?.currentPrice ||
@@ -1103,82 +1120,104 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 }
               }
 
-              const supportLevel = item.technicalAnalysis?.detailedTechnical?.supportResistance?.support?.[0]?.split(' - ')[0] ||
-                item.technicalAnalysis?.metrics?.find(m => m.label.includes('Support'))?.value || '-'
-              const resistanceLevel = item.technicalAnalysis?.detailedTechnical?.supportResistance?.resistance?.[0]?.split(' - ')[0] ||
-                item.technicalAnalysis?.metrics?.find(m => m.label.includes('Resistance'))?.value || '-'
               const earningsDate = item.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date ||
                 item.recentDevelopments?.metrics?.find(m => m.label === 'Next Earnings' || m.label === 'Earnings Date')?.value || '-'
+
+              const sentiment = getSentiment(item.overallRating)
+              const fmtPrice = (p) => !p ? '-' : (p.startsWith('$') ? p : `$${p}`)
 
               return (
                 <div
                   key={itemKey}
-                  className="bg-white/[0.05] border border-white/[0.06] rounded-xl hover:bg-white/[0.08] hover:border-white/[0.10] transition-all cursor-pointer"
+                  className="cursor-pointer hover:bg-white/[0.03] transition-all"
                   onClick={() => handleViewResearch(item)}
                 >
-                  {/* ── Mobile card layout ── */}
-                  <div className="md:hidden flex items-center justify-between gap-2 p-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <CompanyLogo symbol={item.symbol} className="w-9 h-9 flex-shrink-0" textSize="text-[10px]" />
-                      <div className="min-w-0">
-                        <div className="font-semibold text-sm text-white/90">{item.symbol}</div>
-                        <div className="text-[10px] text-white/40 truncate">{formatDateDDMMYYYY(item.date)}</div>
+                  {/* Mobile card */}
+                  <div className="md:hidden flex items-center gap-3 px-4 py-3.5">
+                    <div className={`w-0.5 self-stretch rounded-full flex-shrink-0 opacity-60 ${sentiment.accent}`} />
+                    <CompanyLogo symbol={item.symbol} className="w-9 h-9 flex-shrink-0" textSize="text-[10px]" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-sm text-white/90">{item.symbol}</span>
+                        {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                      </div>
+                      <div className="text-[10px] text-white/40 mt-0.5">{formatRelativeDate(item.date)}</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-mono text-xs text-white/60">
+                        {fmtPrice(currentPrice)}
+                        {targetPrice && <span className="text-white/25"> → </span>}
+                        {targetPrice && <span className="text-blue-400">{fmtPrice(targetPrice)}</span>}
+                      </div>
+                      <div className={`text-[11px] font-semibold mt-0.5 ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="text-right">
-                        <div className="font-mono text-xs text-white/70">{currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}</div>
-                        <div className={`text-xs font-semibold ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
-                        </div>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border flex-shrink-0 ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' : item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                    <div className="flex-shrink-0 text-center">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${sentiment.bg} ${sentiment.border} ${sentiment.text}`}>
                         {item.overallRating}
                       </span>
-                      <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }} className="p-1.5 hover:bg-blue-500/20 text-white/30 hover:text-blue-400 rounded-lg transition-all">
-                          <RefreshCw className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }} className="p-1.5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded-lg transition-all">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      <div className={`text-[9px] font-medium mt-0.5 ${sentiment.text}`}>{sentiment.label}</div>
+                    </div>
+                    <div className="flex flex-col gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol) }} className="p-1.5 hover:bg-blue-500/20 text-white/20 hover:text-blue-400 rounded-lg transition-all">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); const i = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(i) }} className="p-1.5 hover:bg-rose-500/20 text-white/20 hover:text-rose-400 rounded-lg transition-all">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* ── Desktop grid layout ── */}
-                  <div className="hidden md:grid grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-4 items-center p-2">
+                  {/* Desktop row */}
+                  <div className="hidden md:grid grid-cols-[32px_1fr_90px_60px_140px_75px_100px_75px_52px] gap-3 items-center px-5 py-2.5">
                     {/* Checkbox */}
-                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={selectedSymbols.has(item.symbol)} onChange={() => { const next = new Set(selectedSymbols); if (next.has(item.symbol)) next.delete(item.symbol); else next.add(item.symbol); setSelectedSymbols(next); }} className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer" />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={selectedSymbols.has(item.symbol)}
+                        onChange={() => { const next = new Set(selectedSymbols); next.has(item.symbol) ? next.delete(item.symbol) : next.add(item.symbol); setSelectedSymbols(next) }}
+                        className="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-0 cursor-pointer" />
                     </div>
                     {/* Company */}
-                    <div className="flex items-center space-x-2">
-                      <CompanyLogo symbol={item.symbol} className="w-6 h-6" textSize="text-[10px]" />
-                      <span className="font-semibold text-sm text-white/85">{item.symbol}</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <CompanyLogo symbol={item.symbol} className="w-7 h-7 flex-shrink-0" textSize="text-[9px]" />
+                      <div className="min-w-0 flex items-center gap-1.5">
+                        <span className="font-semibold text-sm text-white/85 truncate">{item.symbol}</span>
+                        {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                      </div>
                     </div>
-                    {/* Rating */}
-                    <div className="flex justify-center">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' : item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>{item.overallRating}</span>
+                    {/* Sentiment */}
+                    <div>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${sentiment.bg} ${sentiment.border} ${sentiment.text}`}>
+                        {sentiment.label}
+                      </span>
                     </div>
-                    {/* Current */}
-                    <div className="text-right font-mono text-xs text-white/50">{currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}</div>
-                    {/* Support */}
-                    <div className="text-right font-mono text-xs text-orange-300/80">{supportLevel}</div>
-                    {/* Resistance */}
-                    <div className="text-right font-mono text-xs text-purple-300/80">{resistanceLevel}</div>
-                    {/* Target */}
-                    <div className="text-right font-mono text-xs text-blue-300">{targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : '-'}</div>
+                    {/* Score */}
+                    <div className="text-center">
+                      <span className={`text-sm font-semibold ${sentiment.text}`}>{item.overallRating}</span>
+                      <span className="text-[10px] text-white/25">/100</span>
+                    </div>
+                    {/* Price → Target */}
+                    <div className="font-mono text-xs">
+                      <span className="text-white/60">{fmtPrice(currentPrice)}</span>
+                      {targetPrice && <span className="text-white/25"> → </span>}
+                      {targetPrice && <span className="text-blue-400">{fmtPrice(targetPrice)}</span>}
+                    </div>
                     {/* Upside */}
-                    <div className={`text-center font-semibold text-xs ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}</div>
+                    <div className={`text-center text-xs font-semibold ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
+                    </div>
                     {/* Earnings */}
-                    <div className="text-center text-[10px] font-medium text-yellow-400/80">{earningsDate}</div>
-                    {/* Date */}
-                    <div className="text-center text-[10px] font-medium text-white/40">{formatDateDDMMYYYY(item.date)}</div>
+                    <div className="text-center text-[11px] font-medium text-amber-400/80">{earningsDate}</div>
+                    {/* Analysed */}
+                    <div className="text-center text-[11px] text-white/30">{formatRelativeDate(item.date)}</div>
                     {/* Actions */}
-                    <div className="flex justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }} className="p-1 hover:bg-blue-500/20 text-white/30 hover:text-blue-400 rounded transition-all" title="Rerun"><RefreshCw className="h-3 w-3" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }} className="p-1 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded transition-all" title="Delete"><Trash2 className="h-3 w-3" /></button>
+                    <div className="flex gap-0.5 justify-end" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol) }} className="p-1.5 hover:bg-blue-500/20 text-white/20 hover:text-blue-400 rounded-lg transition-all" title="Rerun">
+                        <RefreshCw className="h-3 w-3" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); const i = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(i) }} className="p-1.5 hover:bg-rose-500/20 text-white/20 hover:text-rose-400 rounded-lg transition-all" title="Delete">
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     </div>
                   </div>
                 </div>
