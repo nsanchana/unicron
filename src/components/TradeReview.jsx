@@ -26,8 +26,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   const [priceError, setPriceError] = useState('')
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [historyFilter, setHistoryFilter] = useState('all') // 'all', 'planned', 'executed', 'expired'
-  const [sortBy, setSortBy] = useState('newest') // newest, symbol, expiry, variance, premium
+  const [historyFilter, setHistoryFilter] = useState(() => localStorage.getItem('trades_filter') || 'executed')
+  const [sortBy, setSortBy] = useState(() => localStorage.getItem('trades_sort') || 'variance')
   const [editingId, setEditingId] = useState(null)
 
   // Chat state
@@ -685,7 +685,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Symbol Selection */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Stock Symbol</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Stock Symbol</label>
               <div className="relative group">
                 <input
                   type="text"
@@ -706,7 +706,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Trade Type */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Strategy Type</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Strategy Type</label>
               <select
                 value={tradeType}
                 onChange={(e) => setTradeType(e.target.value)}
@@ -719,7 +719,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Current Market Price */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Spot Price ($)</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Spot Price ($)</label>
               <div className="relative group">
                 <input
                   type="number"
@@ -740,7 +740,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Strike Price */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Strike Price ($)</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Strike Price ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -753,7 +753,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Premium */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Premium ($)</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Premium ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -766,7 +766,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Trade Entry Date */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Trade Entry Date</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Trade Entry Date</label>
               <input
                 type="date"
                 value={tradeDate}
@@ -777,7 +777,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Expiration Date */}
             <div className="space-y-3">
-              <label className="block text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">Terminal Date</label>
+              <label className="block text-[11px] font-medium text-white/40 ml-1">Terminal Date</label>
               <input
                 type="date"
                 value={expirationDate}
@@ -1160,228 +1160,284 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       )}
 
       {/* Trade History */}
-      {tradeData.length > 0 && (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Trade Analysis History</h3>
-            <button
-              onClick={refreshTradePrices}
-              disabled={loading}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors disabled:opacity-50 text-sm font-medium"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Update Prices</span>
-            </button>
-          </div>
+      {tradeData.length > 0 && (() => {
+        const filterTrade = (trade) => {
+          const daysLeft = Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
+          const isExpired = daysLeft < 0
+          if (historyFilter === 'all') return true
+          if (historyFilter === 'expired') return isExpired
+          if (historyFilter === 'executed') return trade.status === 'executed' && !isExpired
+          if (historyFilter === 'planned') return (trade.status === 'planned' || !trade.status) && !isExpired
+          return true
+        }
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            {/* Filter Buttons */}
-            <div className="flex space-x-2">
-              {['all', 'planned', 'executed', 'expired'].map(filter => (
-                <button
-                  key={filter}
-                  onClick={() => setHistoryFilter(filter)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${historyFilter === filter
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                    : 'bg-white/[0.04] text-white/50 hover:bg-white/10 hover:text-white/85'
-                    }`}
-                >
-                  {filter}
-                </button>
-              ))}
+        const getVarStatus = (trade) => {
+          const dp = trade.currentMarketPrice || trade.stockPrice
+          const diff = dp - trade.strikePrice
+          const pct = (diff / trade.strikePrice) * 100
+          const isCSP = trade.tradeType === 'cashSecuredPut'
+          const isAtRisk = isCSP ? diff < 0 : diff > 0
+          const isWatch = isCSP ? (diff >= 0 && pct < 5) : (diff <= 0 && Math.abs(pct) < 5)
+          return { diff, pct, isAtRisk, isWatch }
+        }
+
+        const handleFilterChange = (f) => {
+          setHistoryFilter(f)
+          localStorage.setItem('trades_filter', f)
+        }
+        const handleSortChange = (s) => {
+          setSortBy(s)
+          localStorage.setItem('trades_sort', s)
+        }
+
+        const counts = {
+          all: tradeData.length,
+          executed: tradeData.filter(t => t.status === 'executed' && Math.ceil((new Date(t.expirationDate) - new Date()) / 86400000) >= 0).length,
+          planned: tradeData.filter(t => (t.status === 'planned' || !t.status) && Math.ceil((new Date(t.expirationDate) - new Date()) / 86400000) >= 0).length,
+          expired: tradeData.filter(t => Math.ceil((new Date(t.expirationDate) - new Date()) / 86400000) < 0).length,
+        }
+
+        const filtered = tradeData.filter(filterTrade).sort((a, b) => {
+          switch (sortBy) {
+            case 'symbol': return a.symbol.localeCompare(b.symbol)
+            case 'expiry':
+              return Math.ceil((new Date(a.expirationDate) - new Date()) / 86400000) - Math.ceil((new Date(b.expirationDate) - new Date()) / 86400000)
+            case 'variance':
+              const vA = getVarStatus(a), vB = getVarStatus(b)
+              return Math.abs(vA.pct) > Math.abs(vB.pct) ? -1 : 1
+            case 'premium':
+              return (b.premium * (b.quantity || 1)) - (a.premium * (a.quantity || 1))
+            default: return new Date(b.timestamp) - new Date(a.timestamp)
+          }
+        })
+
+        return (
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                  <TrendingUp className="h-4 w-4 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-white/90">Trade History</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/40">{tradeData.length}</span>
+                  </div>
+                  <p className="text-[11px] text-white/40 mt-0.5">Executed trades sorted by risk exposure · tap card to edit</p>
+                </div>
+              </div>
+              <button onClick={refreshTradePrices} disabled={loading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-medium rounded-full disabled:opacity-30 transition-all self-start sm:self-auto">
+                <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                Update Prices
+              </button>
             </div>
 
-            {/* Sorting Select */}
-            <div className="flex items-center space-x-3">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">Sort By:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-gray-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="newest">Newest First</option>
-                <option value="symbol">Symbol (A-Z)</option>
-                <option value="expiry">Days to Expiry</option>
-                <option value="variance">Variance ($)</option>
-                <option value="premium">Premium Amount</option>
-              </select>
+            {/* Filter + Sort toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-2.5 bg-white/[0.02] border-b border-white/[0.04]">
+              {/* Filter pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+                {[
+                  { key: 'executed', label: 'Executed' },
+                  { key: 'planned', label: 'Planned' },
+                  { key: 'all', label: 'All' },
+                  { key: 'expired', label: 'Expired' },
+                ].map(f => (
+                  <button key={f.key} onClick={() => handleFilterChange(f.key)}
+                    className={`flex-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                      historyFilter === f.key ? 'bg-blue-500 text-white' : 'bg-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.10] border border-white/[0.08]'
+                    }`}>
+                    {f.label}
+                    <span className={`text-[9px] px-1 py-0.5 rounded-full ${historyFilter === f.key ? 'bg-white/20' : 'bg-white/[0.08]'}`}>{counts[f.key]}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Sort pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-shrink-0">
+                {[
+                  { key: 'variance', label: 'Risk' },
+                  { key: 'expiry', label: 'Expiry' },
+                  { key: 'newest', label: 'Recent' },
+                  { key: 'premium', label: 'Premium' },
+                  { key: 'symbol', label: 'A–Z' },
+                ].map(s => (
+                  <button key={s.key} onClick={() => handleSortChange(s.key)}
+                    className={`flex-none flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                      sortBy === s.key ? 'bg-white/[0.10] text-white/80 border border-white/[0.15]' : 'text-white/30 hover:text-white/50'
+                    }`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            {tradeData
-              .filter(trade => {
-                const daysLeft = Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
-                const isExpired = daysLeft < 0
-
-                if (historyFilter === 'all') return true
-                if (historyFilter === 'expired') return isExpired
-                if (historyFilter === 'executed') return trade.status === 'executed' && !isExpired
-                if (historyFilter === 'planned') return (trade.status === 'planned' || !trade.status) && !isExpired
-                return true
-              })
-              .sort((a, b) => {
-                switch (sortBy) {
-                  case 'symbol':
-                    return a.symbol.localeCompare(b.symbol)
-                  case 'expiry':
-                    const daysA = Math.ceil((new Date(a.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
-                    const daysB = Math.ceil((new Date(b.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
-                    return daysA - daysB
-                  case 'variance':
-                    const varA = (a.currentMarketPrice || a.stockPrice) - a.strikePrice
-                    const varB = (b.currentMarketPrice || b.stockPrice) - b.strikePrice
-                    return varB - varA // Higher variance first
-                  case 'premium':
-                    return (b.premium * (b.quantity || 1)) - (a.premium * (a.quantity || 1))
-                  default: // newest
-                    return new Date(b.timestamp) - new Date(a.timestamp)
-                }
-              })
-              .map((trade, index) => {
+            {/* Trade Cards */}
+            <div className="divide-y divide-white/[0.04]">
+              {filtered.length === 0 ? (
+                <div className="py-12 text-center text-white/30 text-sm">No trades in this view</div>
+              ) : filtered.map((trade, index) => {
                 const displayPrice = trade.currentMarketPrice || trade.stockPrice
-                const priceDiff = displayPrice - trade.strikePrice
                 const daysLeft = Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))
                 const isExpired = daysLeft < 0
+                const varStatus = getVarStatus(trade)
+                const isExecuted = trade.status === 'executed'
+                const totalPremium = trade.premium * (trade.quantity || 1) * 100
 
                 return (
-                  <div key={index} className={`p-4 rounded-lg transition-all ${trade.closed ? 'opacity-50 grayscale bg-gray-900/40 border border-white/5' :
-                    isExpired ? 'bg-orange-900/10 border border-orange-500/20' :
-                      trade.status === 'executed' ? 'bg-emerald-500/15/20 border border-green-700/30' :
-                        trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
-                          'bg-gray-700'
-                    }`}>
-                    {/* Top Row: Symbol, Type, and Status */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center">
-                        <CompanyLogo symbol={trade.symbol} className="w-10 h-10 mr-3" />
-                        <h4 className="font-semibold text-lg flex items-center flex-wrap gap-2">
-                          <span>{trade.symbol} {trade.tradeType === 'cashSecuredPut' ? 'Cash-Secured Put' : 'Covered Call'}</span>
+                  <div key={index} className={`transition-all ${trade.closed ? 'opacity-40' : ''}`}>
+                    {/* Assignment risk top stripe for executed trades */}
+                    {isExecuted && !trade.closed && !isExpired && (
+                      <div className={`h-0.5 ${varStatus.isAtRisk ? 'bg-gradient-to-r from-rose-500 to-transparent' : varStatus.isWatch ? 'bg-gradient-to-r from-amber-500 to-transparent' : 'bg-gradient-to-r from-emerald-500/40 to-transparent'}`} />
+                    )}
 
-                          {/* Status Badges moved here */}
-                          {isExpired && (
-                            <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded border border-gray-600">
-                              EXPIRED
-                            </span>
-                          )}
-                          {trade.status === 'executed' && !isExpired && (
-                            <span className="text-xs px-2 py-0.5 bg-green-600 text-green-100 rounded">
-                              EXECUTED
-                            </span>
-                          )}
-                          {trade.status === 'planned' && (
-                            <span className="text-xs px-2 py-0.5 bg-blue-600 text-blue-100 rounded">
-                              PLANNED
-                            </span>
-                          )}
-                          {!trade.status && (
-                            <span className="text-xs px-2 py-0.5 bg-gray-600 text-gray-300 rounded">
-                              RESEARCH
-                            </span>
-                          )}
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded ${getRecommendationColor(trade.recommendation.action)}`}>
-                            {trade.recommendation.action}
-                          </span>
-
-                          <div className="flex items-center space-x-2 ml-2 hidden md:flex">
-                            <div className="flex flex-col text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                              {trade.status === 'executed' ? 'Executed' : 'Planned'}: <span className="text-white/85 ml-1 font-black">{formatDateDDMMYYYY(trade.status === 'executed' ? trade.executionDate : trade.timestamp)}</span>
-                            </div>
-                            <div className="flex flex-col text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                              Expires: <span className="text-white/85 ml-1 font-black">{formatDateDDMMYYYY(trade.expirationDate)}</span>
-                            </div>
-                            {trade.closed && (
-                              <span className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest ${trade.result === 'assigned' ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>
-                                Result: {trade.result}
+                    <div className="px-5 py-4">
+                      {/* Card Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <CompanyLogo symbol={trade.symbol} className="w-9 h-9" />
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-base text-white/90">{trade.symbol}</span>
+                              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/40">
+                                {trade.tradeType === 'cashSecuredPut' ? 'CSP' : 'Covered Call'}
                               </span>
-                            )}
+                              {isExecuted && !isExpired && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">Executed</span>
+                              )}
+                              {(trade.status === 'planned' || !trade.status) && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">Planned</span>
+                              )}
+                              {isExpired && !trade.closed && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">Expired</span>
+                              )}
+                              {trade.closed && (
+                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${trade.result === 'assigned' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-white/[0.06] border-white/[0.08] text-white/40'}`}>
+                                  {trade.result === 'assigned' ? 'Assigned' : 'Expired Worthless'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-white/30">
+                              <span>{isExecuted ? 'Executed' : 'Planned'} {formatDateDDMMYYYY(trade.executionDate || trade.timestamp)}</span>
+                              <span className="text-white/15">·</span>
+                              <span>Expires {formatDateDDMMYYYY(trade.expirationDate)}</span>
+                              {trade.lastPriceUpdate && (
+                                <>
+                                  <span className="text-white/15">·</span>
+                                  <span>Price updated {new Date(trade.lastPriceUpdate).toLocaleDateString()}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </h4>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {isExpired && !trade.closed && (
-                          <div className="flex items-center space-x-2 mr-2">
-                            <button
-                              onClick={() => handleCloseTrade(trade.id, 'worthless')}
-                              className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-500/30 rounded text-[10px] font-black uppercase tracking-widest transition-colors"
-                            >
-                              Expired Worthless
-                            </button>
-                            <button
-                              onClick={() => handleCloseTrade(trade.id, 'assigned')}
-                              className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 rounded text-[10px] font-black uppercase tracking-widest transition-colors"
-                            >
-                              Assigned Stock
-                            </button>
-                          </div>
-                        )}
-                        <div className="flex items-center space-x-2 mr-2">
+                        </div>
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           {!trade.closed && (
-                            <button
-                              onClick={() => handleEditTrade(trade)}
-                              className={`p-2 rounded-lg transition-colors ${editingId === trade.id ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/10 text-blue-400'}`}
-                              title="Edit trade"
-                            >
-                              <Edit2 className="h-4 w-4" />
+                            <button onClick={() => handleEditTrade(trade)}
+                              className={`p-2 rounded-xl transition-all ${editingId === trade.id ? 'bg-blue-500 text-white' : 'hover:bg-blue-500/10 text-white/30 hover:text-blue-400'}`}
+                              title="Edit">
+                              <Edit2 className="h-3.5 w-3.5" />
                             </button>
                           )}
                           {trade.status === 'planned' && !trade.closed && (
-                            <button
-                              onClick={() => handleConvertToExecuted(trade)}
-                              className="p-2 hover:bg-emerald-500/15/50 rounded-lg transition-colors"
-                              title="Convert to executed trade"
-                            >
-                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            <button onClick={() => handleConvertToExecuted(trade)}
+                              className="p-2 hover:bg-emerald-500/15 text-white/30 hover:text-emerald-400 rounded-xl transition-all"
+                              title="Mark as executed">
+                              <CheckCircle className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          <button
-                            onClick={() => handleDeleteTrade(trade.id)}
-                            className="p-2 hover:bg-rose-500/15/50 rounded-lg transition-colors"
-                            title="Delete trade"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-400" />
+                          <button onClick={() => handleDeleteTrade(trade.id)}
+                            className="p-2 hover:bg-rose-500/15 text-white/30 hover:text-rose-400 rounded-xl transition-all"
+                            title="Delete">
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Trade Details Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                      <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Current Price</span>
-                        <div className="text-lg font-black text-white/85 font-mono leading-none">
-                          ${displayPrice.toFixed(2)}
+                      {/* ASSIGNMENT RISK ALERT */}
+                      {isExecuted && !trade.closed && !isExpired && varStatus.isAtRisk && (
+                        <div className="flex items-center gap-2 mb-3 px-3 py-2.5 bg-rose-500/10 border border-rose-500/25 rounded-xl">
+                          <AlertTriangle className="h-4 w-4 text-rose-400 flex-shrink-0" />
+                          <div>
+                            <span className="text-xs font-semibold text-rose-400">Assignment Risk</span>
+                            <span className="text-[11px] text-rose-400/70 ml-2">Stock price has dropped below your strike — you may be assigned at expiry</span>
+                          </div>
+                        </div>
+                      )}
+                      {isExecuted && !trade.closed && !isExpired && varStatus.isWatch && (
+                        <div className="flex items-center gap-2 mb-3 px-3 py-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl">
+                          <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                          <span className="text-xs font-semibold text-amber-400">Watch Zone — </span>
+                          <span className="text-[11px] text-amber-400/70">Price within 5% of strike, monitor closely</span>
+                        </div>
+                      )}
+
+                      {/* VARIANCE HERO (executed active trades only) */}
+                      {isExecuted && !trade.closed && (
+                        <div className={`mb-4 p-4 rounded-2xl border ${varStatus.isAtRisk ? 'bg-rose-500/[0.06] border-rose-500/20' : varStatus.isWatch ? 'bg-amber-500/[0.06] border-amber-500/20' : 'bg-emerald-500/[0.04] border-emerald-500/15'}`}>
+                          <div className="flex items-end justify-between gap-4">
+                            <div>
+                              <div className="text-[11px] font-medium text-white/40 mb-1">Variance (Current vs Strike)</div>
+                              <div className={`text-3xl font-semibold font-mono tracking-tight ${varStatus.isAtRisk ? 'text-rose-400' : varStatus.isWatch ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                {varStatus.diff >= 0 ? '+' : ''}${varStatus.diff.toFixed(2)}
+                              </div>
+                              <div className={`text-sm font-medium mt-0.5 ${varStatus.isAtRisk ? 'text-rose-400/70' : varStatus.isWatch ? 'text-amber-400/70' : 'text-emerald-400/70'}`}>
+                                {varStatus.pct >= 0 ? '+' : ''}{varStatus.pct.toFixed(1)}% from strike
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <div className="text-[11px] font-medium text-white/40 mb-1">Total Premium</div>
+                              <div className="text-2xl font-semibold font-mono text-emerald-400">${totalPremium.toFixed(0)}</div>
+                              <div className="text-[11px] text-white/30 mt-0.5">${trade.premium?.toFixed(2)}/share × {(trade.quantity || 1) * 100} shares</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stats row */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="p-3 bg-white/[0.04] rounded-xl border border-white/[0.05]">
+                          <div className="text-[10px] font-medium text-white/40 mb-1">Current Price</div>
+                          <div className="text-base font-semibold font-mono text-white/85">${displayPrice?.toFixed(2)}</div>
+                        </div>
+                        <div className="p-3 bg-white/[0.04] rounded-xl border border-white/[0.05]">
+                          <div className="text-[10px] font-medium text-white/40 mb-1">Strike Price</div>
+                          <div className="text-base font-semibold font-mono text-white/85">${trade.strikePrice?.toFixed(2)}</div>
+                        </div>
+                        <div className="p-3 bg-white/[0.04] rounded-xl border border-white/[0.05]">
+                          <div className="text-[10px] font-medium text-white/40 mb-1">Premium</div>
+                          <div className="text-base font-semibold font-mono text-emerald-400">${trade.premium?.toFixed(2)}</div>
+                        </div>
+                        <div className={`p-3 rounded-xl border ${isExpired ? 'bg-white/[0.04] border-white/[0.05]' : daysLeft <= 7 ? 'bg-rose-500/10 border-rose-500/20' : daysLeft <= 14 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-white/[0.04] border-white/[0.05]'}`}>
+                          <div className="text-[10px] font-medium text-white/40 mb-1">Days to Expiry</div>
+                          <div className={`text-base font-semibold font-mono ${isExpired ? 'text-white/30' : daysLeft <= 7 ? 'text-rose-400' : daysLeft <= 14 ? 'text-amber-400' : 'text-white/85'}`}>
+                            {isExpired ? 'Expired' : `${daysLeft}d`}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Strike</span>
-                        <div className="text-lg font-black text-white/85 font-mono leading-none">${trade.strikePrice?.toFixed(2)}</div>
-                      </div>
-                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
-                        <div className="text-xs text-gray-400 mb-1">Variance</div>
-                        <div className={`text-lg font-bold ${priceDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${priceDiff.toFixed(2)}
-                          <span className="text-xs ml-1 opacity-70">
-                            ({((priceDiff / trade.strikePrice) * 100).toFixed(1)}%)
-                          </span>
+
+                      {/* Expired: close actions */}
+                      {isExpired && !trade.closed && (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <button onClick={() => handleCloseTrade(trade.id, 'worthless')}
+                            className="py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5" /> Expired Worthless
+                          </button>
+                          <button onClick={() => handleCloseTrade(trade.id, 'assigned')}
+                            className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5" /> Assigned Stock
+                          </button>
                         </div>
-                      </div>
-                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
-                        <div className="text-xs text-gray-400 mb-1">Premium</div>
-                        <div className="text-lg font-bold text-emerald-400">${trade.premium?.toFixed(2)}</div>
-                      </div>
-                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
-                        <div className="text-xs text-gray-400 mb-1">Days Left</div>
-                        <div className="text-lg font-bold text-blue-400">
-                          {Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))}d
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )
               })}
+            </div>
           </div>
-        </div>
+        )
+      })()}
       )
       }
     </div >
