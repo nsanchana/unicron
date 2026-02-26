@@ -223,28 +223,28 @@ const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
 
   return (
     <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-8 animate-slide-in-up">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-8">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
             <Calendar className="h-5 w-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-sm font-black tracking-[0.2em] text-white/85 uppercase">Annual Performance Roadmap</h3>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-1">Month-by-month target achievement</p>
+            <h3 className="text-sm font-semibold text-white/85">Annual Performance Roadmap</h3>
+            <p className="text-[11px] text-white/50 mt-0.5">Month-by-month target achievement</p>
           </div>
         </div>
-        <div className="flex items-center space-x-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-          <div className="flex items-center space-x-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Goal Reached</span>
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1.5 bg-white/5 px-3 py-2 rounded-xl border border-white/5 self-start md:self-auto">
+          <div className="flex items-center space-x-1.5">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+            <span className="text-[10px] font-medium text-white/50">Goal Reached</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Min Reached</span>
+          <div className="flex items-center space-x-1.5">
+            <div className="h-2 w-2 rounded-full bg-yellow-500 flex-shrink-0"></div>
+            <span className="text-[10px] font-medium text-white/50">Min Reached</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">On Track</span>
+          <div className="flex items-center space-x-1.5">
+            <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+            <span className="text-[10px] font-medium text-white/50">On Track</span>
           </div>
         </div>
       </div>

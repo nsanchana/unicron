@@ -148,7 +148,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[680px] animate-fade-in">
 
             {/* Sidebar */}
-            <div className={`${isSidebarOpen ? 'w-60' : 'w-0'} border-r border-white/[0.06] transition-all duration-300 overflow-hidden flex flex-col flex-shrink-0`}>
+            <div className={`${isSidebarOpen ? 'md:w-60' : 'md:w-0'} hidden md:flex border-r border-white/[0.06] transition-all duration-300 overflow-hidden flex-col flex-shrink-0`}>
                 <div className="p-4 border-b border-white/[0.06] space-y-3">
                     <h3 className="text-xs font-semibold text-white/40 flex items-center gap-2">
                         <MessageSquare className="h-3 w-3" /> Chat History

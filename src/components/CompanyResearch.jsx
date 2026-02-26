@@ -1113,88 +1113,73 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               return (
                 <div
                   key={itemKey}
-                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-2 md:gap-4 items-center p-3 md:p-2 bg-white/[0.05] border border-white/[0.06] rounded-xl hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                  className="bg-white/[0.05] border border-white/[0.06] rounded-xl hover:bg-white/[0.08] hover:border-white/[0.10] transition-all cursor-pointer"
                   onClick={() => handleViewResearch(item)}
                 >
-                  {/* Checkbox (Desktop only) */}
-                  <div className="hidden md:flex justify-center" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedSymbols.has(item.symbol)}
-                      onChange={() => {
-                        const next = new Set(selectedSymbols)
-                        if (next.has(item.symbol)) next.delete(item.symbol)
-                        else next.add(item.symbol)
-                        setSelectedSymbols(next)
-                      }}
-                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer"
-                    />
+                  {/* ── Mobile card layout ── */}
+                  <div className="md:hidden flex items-center justify-between gap-2 p-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <CompanyLogo symbol={item.symbol} className="w-9 h-9 flex-shrink-0" textSize="text-[10px]" />
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm text-white/90">{item.symbol}</div>
+                        <div className="text-[10px] text-white/40 truncate">{formatDateDDMMYYYY(item.date)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        <div className="font-mono text-xs text-white/70">{currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}</div>
+                        <div className={`text-xs font-semibold ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
+                        </div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border flex-shrink-0 ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' : item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                        {item.overallRating}
+                      </span>
+                      <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }} className="p-1.5 hover:bg-blue-500/20 text-white/30 hover:text-blue-400 rounded-lg transition-all">
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }} className="p-1.5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded-lg transition-all">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Company */}
-                  <div className="flex items-center space-x-3">
-                    <CompanyLogo symbol={item.symbol} className="w-8 h-8 md:w-6 md:h-6" textSize="text-[10px]" />
-                    <span className="font-black text-sm tracking-tight text-white/85">{item.symbol}</span>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex md:justify-center">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400' :
-                      item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-600 dark:text-yellow-400' :
-                        'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
-                      }`}>
-                      {item.overallRating}
-                    </span>
-                  </div>
-
-                  {/* Prices */}
-                  <div className="hidden md:block text-right font-mono text-xs text-white/50">
-                    {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}
-                  </div>
-
-                  {/* Support/Resistance [NEW] */}
-                  <div className="hidden md:block text-right font-mono text-xs text-orange-300/80">
-                    {supportLevel}
-                  </div>
-                  <div className="hidden md:block text-right font-mono text-xs text-purple-300/80">
-                    {resistanceLevel}
-                  </div>
-
-                  <div className="hidden md:block text-right font-mono text-xs text-blue-300">
-                    {targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : '-'}
-                  </div>
-
-                  {/* Potential */}
-                  <div className={`text-right md:text-center font-bold text-xs ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
-                  </div>
-
-                  {/* Earnings [NEW] */}
-                  <div className="hidden md:block text-center text-[10px] font-bold text-yellow-400/80 uppercase tracking-tighter">
-                    {earningsDate}
-                  </div>
-
-                  {/* Date */}
-                  <div className="hidden md:block text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {formatDateDDMMYYYY(item.date)}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex justify-end space-x-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }}
-                      className="p-1 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 rounded transition-all"
-                      title="Rerun"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }}
-                      className="p-1 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                  {/* ── Desktop grid layout ── */}
+                  <div className="hidden md:grid grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-4 items-center p-2">
+                    {/* Checkbox */}
+                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" checked={selectedSymbols.has(item.symbol)} onChange={() => { const next = new Set(selectedSymbols); if (next.has(item.symbol)) next.delete(item.symbol); else next.add(item.symbol); setSelectedSymbols(next); }} className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20 transition-all cursor-pointer" />
+                    </div>
+                    {/* Company */}
+                    <div className="flex items-center space-x-2">
+                      <CompanyLogo symbol={item.symbol} className="w-6 h-6" textSize="text-[10px]" />
+                      <span className="font-semibold text-sm text-white/85">{item.symbol}</span>
+                    </div>
+                    {/* Rating */}
+                    <div className="flex justify-center">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' : item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>{item.overallRating}</span>
+                    </div>
+                    {/* Current */}
+                    <div className="text-right font-mono text-xs text-white/50">{currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}</div>
+                    {/* Support */}
+                    <div className="text-right font-mono text-xs text-orange-300/80">{supportLevel}</div>
+                    {/* Resistance */}
+                    <div className="text-right font-mono text-xs text-purple-300/80">{resistanceLevel}</div>
+                    {/* Target */}
+                    <div className="text-right font-mono text-xs text-blue-300">{targetPrice ? (targetPrice.startsWith('$') ? targetPrice : `$${targetPrice}`) : '-'}</div>
+                    {/* Upside */}
+                    <div className={`text-center font-semibold text-xs ${parseFloat(upsidePercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}</div>
+                    {/* Earnings */}
+                    <div className="text-center text-[10px] font-medium text-yellow-400/80">{earningsDate}</div>
+                    {/* Date */}
+                    <div className="text-center text-[10px] font-medium text-white/40">{formatDateDDMMYYYY(item.date)}</div>
+                    {/* Actions */}
+                    <div className="flex justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol); }} className="p-1 hover:bg-blue-500/20 text-white/30 hover:text-blue-400 rounded transition-all" title="Rerun"><RefreshCw className="h-3 w-3" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); const originalIndex = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(originalIndex); }} className="p-1 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded transition-all" title="Delete"><Trash2 className="h-3 w-3" /></button>
+                    </div>
                   </div>
                 </div>
               )
