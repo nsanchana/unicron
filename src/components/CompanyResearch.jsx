@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Loader, Loader2, ChevronDown, ChevronUp, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp } from 'lucide-react'
+import { Search, Loader, Loader2, ChevronDown, ChevronUp, ChevronLeft, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp } from 'lucide-react'
 import { scrapeCompanyData } from '../services/webScraping'
 import { COMPANY_RESEARCH_VERSION } from '../config'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
@@ -513,7 +513,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             <span className="font-bold text-sm">{subsection.rating}/100</span>
           </div>
         </div>
-        <p className="text-gray-300 text-sm leading-relaxed">{subsection.content}</p>
+        <p className="text-white/70 text-sm leading-relaxed">{subsection.content}</p>
       </div>
     )
   }
@@ -528,11 +528,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
       <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
         <button
           onClick={() => toggleSection(sectionKey)}
-          className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.03] rounded-xl transition-colors"
         >
           <div className="flex items-center space-x-3">
             {getRatingIcon(rating)}
-            <h3 className="text-lg font-semibold">{title}</h3>
+            <h3 className="text-sm font-semibold text-white/90">{title}</h3>
             {rating && (
               <div className={`flex items-center space-x-1 ${getRatingColor(rating)}`}>
                 <Star className="h-4 w-4 fill-current" />
@@ -548,19 +548,19 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Summary Analysis */}
             {data.analysis && (
               <div>
-                <h4 className="font-medium mb-2">Executive Summary</h4>
-                <p className="text-gray-300 text-sm leading-relaxed bg-white/[0.04] border border-white/[0.05] rounded-xl p-3">{data.analysis}</p>
+                <h4 className="text-[11px] font-semibold text-white/50 mb-2">Executive Summary</h4>
+                <p className="text-white/70 text-sm leading-relaxed bg-white/[0.04] border border-white/[0.05] rounded-xl p-3">{data.analysis}</p>
               </div>
             )}
 
             {/* Key Metrics - Special rendering for Technical Analysis */}
             {data.metrics && data.metrics.length > 0 && isTechnicalAnalysis && (
               <div>
-                <h4 className="font-medium mb-3">Key Metrics</h4>
-                <h4 className="font-medium mb-3 text-white/85">Key Metrics</h4>
+                <h4 className="text-[11px] font-semibold text-white/50 mb-3">Key Metrics</h4>
+                
                 {/* Current Price - Prominent Display */}
                 {data.metrics.find(m => m.label === 'Current Price') && (
-                  <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-4 mb-4 border border-blue-600">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-4">
                     <div className="flex items-center justify-between">
                       <span className="text-white/50 text-sm">Current Price</span>
                       {/* Root symbol or local state fallback */}
@@ -573,7 +573,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
                 {/* Target Price Analysis - Moved Here */}
                 {data.detailedTechnical?.targetPriceAnalysis && (
-                  <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-lg p-4 mb-4 border border-blue-700/30">
+                  <div className="bg-blue-500/[0.06] border border-blue-500/15 rounded-2xl p-4 mb-4">
                     <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.targetPriceAnalysis.title}</h5>
                     {data.detailedTechnical.targetPriceAnalysis.targetPrice && (
                       <div className="flex items-center mb-3">
@@ -588,7 +588,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 {/* Support & Resistance Visual Display */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Support Levels */}
-                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-green-500">
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-emerald-500/20 rounded-[20px] p-5">
                     <h5 className="text-green-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                       Support Levels
@@ -613,7 +613,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   </div>
 
                   {/* Resistance Levels */}
-                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-red-500">
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-rose-500/20 rounded-[20px] p-5">
                     <h5 className="text-red-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                       Resistance Levels
@@ -791,7 +791,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center space-x-3"
+            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center space-x-3"
           >
             {loading ? (
               <RefreshCw className="h-5 w-5" />
@@ -832,7 +832,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   const isActive = loadingProgress > (i * 25) && loadingProgress <= ((i + 1) * 25);
                   return (
                     <div key={step} className="text-center">
-                      <div className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${isCompleted ? 'text-blue-400' : 'text-gray-600'}`}>
+                      <div className={`text-[10px] font-medium mb-1 ${isCompleted ? 'text-blue-400' : 'text-gray-600'}`}>
                         {step}
                       </div>
                       <div className={`h-1.5 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-blue-500/50' : 'bg-gray-800'}`}>
@@ -855,39 +855,69 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
       </div>
 
       {companyData && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {/* Overall Rating Header */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 bg-gradient-to-r from-blue-600/10 to-transparent border-blue-500/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-black tracking-tight flex items-baseline gap-3">
-                  {companyData.symbol} Analysis
-                  <span className="text-xs text-gray-600 font-medium opacity-50">{COMPANY_RESEARCH_VERSION}</span>
-                </h2>
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1">Deep Intelligence Report</p>
-              </div>
-              <div className="flex items-center space-x-8">
-                <div className="text-center">
-                  <div className={`text-5xl font-black ${getRatingColor(companyData.overallRating)} text-shadow-glow`}>
-                    {companyData.overallRating}
-                    <span className="text-xl opacity-50 font-medium lowercase ml-1">/100</span>
-                  </div>
-                  <div className="text-[10px] text-gray-500 font-black uppercase tracking-tighter mt-1">Global Score</div>
+        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header with back button */}
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+            {/* Top accent stripe based on sentiment */}
+            <div className={`h-0.5 ${companyData.overallRating >= 75 ? 'bg-gradient-to-r from-emerald-500 to-transparent' : companyData.overallRating >= 50 ? 'bg-gradient-to-r from-amber-500 to-transparent' : 'bg-gradient-to-r from-rose-500 to-transparent'}`} />
+
+            <div className="p-5">
+              {/* Back + actions row */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setCompanyData(null)}
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-white/40 hover:text-white/70 transition-colors group"
+                >
+                  <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+                  Back to Research
+                </button>
+                <div className="flex items-center gap-2">
+                  {!companyData.saved ? (
+                    <button onClick={handleSaveResearch}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-semibold transition-all active:scale-95">
+                      <Save className="h-3.5 w-3.5" />
+                      Save Report
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-medium">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      Saved
+                    </div>
+                  )}
                 </div>
-                {!companyData.saved ? (
-                  <button
-                    onClick={handleSaveResearch}
-                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-6 py-3 rounded-xl font-bold uppercase tracking-widest transition-all active:scale-95 flex items-center space-x-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save Report</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center space-x-2 text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
-                    <CheckCircle className="h-5 w-5" />
-                    <span className="text-sm font-black uppercase tracking-widest">Secured</span>
+              </div>
+
+              {/* Symbol + score */}
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <CompanyLogo symbol={companyData.symbol} className="w-12 h-12" textSize="text-sm" />
+                    <div>
+                      <h2 className="text-2xl font-semibold text-white/90">{companyData.symbol}</h2>
+                      <p className="text-[11px] text-white/40 mt-0.5">Full Intelligence Report</p>
+                    </div>
                   </div>
-                )}
+                  {/* 4 section scores */}
+                  <div className="flex items-center gap-2 mt-3 flex-wrap">
+                    {[
+                      { label: 'Company', score: companyData.companyAnalysis?.rating },
+                      { label: 'Financial', score: companyData.financialHealth?.rating },
+                      { label: 'Technical', score: companyData.technicalAnalysis?.rating },
+                      { label: 'Events', score: companyData.recentDevelopments?.rating },
+                    ].map(({ label, score }) => score ? (
+                      <div key={label} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium ${score >= 70 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : score >= 50 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+                        <span className="text-white/40">{label}</span>
+                        <span className="font-semibold">{score}</span>
+                      </div>
+                    ) : null)}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className={`text-5xl font-semibold font-mono ${companyData.overallRating >= 75 ? 'text-emerald-400' : companyData.overallRating >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                    {companyData.overallRating}
+                  </div>
+                  <div className="text-[11px] text-white/30 mt-0.5">Overall Score</div>
+                </div>
               </div>
             </div>
           </div>
@@ -913,11 +943,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
           <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
             <button
               onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.03] rounded-xl transition-colors"
             >
               <div className="flex items-center space-x-3">
                 <MessageCircle className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-semibold">Ask Questions About {companyData.symbol}</h3>
+                <h3 className="text-sm font-semibold text-white/90">Ask About {companyData.symbol}</h3>
               </div>
               {chatOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </button>
@@ -925,7 +955,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-white/[0.02]0 backdrop-blur-md rounded-xl border border-white/5 p-4 h-[500px] overflow-y-auto mb-4 pr-2 custom-scrollbar">
+                <div className="bg-white/[0.02] rounded-xl border border-white/[0.05] p-4 h-[400px] overflow-y-auto mb-4 pr-2 custom-scrollbar">
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
@@ -1184,9 +1214,24 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     {/* Company */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <CompanyLogo symbol={item.symbol} className="w-7 h-7 flex-shrink-0" textSize="text-[9px]" />
-                      <div className="min-w-0 flex items-center gap-1.5">
-                        <span className="font-semibold text-sm text-white/85 truncate">{item.symbol}</span>
-                        {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-sm text-white/85 truncate">{item.symbol}</span>
+                          {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                        </div>
+                        {/* Section scores row */}
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {[
+                            { key: 'Co', score: item.companyAnalysis?.rating },
+                            { key: 'Fi', score: item.financialHealth?.rating },
+                            { key: 'Te', score: item.technicalAnalysis?.rating },
+                            { key: 'Ev', score: item.recentDevelopments?.rating },
+                          ].map(({ key, score }) => score ? (
+                            <span key={key} className={`text-[9px] font-semibold px-1 rounded ${score >= 70 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                              {key}&nbsp;{score}
+                            </span>
+                          ) : null)}
+                        </div>
                       </div>
                     </div>
                     {/* Sentiment */}

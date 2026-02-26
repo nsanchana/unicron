@@ -52,8 +52,13 @@ function App() {
     const searchParams = new URLSearchParams(window.location.search)
     if (path === '/log') return 'trades'
     if (searchParams.has('ticker')) return 'research'
-    return 'dashboard'
+    return localStorage.getItem('active_tab') || 'dashboard'
   })
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    localStorage.setItem('active_tab', tab)
+  }
   const [researchData, setResearchData] = useState([])
   const [tradeData, setTradeData] = useState([])
   const [stockData, setStockData] = useState([])
@@ -298,7 +303,7 @@ function App() {
 
   const handleViewResearch = (item) => {
     setSelectedResearch(item)
-    setActiveTab('research')
+    handleTabChange('research')
   }
 
   const handleSettingsUpdate = (newSettings) => {
@@ -642,7 +647,7 @@ function App() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       isActive
                         ? 'bg-blue-500/20 text-blue-400'
@@ -811,7 +816,7 @@ function App() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] py-1.5 px-2 rounded-xl transition-all ${
                   isActive ? 'text-blue-400' : 'text-white/30 hover:text-white/60'
                 }`}
