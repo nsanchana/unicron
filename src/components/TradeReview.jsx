@@ -671,30 +671,56 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Trade Setup Form */}
-      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600/10 to-transparent p-6 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-xl font-black tracking-tight flex items-center">
-            <Calculator className="h-6 w-6 mr-3 text-blue-400" />
-            Trade Deployment Engine
-          </h3>
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Manual Entry Terminal</div>
+      {/* Log Trade Form */}
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+              <Calculator className="h-4 w-4 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white/90">{editingId ? 'Edit Trade' : 'Log Trade'}</h3>
+              <p className="text-[11px] text-white/40 mt-0.5">Analyze, save planned, or record an executed trade</p>
+            </div>
+          </div>
         </div>
 
-        <div className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Symbol Selection */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Stock Symbol</label>
-              <div className="relative group">
+        {/* Form fields */}
+        <div className="p-5">
+          {/* Strategy toggle — replaces broken native select */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-medium text-white/40 mb-2">Strategy</label>
+            <div className="flex rounded-xl bg-white/[0.06] border border-white/[0.10] p-1 gap-1 w-fit">
+              <button
+                onClick={() => setTradeType('cashSecuredPut')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tradeType === 'cashSecuredPut' ? 'bg-blue-500 text-white' : 'text-white/40 hover:text-white/70'}`}
+              >
+                Cash-Secured Put
+              </button>
+              <button
+                onClick={() => setTradeType('coveredCall')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${tradeType === 'coveredCall' ? 'bg-blue-500 text-white' : 'text-white/40 hover:text-white/70'}`}
+              >
+                Covered Call
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Symbol */}
+            <div className="col-span-2 md:col-span-1 lg:col-span-1 space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Symbol</label>
+              <div className="relative">
                 <input
                   type="text"
                   list="symbol-suggestions"
                   value={selectedSymbol}
                   onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
                   onBlur={(e) => handleSymbolChange(e.target.value.toUpperCase())}
-                  placeholder="E.G. NVDA"
-                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black placeholder:text-gray-700"
+                  placeholder="NVDA"
+                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-base font-semibold text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
                 />
                 <datalist id="symbol-suggestions">
                   {availableSymbols.map(symbol => (
@@ -704,142 +730,118 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               </div>
             </div>
 
-            {/* Trade Type */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Strategy Type</label>
-              <select
-                value={tradeType}
-                onChange={(e) => setTradeType(e.target.value)}
-                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold appearance-none cursor-pointer"
-              >
-                <option value="cashSecuredPut">Cash-Secured Put</option>
-                <option value="coveredCall">Covered Call</option>
-              </select>
-            </div>
-
-            {/* Current Market Price */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Spot Price ($)</label>
-              <div className="relative group">
+            {/* Market Price */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Market Price ($)</label>
+              <div className="relative">
                 <input
                   type="number"
                   step="0.01"
                   value={currentPrice}
                   onChange={(e) => setCurrentPrice(e.target.value)}
                   placeholder="0.00"
-                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black"
+                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-base font-semibold text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
                   disabled={fetchingPrice}
                 />
                 {fetchingPrice && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />
                   </div>
                 )}
               </div>
             </div>
 
             {/* Strike Price */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Strike Price ($)</label>
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Strike Price ($)</label>
               <input
                 type="number"
                 step="0.01"
                 value={strikePrice}
                 onChange={(e) => setStrikePrice(e.target.value)}
                 placeholder="0.00"
-                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black text-blue-400"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-base font-semibold text-blue-400 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
               />
             </div>
 
             {/* Premium */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Premium ($)</label>
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Premium ($)</label>
               <input
                 type="number"
                 step="0.01"
                 value={premium}
                 onChange={(e) => setPremium(e.target.value)}
                 placeholder="0.00"
-                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black text-emerald-400"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-base font-semibold text-emerald-400 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
               />
             </div>
 
-            {/* Trade Entry Date */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Trade Entry Date</label>
+            {/* Entry Date */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Entry Date</label>
               <input
                 type="date"
                 value={tradeDate}
                 onChange={(e) => setTradeDate(e.target.value)}
-                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
               />
             </div>
 
-            {/* Expiration Date */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-medium text-white/40 ml-1">Terminal Date</label>
+            {/* Expiry Date */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Expiry Date</label>
               <input
                 type="date"
                 value={expirationDate}
                 onChange={(e) => setExpirationDate(e.target.value)}
-                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
               />
             </div>
           </div>
+
+          {priceError && (
+            <p className="mt-2 text-[11px] text-amber-400 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" /> {priceError}
+            </p>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-2 px-5 pb-5">
           <button
             onClick={handleAnalyze}
             disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex-1 min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Analyzing...</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <Calculator className="h-4 w-4" />
-                <span>Analyze Trade</span>
-              </div>
-            )}
+            {loading ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <Calculator className="h-4 w-4" />}
+            {loading ? 'Analyzing…' : 'Analyze'}
           </button>
 
           <button
             onClick={() => handleQuickSave('planned')}
             disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
-            className="flex-1 min-w-[180px] flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-white/70 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4" />
-            <span>Quick Save as Planned</span>
+            Save Planned
           </button>
 
           <button
             onClick={() => handleQuickSave('executed')}
             disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
-            className="flex-1 min-w-[180px] flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <CheckCircle className="h-4 w-4" />
-            <span>Quick Save as Executed</span>
+            Save Executed
           </button>
 
           {editingId && (
             <button
-              onClick={() => {
-                setEditingId(null)
-                setSelectedSymbol('')
-                setStrikePrice('')
-                setExpirationDate('')
-                setCurrentPrice('')
-                setPremium('')
-                setAnalysis(null)
-              }}
-              className="flex-1 min-w-[120px] flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              onClick={() => { setEditingId(null); setSelectedSymbol(''); setStrikePrice(''); setExpirationDate(''); setCurrentPrice(''); setPremium(''); setAnalysis(null) }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/40 rounded-full text-sm font-medium transition-all"
             >
-              <span>Cancel Edit</span>
+              Cancel
             </button>
           )}
         </div>
