@@ -4,6 +4,17 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { UNICRON_AI_VERSION } from '../config'
 
+const QUICK_PROMPTS = [
+    { emoji: '⚠️', label: 'Assignment risk?', prompt: 'Which of my active trades are closest to assignment risk? Show strike vs current price for each.' },
+    { emoji: '💰', label: 'Premium this month?', prompt: 'What is the total premium I have collected this month from executed trades?' },
+    { emoji: '📅', label: 'Expiring soon?', prompt: 'Which of my trades expire in the next 14 days? List them with days remaining and variance.' },
+    { emoji: '📊', label: 'Active positions', prompt: 'Give me a summary of all my active (non-expired, non-closed) trades with their current status.' },
+    { emoji: '🐂', label: 'Bullish picks?', prompt: 'From my research history, which stocks have a Bullish sentiment (score ≥75)? Suggest which are good candidates for a cash-secured put.' },
+    { emoji: '📣', label: 'Earnings risk?', prompt: 'Are there any upcoming earnings announcements that could affect my open trade positions before they expire?' },
+    { emoji: '🎯', label: 'Max risk exposure?', prompt: 'What is my total maximum risk exposure right now across all active trades? Show max loss per trade and total.' },
+    { emoji: '📈', label: 'Strategy review', prompt: 'Review my closed trades and overall performance. What patterns do you see? Any strategy improvements to suggest?' },
+]
+
 const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, strategyNotes, chatHistory, onUpdateHistory, theme }) => {
     const [messages, setMessages] = useState([])
     const [activeSessionId, setActiveSessionId] = useState(null)
@@ -36,7 +47,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
         const newId = `session-${Date.now()}`
         const welcomeMessage = [{
             id: 'welcome', role: 'assistant',
-            content: `I am Unicron AI. Greetings, ${userName}! I have access to your portfolio, trades, and strategy. How can I assist you today?`
+            content: `Hi ${userName}. I can see your full portfolio — active trades, research history, and strategy notes. Use the quick questions above for instant answers, or ask me anything about your positions, risk exposure, or next moves.`
         }]
         setActiveSessionId(newId)
         setMessages(welcomeMessage)
@@ -144,8 +155,56 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
         if (confirm('Clear ALL chat sessions? This cannot be undone.')) { onUpdateHistory([]); handleNewChat(true) }
     }
 
+    const handleQuickPrompt = (prompt) => {
+        if (isLoading) return
+        setInput(prompt)
+        // Small delay so state updates before send fires
+        setTimeout(() => {
+            const syntheticSend = async () => {
+                const userMessage = { id: Date.now().toString(), role: 'user', content: prompt }
+                const updatedMessages = [...messages, userMessage]
+                shouldScrollRef.current = true
+                setMessages(updatedMessages)
+                setInput('')
+                setIsLoading(true)
+                const userContext = {
+                    userName,
+                    portfolio: { totalValue: settings.portfolioSize, activeTradesCount: tradeData.filter(t => !t.closed).length },
+                    strategyNotes,
+                    recentTrades: tradeData.slice(0, 10).map(t => ({ symbol: t.symbol, type: t.type, strikePrice: t.strikePrice, expirationDate: t.expirationDate, premium: t.premium, status: t.status, currentMarketPrice: t.currentMarketPrice || t.stockPrice, closed: t.closed })),
+                    researchSummary: researchData.slice(0, 10).map(r => ({ symbol: r.symbol, rating: r.overallRating, sentiment: r.overallRating >= 75 ? 'Bullish' : r.overallRating >= 50 ? 'Neutral' : 'Bearish' }))
+                }
+                try {
+                    const response = await fetch('/api/unicron-ai', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: prompt, userContext, history: messages.map(m => ({ role: m.role, content: m.content })) })
+                    })
+                    const data = await response.json()
+                    if (response.ok) {
+                        const aiMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: data.response }
+                        const finalMessages = [...updatedMessages, aiMessage]
+                        shouldScrollRef.current = true
+                        setMessages(finalMessages)
+                        onUpdateHistory(chatHistory.map(s => s.id === activeSessionId
+                            ? { ...s, messages: finalMessages, lastModified: new Date().toISOString(), title: s.title === 'New Chat' ? (prompt.substring(0, 30) + '…') : s.title }
+                            : s))
+                    } else {
+                        throw new Error(data.error || 'Failed')
+                    }
+                } catch (error) {
+                    const errMessages = [...updatedMessages, { id: Date.now().toString(), role: 'assistant', content: `❌ **Error**: ${error.message}` }]
+                    setMessages(errMessages)
+                    onUpdateHistory(chatHistory.map(s => s.id === activeSessionId ? { ...s, messages: errMessages, lastModified: new Date().toISOString() } : s))
+                } finally {
+                    setIsLoading(false)
+                }
+            }
+            syntheticSend()
+        }, 50)
+    }
+
     return (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[680px] animate-fade-in">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[780px] animate-fade-in">
 
             {/* Sidebar */}
             <div className={`${isSidebarOpen ? 'md:w-60' : 'md:w-0'} hidden md:flex border-r border-white/[0.06] transition-all duration-300 overflow-hidden flex-col flex-shrink-0`}>
@@ -212,6 +271,24 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                     <div className="flex items-center gap-1.5">
                         <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
                         <span className="text-[10px] text-white/30 font-medium hidden sm:block">{isLoading ? 'Thinking…' : 'Online'}</span>
+                    </div>
+                </div>
+
+                {/* Quick Prompts */}
+                <div className="px-4 py-3 border-b border-white/[0.05] bg-white/[0.01]">
+                    <p className="text-[10px] font-medium text-white/25 mb-2">Quick questions</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {QUICK_PROMPTS.map((p, i) => (
+                            <button
+                                key={i}
+                                onClick={() => handleQuickPrompt(p.prompt)}
+                                disabled={isLoading}
+                                className="flex items-center gap-1.5 px-2.5 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] rounded-xl text-left transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+                            >
+                                <span className="text-sm flex-shrink-0">{p.emoji}</span>
+                                <span className="text-[11px] font-medium text-white/50 group-hover:text-white/80 transition-colors leading-tight">{p.label}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
 

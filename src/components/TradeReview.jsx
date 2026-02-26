@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw } from 'lucide-react'
+import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw, Sparkles } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
@@ -390,6 +390,101 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     setQuantity('1')
     setPriceError('')
     // Keep the date as is, user might be entering multiple historic trades
+  }
+
+  // Save as planned AND run AI analysis in background — attaches review to trade card
+  const handleSavePlannedAnalyzed = async () => {
+    if (!selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium || !tradeDate || !quantity) {
+      alert('Please fill in all required fields before saving.')
+      return
+    }
+
+    const sPrice = parseFloat(currentPrice)
+    const stPrice = parseFloat(strikePrice)
+    const prem = parseFloat(premium)
+    const qty = parseInt(quantity) || 1
+    const timestamp = new Date(tradeDate)
+    timestamp.setHours(12, 0, 0, 0)
+    const timestampIso = timestamp.toISOString()
+    const tradeId = Date.now()
+
+    // Save immediately with a pending indicator
+    const baseTrade = {
+      id: tradeId,
+      symbol: selectedSymbol.toUpperCase(),
+      tradeType, type: tradeType, optionType,
+      strikePrice: stPrice, expirationDate,
+      stockPrice: sPrice, premium: prem, quantity: qty,
+      closed: false, executed: false, planned: true, status: 'planned',
+      timestamp: timestampIso, executionDate: null,
+      rating: 5,
+      riskAssessment: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
+      riskMetrics: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
+      recommendation: { action: 'Analyzing…', confidence: 0, rationale: 'AI review in progress…', rating: 5 },
+      hasResearchData: false, aiReviewPending: true, aiReviewed: false
+    }
+
+    const newData = [baseTrade, ...tradeData]
+    setTradeData(newData)
+    saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, newData)
+
+    // Clear form
+    setSelectedSymbol('')
+    setStrikePrice('')
+    setExpirationDate('')
+    setCurrentPrice('')
+    setPremium('')
+    setQuantity('1')
+    setPriceError('')
+
+    // Run analysis in background
+    setLoading(true)
+    try {
+      const companyData = researchData.find(item => item.symbol === selectedSymbol.toUpperCase())
+      const volatility = companyData?.technicalAnalysis?.rating || 5
+      const companyRating = companyData?.overallRating || 5
+      const greeks = calculateOptionGreeks(sPrice, stPrice, new Date(expirationDate), optionType, 0.02, volatility)
+
+      let earningsAndEvents = null
+      try {
+        const r = await fetch('/api/scrape/earnings-events', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ symbol: selectedSymbol.toUpperCase(), expirationDate })
+        })
+        if (r.ok) earningsAndEvents = await r.json()
+      } catch (e) { console.error('Earnings fetch:', e) }
+
+      const riskAssessment = assessTradeRisk(tradeType, sPrice, stPrice, greeks, portfolioSettings, earningsAndEvents)
+      const recommendation = generateTradeRecommendation(tradeType, greeks, riskAssessment, companyRating, portfolioSettings, {
+        premium: prem, stockPrice: sPrice, strikePrice: stPrice,
+        daysToExpiration: Math.ceil((new Date(expirationDate) - new Date()) / (1000 * 60 * 60 * 24)),
+        earningsAndEvents
+      })
+
+      const analyzedTrade = {
+        ...baseTrade,
+        rating: recommendation.rating,
+        riskAssessment, riskMetrics: riskAssessment,
+        recommendation, earningsAndEvents,
+        companyRating, hasResearchData: !!companyData,
+        aiReviewPending: false, aiReviewed: true
+      }
+
+      setTradeData(prev => {
+        const updated = prev.map(t => t.id === tradeId ? analyzedTrade : t)
+        saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updated)
+        return updated
+      })
+    } catch (error) {
+      console.error('AI review error:', error)
+      setTradeData(prev => {
+        const updated = prev.map(t => t.id === tradeId ? { ...t, aiReviewPending: false, aiReviewFailed: true } : t)
+        saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updated)
+        return updated
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleAnalyze = async () => {
@@ -819,11 +914,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </button>
 
           <button
-            onClick={() => handleQuickSave('planned')}
+            onClick={handleSavePlannedAnalyzed}
             disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
             className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-white/70 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" />
             Save Planned
           </button>
 
@@ -1418,6 +1513,45 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           </div>
                         </div>
                       </div>
+
+                      {/* AI Review (auto-triggered on Save Planned) */}
+                      {trade.aiReviewPending && (
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2.5 bg-purple-500/[0.06] border border-purple-500/15 rounded-xl">
+                          <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin flex-shrink-0" />
+                          <span className="text-[11px] text-purple-400/80">AI review running…</span>
+                        </div>
+                      )}
+                      {trade.aiReviewed && trade.recommendation && trade.recommendation.action !== 'Quick Save' && trade.recommendation.action !== 'Analyzing…' && (
+                        <div className="mt-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                          <div className="flex items-start gap-2.5">
+                            <Sparkles className="h-3.5 w-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                <span className="text-[10px] font-semibold text-purple-400">AI Review</span>
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${getRecommendationColor(trade.recommendation.action)}`}>
+                                  {trade.recommendation.action}
+                                </span>
+                                {trade.hasResearchData && (
+                                  <span className="text-[10px] text-white/25">Based on your research data</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-white/50 leading-relaxed">{trade.recommendation.rationale}</p>
+                              {trade.riskAssessment?.factors?.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {trade.riskAssessment.factors.slice(0, 3).map((f, i) => (
+                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full text-white/40">{f}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {trade.aiReviewFailed && (
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2 text-[11px] text-white/30">
+                          <AlertTriangle className="h-3 w-3" /> AI review unavailable
+                        </div>
+                      )}
 
                       {/* Expired: close actions */}
                       {isExpired && !trade.closed && (
