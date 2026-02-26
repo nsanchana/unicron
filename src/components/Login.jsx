@@ -10,7 +10,6 @@ function Login({ onLoginSuccess }) {
   const [theme, setTheme] = useState('dark')
 
   useEffect(() => {
-    // Load theme preference
     const savedTheme = localStorage.getItem('unicron_theme') || 'dark'
     setTheme(savedTheme)
     document.documentElement.classList.toggle('light-mode', savedTheme === 'light')
@@ -29,23 +28,19 @@ function Login({ onLoginSuccess }) {
         body: JSON.stringify({ username, password })
       })
 
-      // Check if response is JSON
       const contentType = response.headers.get('content-type')
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('Server returned an invalid response. Please check Vercel deployment logs.')
       }
 
       const data = await response.json()
-      console.log('Login response:', { status: response.status, data })
 
       if (!response.ok) {
-        // Show detailed error message from server
         const errorMsg = data.message || data.error || 'Authentication failed'
         const debugInfo = data.debug ? ` (Debug: ${JSON.stringify(data.debug)})` : ''
         throw new Error(errorMsg + debugInfo)
       }
 
-      // Store user in localStorage and call parent callback
       localStorage.setItem('unicron_user', JSON.stringify(data.user))
       onLoginSuccess(data.user)
     } catch (err) {
@@ -57,111 +52,85 @@ function Login({ onLoginSuccess }) {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 relative overflow-hidden ${theme === 'light'
-      ? 'bg-gray-50'
-      : 'bg-[#0f172a]'
-      }`}>
-      {/* Dynamic Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-sm animate-fade-in">
 
-      <div className="w-full max-w-md relative z-10 px-4">
-        {/* Logo and Title */}
-        <div className="text-center mb-10">
-          <div className="inline-block p-4 rounded-3xl bg-gray-800/40 backdrop-blur-2xl border border-gray-700/50 mb-6 shadow-2xl animate-float">
-            <img src="/unicron-logo.jpg" alt="Unicron" className="h-16 w-16 object-contain rounded-lg" />
+        {/* Logo + title */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-white/[0.06] border border-white/[0.10] mb-5 animate-float">
+            <img src="/unicron-logo.jpg" alt="Unicron" className="h-11 w-11 object-contain rounded-xl border-0 outline-none" />
           </div>
-          <h1 className="text-5xl font-black tracking-tight mb-3">
-            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Unicron
-            </span>
-          </h1>
-          <p className={`text-lg transition-colors duration-300 ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'
-            }`}>
-            The Future of Options Analysis
-          </p>
+          <h1 className="text-2xl font-semibold text-white tracking-tight mb-1">Unicron</h1>
+          <p className="text-sm text-white/40 font-medium">Options Intelligence Terminal</p>
         </div>
 
-        {/* Login Card */}
-        <div className="glass-card p-10 border-white/10">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
-            <div className="h-1 w-12 bg-blue-500 mx-auto mt-2 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+        {/* Card */}
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-8 space-y-5">
+          <div className="space-y-1.5 mb-2">
+            <h2 className="text-lg font-semibold text-white">Sign in</h2>
+            <p className="text-sm text-white/40">Enter your credentials to continue</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-300 ml-1">
-                <User className="inline h-4 w-4 mr-2 text-blue-400" />
-                Username
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-white/50 flex items-center gap-1.5">
+                <User className="h-3 w-3" /> Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                className="glass-input w-full py-3"
+                placeholder="Enter username"
+                className="w-full bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all"
                 required
                 autoFocus
               />
             </div>
 
             {/* Password */}
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-300 ml-1">
-                <Lock className="inline h-4 w-4 mr-2 text-purple-400" />
-                Password
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-white/50 flex items-center gap-1.5">
+                <Lock className="h-3 w-3" /> Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="glass-input w-full py-3"
+                className="w-full bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all"
                 required
               />
             </div>
 
-            {/* Error Message */}
+            {/* Error */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm animate-shake">
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-3 rounded-xl text-sm animate-shake">
                 {error}
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 rounded-full text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Securing Session...</span>
-                </div>
-              ) : (
-                <span className="flex items-center justify-center">
-                  Sign In to Terminal
-                </span>
-              )}
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in…
+                </>
+              ) : 'Sign In'}
             </button>
           </form>
 
-          {/* Info Message */}
-          <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl">
-            <p className="text-xs text-gray-400 text-center leading-relaxed">
-              Protected by military-grade encryption. Your session data is stored locally and never shared.
-            </p>
-          </div>
+          <p className="text-[11px] text-white/25 text-center pt-1 leading-relaxed">
+            Your session data is stored locally and never shared.
+          </p>
         </div>
 
-        {/* Footer */}
-        <div className={`text-center mt-10 text-sm font-medium transition-colors duration-300 ${theme === 'light' ? 'text-gray-500' : 'text-gray-500'
-          }`}>
-          <p>© 2026 Unicron Intelligence Systems</p>
-        </div>
+        <p className="text-center text-xs text-white/20 mt-6">© 2026 Unicron Intelligence Systems</p>
       </div>
     </div>
   )

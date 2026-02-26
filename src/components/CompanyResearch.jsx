@@ -280,6 +280,27 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     if (existingIndex !== -1) {
       updatedResearchData = [...researchData]
       updatedResearchData[existingIndex] = savedResearch
+      
+      setResearchData(updatedResearchData)
+      saveToLocalStorage(STORAGE_KEYS.RESEARCH_DATA, updatedResearchData)
+      setCompanyData(savedResearch)
+      alert(`Research for ${companyData.symbol} updated successfully!`)
+      return
+    }
+
+    // Check for duplicate symbols (previous research for the same company)
+    const duplicateIndex = researchData.findIndex(r => r.symbol === companyData.symbol)
+    
+    if (duplicateIndex !== -1) {
+      const choice = window.confirm(`Research for ${companyData.symbol} already exists. \n\nClick OK to REPLACE the existing entry.\nClick CANCEL to keep both as SEPARATE entries.`)
+      
+      if (choice) {
+        // Replace: Filter out all previous entries for this symbol
+        updatedResearchData = [savedResearch, ...researchData.filter(r => r.symbol !== companyData.symbol)]
+      } else {
+        // Keep separate: Just add to the list
+        updatedResearchData = [savedResearch, ...researchData]
+      }
     } else {
       updatedResearchData = [savedResearch, ...researchData]
     }
@@ -293,7 +314,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     setCompanyData(savedResearch)
 
     // Show success message
-    alert(`Research for ${companyData.symbol} saved successfully with chat history!`)
+    alert(`Research for ${companyData.symbol} saved successfully!`)
   }
 
   const handleViewResearch = (research) => {
@@ -461,9 +482,9 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   const renderDetailedSubsection = (subsection) => {
     if (!subsection) return null
     return (
-      <div className="glass-card mb-3">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <h5 className="font-semibold text-primary-400">{subsection.title}</h5>
+          <h5 className="font-semibold text-blue-400">{subsection.title}</h5>
           <div className={`flex items-center space-x-1 ${getRatingColor(subsection.rating)}`}>
             <Star className="h-4 w-4 fill-current" />
             <span className="font-bold text-sm">{subsection.rating}/100</span>
@@ -481,7 +502,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     const isRecentDevelopments = sectionKey === 'recentDevelopments'
 
     return (
-      <div className="glass-card">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
         <button
           onClick={() => toggleSection(sectionKey)}
           className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
@@ -505,7 +526,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {data.analysis && (
               <div>
                 <h4 className="font-medium mb-2">Executive Summary</h4>
-                <p className="text-gray-300 text-sm leading-relaxed glass-item">{data.analysis}</p>
+                <p className="text-gray-300 text-sm leading-relaxed bg-white/[0.04] border border-white/[0.05] rounded-xl p-3">{data.analysis}</p>
               </div>
             )}
 
@@ -513,14 +534,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {data.metrics && data.metrics.length > 0 && isTechnicalAnalysis && (
               <div>
                 <h4 className="font-medium mb-3">Key Metrics</h4>
-                <h4 className="font-medium mb-3 text-[var(--text-primary)]">Key Metrics</h4>
+                <h4 className="font-medium mb-3 text-white/85">Key Metrics</h4>
                 {/* Current Price - Prominent Display */}
                 {data.metrics.find(m => m.label === 'Current Price') && (
-                  <div className="bg-gradient-to-r from-primary-900 to-primary-800 rounded-lg p-4 mb-4 border border-primary-600">
+                  <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-4 mb-4 border border-blue-600">
                     <div className="flex items-center justify-between">
-                      <span className="text-[var(--text-secondary)] text-sm">Current Price</span>
+                      <span className="text-white/50 text-sm">Current Price</span>
                       {/* Root symbol or local state fallback */}
-                      <span className="text-3xl font-black text-[var(--text-primary)]">
+                      <span className="text-3xl font-black text-white/85">
                         {(companyData?.symbol || symbol || 'SYMBOL').toUpperCase()} ${data.metrics.find(m => m.label === 'Current Price')?.value || '0.00'}
                       </span>
                     </div>
@@ -533,18 +554,18 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.targetPriceAnalysis.title}</h5>
                     {data.detailedTechnical.targetPriceAnalysis.targetPrice && (
                       <div className="flex items-center mb-3">
-                        <span className="text-[var(--text-secondary)] text-sm mr-2">Analyst Target:</span>
+                        <span className="text-white/50 text-sm mr-2">Analyst Target:</span>
                         <span className="text-2xl font-bold text-blue-300">{data.detailedTechnical.targetPriceAnalysis.targetPrice}</span>
                       </div>
                     )}
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.targetPriceAnalysis.content}</p>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedTechnical.targetPriceAnalysis.content}</p>
                   </div>
                 )}
 
                 {/* Support & Resistance Visual Display */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Support Levels */}
-                  <div className="glass-card border-l-4 border-green-500">
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-green-500">
                     <h5 className="text-green-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                       Support Levels
@@ -553,23 +574,23 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                       {data.metrics
                         .filter(m => m.label.includes('Support'))
                         .map((metric, i) => (
-                          <div key={i} className="glass-item">
-                            <div className="text-green-300 font-medium text-lg">
+                          <div key={i} className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
+                            <div className="text-emerald-400 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-[var(--text-secondary)] text-sm mt-1">
+                            <div className="text-white/50 text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
                         ))}
                       {data.metrics.filter(m => m.label.includes('Support')).length === 0 && (
-                        <p className="text-[var(--text-secondary)] text-sm">No support levels identified</p>
+                        <p className="text-white/50 text-sm">No support levels identified</p>
                       )}
                     </div>
                   </div>
 
                   {/* Resistance Levels */}
-                  <div className="glass-card border-l-4 border-red-500">
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-red-500">
                     <h5 className="text-red-400 font-semibold mb-3 flex items-center">
                       <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
                       Resistance Levels
@@ -578,17 +599,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                       {data.metrics
                         .filter(m => m.label.includes('Resistance'))
                         .map((metric, i) => (
-                          <div key={i} className="glass-item">
-                            <div className="text-red-300 font-medium text-lg">
+                          <div key={i} className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
+                            <div className="text-rose-400 font-medium text-lg">
                               {metric.value.split(' - ')[0]}
                             </div>
-                            <div className="text-[var(--text-secondary)] text-sm mt-1">
+                            <div className="text-white/50 text-sm mt-1">
                               {metric.value.split(' - ').slice(1).join(' - ')}
                             </div>
                           </div>
                         ))}
                       {data.metrics.filter(m => m.label.includes('Resistance')).length === 0 && (
-                        <p className="text-[var(--text-secondary)] text-sm">No resistance levels identified</p>
+                        <p className="text-white/50 text-sm">No resistance levels identified</p>
                       )}
                     </div>
                   </div>
@@ -599,12 +620,12 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Key Metrics - Standard rendering for other sections */}
             {data.metrics && data.metrics.length > 0 && !isTechnicalAnalysis && (
               <div>
-                <h4 className="font-medium mb-2 text-[var(--text-primary)]">Key Metrics</h4>
+                <h4 className="font-medium mb-2 text-white/85">Key Metrics</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {data.metrics.map((metric, index) => (
-                    <div key={index} className="flex justify-between text-sm glass-item p-2">
-                      <span className="text-[var(--text-secondary)]">{metric.label}:</span>
-                      <span className="font-medium text-[var(--text-primary)]">{metric.value}</span>
+                    <div key={index} className="flex justify-between text-sm bg-white/[0.05] border border-white/[0.06] rounded-xl p-2">
+                      <span className="text-white/50">{metric.label}:</span>
+                      <span className="font-medium text-white/85">{metric.value}</span>
                     </div>
                   ))}
                 </div>
@@ -614,7 +635,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Analysis Sections - Only for Company Analysis */}
             {isCompanyAnalysis && data.detailedAnalysis && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Detailed Analysis</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-white/85">Detailed Analysis</h4>
                 {renderDetailedSubsection(data.detailedAnalysis.marketPosition)}
                 {renderDetailedSubsection(data.detailedAnalysis.businessModel)}
                 {renderDetailedSubsection(data.detailedAnalysis.industryTrends)}
@@ -627,13 +648,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Technical Analysis */}
             {isTechnicalAnalysis && data.detailedTechnical && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Technical Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-white/85">Technical Details</h4>
 
                 {/* 30-60 Day Trend Outlook */}
                 {data.detailedTechnical.trend30to60Days && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.trend30to60Days.title}</h5>
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.trend30to60Days.title}</h5>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedTechnical.trend30to60Days.content}</p>
                   </div>
                 )}
 
@@ -641,9 +662,9 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
                 {/* Options Strategy */}
                 {data.detailedTechnical.optionsStrategy && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedTechnical.optionsStrategy.title}</h5>
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedTechnical.optionsStrategy.title}</h5>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedTechnical.optionsStrategy.content}</p>
                   </div>
                 )}
               </div>
@@ -652,33 +673,33 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Detailed Recent Developments */}
             {isRecentDevelopments && data.detailedDevelopments && (
               <div>
-                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-[var(--text-primary)]">Event Details</h4>
+                <h4 className="font-medium mb-3 mt-4 text-lg border-b border-gray-600 pb-2 text-white/85">Event Details</h4>
 
                 {/* Next Earnings Call */}
                 {data.detailedDevelopments.nextEarningsCall && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.nextEarningsCall.title}</h5>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedDevelopments.nextEarningsCall.title}</h5>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-[var(--text-secondary)]">Next Earnings</span>
-                      <span className="text-[var(--text-primary)]">{data.detailedDevelopments.nextEarningsCall.date}</span>
+                      <span className="text-white/50">Next Earnings</span>
+                      <span className="text-white/85">{data.detailedDevelopments.nextEarningsCall.date}</span>
                     </div>
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedDevelopments.nextEarningsCall.expectation}</p>
                   </div>
                 )}
 
                 {/* Major Events */}
                 {data.detailedDevelopments.majorEvents && data.detailedDevelopments.majorEvents.events?.length > 0 && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.majorEvents.title}</h5>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedDevelopments.majorEvents.title}</h5>
                     <div className="space-y-3">
                       {data.detailedDevelopments.majorEvents.events.map((event, i) => (
-                        <div key={i} className="border-l-2 border-primary-500 pl-3">
+                        <div key={i} className="border-l-2 border-blue-500 pl-3">
                           <div className="flex justify-between items-start">
-                            <span className="font-medium text-[var(--text-primary)]">{event.event}</span>
-                            {event.date && <span className="text-xs text-[var(--text-secondary)] ml-2">{event.date}</span>}
+                            <span className="font-medium text-white/85">{event.event}</span>
+                            {event.date && <span className="text-xs text-white/50 ml-2">{event.date}</span>}
                           </div>
                           {event.expectedImpact && (
-                            <p className="text-sm text-[var(--text-secondary)] mt-1">{event.expectedImpact}</p>
+                            <p className="text-sm text-white/50 mt-1">{event.expectedImpact}</p>
                           )}
                         </div>
                       ))}
@@ -688,17 +709,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
                 {/* Upcoming Catalysts */}
                 {data.detailedDevelopments.catalysts && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.catalysts.title}</h5>
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedDevelopments.catalysts.title}</h5>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedDevelopments.catalysts.content}</p>
                   </div>
                 )}
 
                 {/* Options Implication */}
                 {data.detailedDevelopments.optionsImplication && (
-                  <div className="glass-card mb-3">
-                    <h5 className="font-semibold text-primary-400 mb-2">{data.detailedDevelopments.optionsImplication.title}</h5>
-                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
+                  <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 mb-3">
+                    <h5 className="font-semibold text-blue-400 mb-2">{data.detailedDevelopments.optionsImplication.title}</h5>
+                    <p className="text-white/50 text-sm leading-relaxed">{data.detailedDevelopments.optionsImplication.content}</p>
                   </div>
                 )}
               </div>
@@ -707,12 +728,12 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {/* Signals */}
             {data.signals && data.signals.length > 0 && (
               <div>
-                <h4 className="font-medium mb-2 text-[var(--text-primary)]">Signals</h4>
+                <h4 className="font-medium mb-2 text-white/85">Signals</h4>
                 <div className="space-y-1">
                   {data.signals.map((signal, index) => (
-                    <div key={index} className={`text-sm p-2 rounded ${signal.type === 'positive' ? 'bg-green-900 text-green-300' :
-                      signal.type === 'negative' ? 'bg-red-900 text-red-300' :
-                        'bg-yellow-900 text-yellow-300'
+                    <div key={index} className={`text-sm p-2 rounded ${signal.type === 'positive' ? 'bg-emerald-500/15 text-emerald-400' :
+                      signal.type === 'negative' ? 'bg-rose-500/15 text-rose-400' :
+                        'bg-amber-500/15 text-amber-400'
                       }`}>
                       {signal.message}
                     </div>
@@ -730,18 +751,18 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   return (
     <div className="space-y-8 pb-12">
       {/* Search Form */}
-      <div className="glass-card shadow-blue-500/5">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 shadow-blue-500/5">
         <form onSubmit={handleSearch} className="flex gap-4">
           <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-[var(--text-secondary)] group-focus-within:text-blue-400 transition-colors" />
+              <Search className="h-5 w-5 text-white/50 group-focus-within:text-blue-400 transition-colors" />
             </div>
             <input
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
               placeholder="SEARCH ASSET (E.G. AAPL, TSLA, NVDA)"
-              className="glass-input w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-[var(--text-secondary)]"
+              className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-white/50"
             />
           </div>
           <button
@@ -761,23 +782,23 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         {/* Progress Bar when loading */}
         {loading && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="glass-card p-6 border-primary-500/30">
+            <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 p-6 border-blue-500/30">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary-500/20 rounded-lg">
-                    <Loader2 className="h-5 w-5 text-primary-400 animate-spin" />
+                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                    <Loader2 className="h-5 w-5 text-blue-400 animate-spin" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[var(--text-primary)]">Analyzing {symbol.toUpperCase()}</h3>
-                    <p className="text-sm text-[var(--text-secondary)]">Current step: <span className="text-primary-400 font-medium">{currentLoadingSection || 'Initializing...'}</span></p>
+                    <h3 className="font-semibold text-white/85">Analyzing {symbol.toUpperCase()}</h3>
+                    <p className="text-sm text-white/50">Current step: <span className="text-blue-400 font-medium">{currentLoadingSection || 'Initializing...'}</span></p>
                   </div>
                 </div>
-                <span className="text-2xl font-bold text-primary-400">{loadingProgress}%</span>
+                <span className="text-2xl font-bold text-blue-400">{loadingProgress}%</span>
               </div>
 
               <div className="w-full h-3 bg-gray-800/50 rounded-full overflow-hidden border border-white/5 p-0.5">
                 <div
-                  className="h-full bg-gradient-to-r from-primary-600 via-primary-400 to-accent-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                  className="h-full bg-gradient-to-r from-blue-600 via-primary-400 to-purple-400 rounded-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   style={{ width: `${loadingProgress}%` }}
                 ></div>
               </div>
@@ -788,11 +809,11 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   const isActive = loadingProgress > (i * 25) && loadingProgress <= ((i + 1) * 25);
                   return (
                     <div key={step} className="text-center">
-                      <div className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${isCompleted ? 'text-primary-400' : 'text-gray-600'}`}>
+                      <div className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${isCompleted ? 'text-blue-400' : 'text-gray-600'}`}>
                         {step}
                       </div>
-                      <div className={`h-1.5 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-primary-500/50' : 'bg-gray-800'}`}>
-                        {isActive && <div className="h-full bg-primary-400 rounded-full animate-pulse" style={{ width: '100%' }}></div>}
+                      <div className={`h-1.5 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-blue-500/50' : 'bg-gray-800'}`}>
+                        {isActive && <div className="h-full bg-blue-400 rounded-full animate-pulse" style={{ width: '100%' }}></div>}
                       </div>
                     </div>
                   )
@@ -803,7 +824,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         )}
 
         {error && (
-          <div className="mb-8 p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-200 flex items-start space-x-3 animate-in fade-in slide-in-from-top-4">
+          <div className="mb-8 p-4 bg-rose-500/15/30 border border-red-500/50 rounded-xl text-red-200 flex items-start space-x-3 animate-in fade-in slide-in-from-top-4">
             <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
             <p>{error}</p>
           </div>
@@ -813,7 +834,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
       {companyData && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Overall Rating Header */}
-          <div className="glass-card bg-gradient-to-r from-blue-600/10 to-transparent border-blue-500/20">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 bg-gradient-to-r from-blue-600/10 to-transparent border-blue-500/20">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-black tracking-tight flex items-baseline gap-3">
@@ -866,13 +887,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
           {renderSection('Recent Developments', 'recentDevelopments', companyData.recentDevelopments, companyData.recentDevelopments?.rating)}
 
           {/* Chat Interface */}
-          <div className="glass-card">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
             <button
               onClick={() => setChatOpen(!chatOpen)}
               className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
-                <MessageCircle className="h-5 w-5 text-primary-400" />
+                <MessageCircle className="h-5 w-5 text-blue-400" />
                 <h3 className="text-lg font-semibold">Ask Questions About {companyData.symbol}</h3>
               </div>
               {chatOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -881,7 +902,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-gray-900/50 backdrop-blur-md rounded-xl border border-white/5 p-4 h-[500px] overflow-y-auto mb-4 pr-2 custom-scrollbar">
+                <div className="bg-white/[0.02]0 backdrop-blur-md rounded-xl border border-white/5 p-4 h-[500px] overflow-y-auto mb-4 pr-2 custom-scrollbar">
                   {chatMessages.map((msg, index) => (
                     <div
                       key={index}
@@ -895,8 +916,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                       )}
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user'
-                          ? 'bg-primary-600 text-white'
-                          : 'glass-item text-gray-200'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white/[0.06] border border-white/[0.06] rounded-xl px-3 py-2 text-white/85'
                           }`}
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -913,8 +934,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center p-1">
                         <img src="/unicron-logo.jpg" alt="Unicron" className="h-full w-full object-contain rounded-full" />
                       </div>
-                      <div className="glass-item">
-                        <Loader className="h-5 w-5 animate-spin text-primary-400" />
+                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
+                        <Loader className="h-5 w-5 animate-spin text-blue-400" />
                       </div>
                     </div>
                   )}
@@ -928,13 +949,13 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask about market position, growth strategy, options trading..."
-                    className="input-primary flex-1"
+                    className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all flex-1"
                     disabled={chatLoading}
                   />
                   <button
                     type="submit"
                     disabled={chatLoading || !chatInput.trim()}
-                    className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="h-5 w-5" />
                   </button>
@@ -947,7 +968,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
       {/* Previous Research */}
       {researchData.length > 0 && (
-        <div className="card">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Research History</h3>
             <div className="flex items-center space-x-1 overflow-x-auto pb-2 scrollbar-hide">
@@ -1092,7 +1113,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               return (
                 <div
                   key={itemKey}
-                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-2 md:gap-4 items-center p-3 md:p-2 glass-item hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                  className="grid grid-cols-2 md:grid-cols-[40px_1fr_60px_80px_80px_80px_80px_80px_100px_90px_60px] gap-2 md:gap-4 items-center p-3 md:p-2 bg-white/[0.05] border border-white/[0.06] rounded-xl hover:bg-white/5 border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
                   onClick={() => handleViewResearch(item)}
                 >
                   {/* Checkbox (Desktop only) */}
@@ -1113,21 +1134,21 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   {/* Company */}
                   <div className="flex items-center space-x-3">
                     <CompanyLogo symbol={item.symbol} className="w-8 h-8 md:w-6 md:h-6" textSize="text-[10px]" />
-                    <span className="font-black text-sm tracking-tight text-white">{item.symbol}</span>
+                    <span className="font-black text-sm tracking-tight text-white/85">{item.symbol}</span>
                   </div>
 
                   {/* Rating */}
                   <div className="flex md:justify-center">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                      item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/10 border-red-500/20 text-red-400'
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${item.overallRating >= 70 ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400' :
+                      item.overallRating >= 50 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-600 dark:text-yellow-400' :
+                        'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
                       }`}>
                       {item.overallRating}
                     </span>
                   </div>
 
                   {/* Prices */}
-                  <div className="hidden md:block text-right font-mono text-xs text-gray-300">
+                  <div className="hidden md:block text-right font-mono text-xs text-white/50">
                     {currentPrice ? (currentPrice.startsWith('$') ? currentPrice : `$${currentPrice}`) : '-'}
                   </div>
 

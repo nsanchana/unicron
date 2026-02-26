@@ -597,10 +597,10 @@ function App() {
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-blue-900/20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 rounded-full border-2 border-white/10 border-t-blue-500 animate-spin mx-auto" />
+          <p className="text-sm text-white/40 font-medium">Loading…</p>
         </div>
       </div>
     )
@@ -612,111 +612,105 @@ function App() {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'unicron-ai', label: 'Unicron AI', icon: Sparkles },
-    { id: 'research', label: 'Company Research', icon: BarChart3 },
-    { id: 'trades', label: 'Trades', icon: TrendingUp },
-    { id: 'stocks', label: 'Stocks', icon: Briefcase },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'dashboard',  label: 'Dashboard',         shortLabel: 'Home',     icon: BarChart3  },
+    { id: 'unicron-ai', label: 'Unicron AI',         shortLabel: 'AI',       icon: Sparkles   },
+    { id: 'research',   label: 'Company Research',   shortLabel: 'Research', icon: BarChart3  },
+    { id: 'trades',     label: 'Trades',             shortLabel: 'Trades',   icon: TrendingUp },
+    { id: 'stocks',     label: 'Stocks',             shortLabel: 'Stocks',   icon: Briefcase  },
+    { id: 'settings',   label: 'Settings',           shortLabel: 'Settings', icon: Settings   },
   ]
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 relative ${theme === 'light'
-      ? 'bg-slate-50'
-      : 'bg-[#030712]'
-      }`}>
-      {/* Background Glows */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className={`absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-all duration-1000 ${theme === 'light'
-          ? 'bg-blue-400/15'
-          : 'bg-blue-600/10'
-          }`}></div>
-        <div className={`absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-all duration-1000 ${theme === 'light'
-          ? 'bg-purple-400/15'
-          : 'bg-purple-600/10'
-          }`}></div>
-      </div>
+    <div className="min-h-screen bg-black text-white">
 
-      {/* Header */}
-      <header className={`sticky top-0 z-50 glass-nav header-differentiated ${theme === 'light'
-        ? 'border-gray-200'
-        : 'border-white/5'
-        }`}>
+      {/* ── Top Navigation (desktop) ─────────────────────────────────── */}
+      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="p-1 bg-gray-900/80 rounded-2xl logo-glow-premium overflow-hidden">
-                <img
-                  src="/unicron-logo.jpg"
-                  alt="Unicron Logo"
-                  className="h-14 w-14 object-contain rounded-xl"
-                />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Unicron
-                </h1>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold">Intelligence Terminal</p>
-              </div>
+          <div className="flex items-center justify-between h-14 gap-4">
+
+            {/* Logo */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <img src="/unicron-logo.jpg" alt="Unicron" className="h-8 w-8 rounded-xl object-contain border-0 outline-none" />
+              <span className="text-base font-semibold text-white tracking-tight">Unicron</span>
             </div>
 
-            <div className="flex items-center space-x-6">
-              {/* Cloud Sync Status */}
-              <div className="hidden md:flex items-center space-x-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/5" title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}>
+            {/* Desktop tabs */}
+            <nav className="hidden md:flex items-center gap-1 flex-1 overflow-x-auto">
+              {tabs.map(tab => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      isActive
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </nav>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+
+              {/* Cloud sync status */}
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all"
+                title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}
+                style={{
+                  background: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.08)' :
+                              cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.05)',
+                  borderColor: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.2)' :
+                               cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.08)',
+                  color: cloudSyncStatus === 'synced' ? '#34d399' :
+                         cloudSyncStatus === 'syncing' ? '#fbbf24' : 'rgba(255,255,255,0.3)',
+                }}
+              >
                 {cloudSyncStatus === 'syncing' ? (
-                  <div className="flex items-center space-x-2 text-yellow-400">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Syncing</span>
-                  </div>
+                  <RefreshCw className="h-3 w-3 animate-spin" />
                 ) : cloudSyncStatus === 'synced' ? (
-                  <div className="flex items-center space-x-2 text-emerald-400">
-                    <Cloud className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Securely Synced</span>
-                  </div>
+                  <Cloud className="h-3 w-3" />
                 ) : (
-                  <div className="flex items-center space-x-2 text-gray-500">
-                    <CloudOff className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Offline</span>
-                  </div>
+                  <CloudOff className="h-3 w-3" />
                 )}
+                <span className="hidden lg:inline">
+                  {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
+                </span>
               </div>
 
-              {/* Live Market Indicator */}
+              {/* Market open badge */}
               {isUSTradingHours() && (
-                <div className="hidden lg:flex items-center space-x-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-                  <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Market Open (Live)</span>
+                <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs font-medium text-emerald-400">
+                  <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                  Live
                 </div>
               )}
 
-              {/* Update Prices Button */}
+              {/* Refresh prices */}
               <button
                 onClick={() => handleGlobalPriceUpdate()}
                 disabled={refreshingPrices}
-                className={`hidden md:flex items-center space-x-2 px-4 py-2 rounded-2xl border transition-all active:scale-95 ${refreshingPrices
-                  ? 'bg-blue-500/20 border-blue-500/40 text-blue-400 animate-glow-pulse'
-                  : 'bg-white/5 border-white/5 hover:border-white/10 text-gray-400 hover:text-white'
-                  }`}
-                title="Update market prices for all active trades and stocks"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-xs font-medium text-white/60 hover:text-white transition-all disabled:opacity-50"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshingPrices ? 'animate-spin' : ''}`} />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  {refreshingPrices ? 'Updating...' : 'Update Prices'}
-                </span>
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshingPrices ? 'animate-spin' : ''}`} />
+                <span className="hidden lg:inline">{refreshingPrices ? 'Updating…' : 'Prices'}</span>
               </button>
 
-              <div className="flex items-center space-x-4">
-                <div className="text-right hidden sm:block">
-                  <div className="text-xs font-black text-blue-400 uppercase tracking-wider">{user.username}</div>
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Active Session</div>
-                </div>
-
+              {/* User + logout */}
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:block text-xs font-semibold text-blue-400">{user.username}</span>
                 <button
                   onClick={handleLogout}
-                  className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all active:scale-95"
+                  className="p-2 bg-white/[0.06] hover:bg-rose-500/20 border border-white/[0.08] hover:border-rose-500/20 text-white/50 hover:text-rose-400 rounded-xl transition-all"
                   title="Logout"
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -724,39 +718,8 @@ function App() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <nav className={`sticky top-20 z-40 glass-nav ${theme === 'light'
-        ? 'bg-gray-50/50 border-gray-200'
-        : 'border-white/5'
-        }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center space-x-2 py-5 px-6 font-bold text-sm transition-all duration-300 ${isActive
-                    ? 'text-blue-400'
-                    : 'text-gray-500 hover:text-gray-300'
-                    }`}
-                >
-                  <Icon className={`h-5 w-5 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
-                  <span className="uppercase tracking-widest">{tab.label}</span>
-                  {isActive && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </nav >
-
-      {/* Main Content */}
-      < main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8" >
+      {/* ── Main Content ─────────────────────────────────────────────── */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
@@ -772,90 +735,96 @@ function App() {
             onSaveStrategy={(notes) => {
               setStrategyNotes(notes)
               saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
-              // Force immediate cloud save to prevent data loss
               if (user) {
                 saveToCloud(user.id || user.username, {
-                  researchData,
-                  tradeData,
-                  settings,
-                  stockData,
-                  strategyNotes: notes,
-                  chatHistory
+                  researchData, tradeData, settings, stockData,
+                  strategyNotes: notes, chatHistory
                 })
               }
             }}
           />
         )}
-        {
-          activeTab === 'unicron-ai' && (
-            <div className="max-w-6xl mx-auto px-4 pb-12 space-y-8 animate-slide-in-up">
-              <UnicronAI
-                userName={user?.username || 'Trader'}
-                researchData={researchData}
-                tradeData={tradeData}
-                stockData={stockData}
-                settings={settings}
-                strategyNotes={strategyNotes}
-                chatHistory={chatHistory}
-                theme={theme}
-                onUpdateHistory={(history) => {
-                  setChatHistory(history)
-                  saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-                }}
-              />
-            </div>
-          )
-        }
-        {
-          activeTab === 'research' && (
-            <CompanyResearch
-              researchData={researchData}
-              setResearchData={setResearchData}
-              lastRefresh={lastRefresh}
-              selectedResearch={selectedResearch}
-              onViewResearch={setSelectedResearch}
-              researchQueue={researchQueue}
-              onAddToQueue={handleAddToResearchQueue}
-              onClearQueue={handleClearResearchQueue}
-            />
-          )
-        }
-        {
-          activeTab === 'trades' && (
-            <TradeReview
-              tradeData={tradeData}
-              setTradeData={setTradeData}
-              portfolioSettings={settings}
-              researchData={researchData}
-              lastRefresh={lastRefresh}
-            />
-          )
-        }
-        {
-          activeTab === 'stocks' && (
-            <StockPortfolio
-              stockData={stockData}
-              onUpdate={(newData) => {
-                setStockData(newData)
-                saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
-              }}
-            />
-          )
-        }
-        {
-          activeTab === 'settings' && (
-            <SettingsPanel
-              settings={settings}
-              onSettingsUpdate={handleSettingsUpdate}
-              theme={theme}
-              onThemeToggle={handleThemeToggle}
-              onImportData={handleImportData}
-              onExportData={handleExportData}
-            />
-          )
-        }
-      </main >
-    </div >
+        {activeTab === 'unicron-ai' && (
+          <UnicronAI
+            userName={user?.username || 'Trader'}
+            researchData={researchData}
+            tradeData={tradeData}
+            stockData={stockData}
+            settings={settings}
+            strategyNotes={strategyNotes}
+            chatHistory={chatHistory}
+            theme={theme}
+            onUpdateHistory={(history) => {
+              setChatHistory(history)
+              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
+            }}
+          />
+        )}
+        {activeTab === 'research' && (
+          <CompanyResearch
+            researchData={researchData}
+            setResearchData={setResearchData}
+            lastRefresh={lastRefresh}
+            selectedResearch={selectedResearch}
+            onViewResearch={setSelectedResearch}
+            researchQueue={researchQueue}
+            onAddToQueue={handleAddToResearchQueue}
+            onClearQueue={handleClearResearchQueue}
+          />
+        )}
+        {activeTab === 'trades' && (
+          <TradeReview
+            tradeData={tradeData}
+            setTradeData={setTradeData}
+            portfolioSettings={settings}
+            researchData={researchData}
+            lastRefresh={lastRefresh}
+          />
+        )}
+        {activeTab === 'stocks' && (
+          <StockPortfolio
+            stockData={stockData}
+            onUpdate={(newData) => {
+              setStockData(newData)
+              saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
+            }}
+          />
+        )}
+        {activeTab === 'settings' && (
+          <SettingsPanel
+            settings={settings}
+            onSettingsUpdate={handleSettingsUpdate}
+            theme={theme}
+            onThemeToggle={handleThemeToggle}
+            onImportData={handleImportData}
+            onExportData={handleExportData}
+          />
+        )}
+      </main>
+
+      {/* ── Mobile Bottom Tab Bar ────────────────────────────────────── */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black/90 backdrop-blur-xl border-t border-white/[0.08]">
+        <div className="flex justify-around items-center px-2 py-1 safe-area-inset-bottom">
+          {tabs.map(tab => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] py-1.5 px-2 rounded-xl transition-all ${
+                  isActive ? 'text-blue-400' : 'text-white/30 hover:text-white/60'
+                }`}
+              >
+                <Icon className={`h-5 w-5 transition-all ${isActive ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">{tab.shortLabel}</span>
+              </button>
+            )
+          })}
+        </div>
+      </nav>
+
+    </div>
   )
 }
 

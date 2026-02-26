@@ -660,11 +660,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   const getRecommendationColor = (action) => {
     switch (action) {
-      case 'Strong Buy': return 'text-green-400 bg-green-900'
-      case 'Buy': return 'text-green-400 bg-green-900'
-      case 'Hold': return 'text-yellow-400 bg-yellow-900'
-      case 'Sell': return 'text-red-400 bg-red-900'
-      case 'Strong Sell': return 'text-red-400 bg-red-900'
+      case 'Strong Buy': return 'text-green-400 bg-emerald-500/15'
+      case 'Buy': return 'text-green-400 bg-emerald-500/15'
+      case 'Hold': return 'text-yellow-400 bg-amber-500/15'
+      case 'Sell': return 'text-red-400 bg-rose-500/15'
+      case 'Strong Sell': return 'text-red-400 bg-rose-500/15'
       default: return 'text-gray-400 bg-gray-900'
     }
   }
@@ -672,7 +672,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   return (
     <div className="space-y-8 pb-12">
       {/* Trade Setup Form */}
-      <div className="glass-card overflow-hidden">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600/10 to-transparent p-6 border-b border-white/5 flex items-center justify-between">
           <h3 className="text-xl font-black tracking-tight flex items-center">
             <Calculator className="h-6 w-6 mr-3 text-blue-400" />
@@ -694,7 +694,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   onChange={(e) => handleSymbolChange(e.target.value.toUpperCase())}
                   onBlur={(e) => handleSymbolChange(e.target.value.toUpperCase())}
                   placeholder="E.G. NVDA"
-                  className="glass-input w-full py-4 text-xl font-black placeholder:text-gray-700"
+                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black placeholder:text-gray-700"
                 />
                 <datalist id="symbol-suggestions">
                   {availableSymbols.map(symbol => (
@@ -710,7 +710,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               <select
                 value={tradeType}
                 onChange={(e) => setTradeType(e.target.value)}
-                className="glass-input w-full py-4 font-bold appearance-none cursor-pointer"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold appearance-none cursor-pointer"
               >
                 <option value="cashSecuredPut">Cash-Secured Put</option>
                 <option value="coveredCall">Covered Call</option>
@@ -727,7 +727,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   value={currentPrice}
                   onChange={(e) => setCurrentPrice(e.target.value)}
                   placeholder="0.00"
-                  className="glass-input w-full py-4 text-xl font-black"
+                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black"
                   disabled={fetchingPrice}
                 />
                 {fetchingPrice && (
@@ -747,7 +747,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 value={strikePrice}
                 onChange={(e) => setStrikePrice(e.target.value)}
                 placeholder="0.00"
-                className="glass-input w-full py-4 text-xl font-black text-blue-400"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black text-blue-400"
               />
             </div>
 
@@ -760,7 +760,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 value={premium}
                 onChange={(e) => setPremium(e.target.value)}
                 placeholder="0.00"
-                className="glass-input w-full py-4 text-xl font-black text-emerald-400"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 text-xl font-black text-emerald-400"
               />
             </div>
 
@@ -771,7 +771,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 type="date"
                 value={tradeDate}
                 onChange={(e) => setTradeDate(e.target.value)}
-                className="glass-input w-full py-4 font-bold"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold"
               />
             </div>
 
@@ -782,7 +782,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 type="date"
                 value={expirationDate}
                 onChange={(e) => setExpirationDate(e.target.value)}
-                className="glass-input w-full py-4 font-bold"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full py-4 font-bold"
               />
             </div>
           </div>
@@ -793,7 +793,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           <button
             onClick={handleAnalyze}
             disabled={loading || !selectedSymbol || !strikePrice || !expirationDate || !currentPrice || !premium}
-            className="btn-primary flex-1 min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex-1 min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center justify-center space-x-2">
@@ -849,7 +849,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       {analysis && (
         <div className="space-y-4">
           {/* Trade Summary */}
-          <div className="glass-card border-l-4 border-l-primary-500">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-l-primary-500">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold">
@@ -876,7 +876,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                     </button>
                     <button
                       onClick={() => handleSaveTrade('executed')}
-                      className="btn-primary flex items-center space-x-2"
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex items-center space-x-2"
                     >
                       <CheckCircle className="h-4 w-4" />
                       <span>Save as Executed</span>
@@ -917,7 +917,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Risk Assessment */}
-          <div className="glass-card">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
             <h4 className="text-lg font-semibold mb-4 flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2" />
               Risk Assessment
@@ -947,10 +947,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             <div className="space-y-2">
               {analysis.riskAssessment.factors?.map((factor, index) => (
-                <div key={index} className={`p-3 rounded-lg ${factor.type === 'positive' ? 'bg-green-900 text-green-300' :
-                  factor.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
+                <div key={index} className={`p-3 rounded-lg ${factor.type === 'positive' ? 'bg-emerald-500/15 text-emerald-400' :
+                  factor.type === 'warning' ? 'bg-amber-500/15 text-amber-400' :
                     factor.type === 'info' ? 'bg-blue-900 text-blue-300' :
-                      'bg-red-900 text-red-300'
+                      'bg-rose-500/15 text-rose-400'
                   }`}>
                   <div className="font-medium">{factor.message}</div>
                   {factor.detail && (
@@ -962,13 +962,13 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
             {/* Market Sentiment section */}
             {analysis.earningsAndEvents?.marketSentiment && (
-              <div className="mt-4 glass-item">
+              <div className="mt-4 bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
                 <h5 className="font-medium mb-2">Market Sentiment</h5>
                 <p className="text-sm text-gray-300 mb-2">{analysis.earningsAndEvents.marketSentiment.description}</p>
                 <ul className="space-y-1">
                   {analysis.earningsAndEvents.marketSentiment.factors.map((factor, idx) => (
                     <li key={idx} className="text-xs text-gray-400 flex items-start">
-                      <span className="text-primary-500 mr-2">•</span>
+                      <span className="text-blue-500 mr-2">•</span>
                       {factor}
                     </li>
                   ))}
@@ -978,7 +978,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Recommendation */}
-          <div className="glass-card">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
             <h4 className="text-lg font-semibold mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
               Trade Recommendation
@@ -1014,15 +1014,15 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
                     // Determine card color based on title
                     let cardColor = 'bg-gray-700'
-                    if (title && title.includes('STRONG BUY')) cardColor = 'bg-green-900 border-l-4 border-green-500'
-                    else if (title && title.includes('BUY')) cardColor = 'bg-green-900/50 border-l-4 border-green-600'
-                    else if (title && title.includes('AVOID')) cardColor = 'bg-red-900/50 border-l-4 border-red-600'
-                    else if (title && title.includes('HOLD')) cardColor = 'bg-yellow-900/50 border-l-4 border-yellow-600'
+                    if (title && title.includes('STRONG BUY')) cardColor = 'bg-emerald-500/15 border-l-4 border-green-500'
+                    else if (title && title.includes('BUY')) cardColor = 'bg-emerald-500/15/50 border-l-4 border-green-600'
+                    else if (title && title.includes('AVOID')) cardColor = 'bg-rose-500/15/50 border-l-4 border-red-600'
+                    else if (title && title.includes('HOLD')) cardColor = 'bg-amber-500/15/50 border-l-4 border-yellow-600'
 
                     return (
                       <div key={idx} className={`p-4 rounded-lg ${cardColor}`}>
                         {title && (
-                          <h6 className="font-semibold text-sm mb-2 text-primary-300">{title}</h6>
+                          <h6 className="font-semibold text-sm mb-2 text-blue-300">{title}</h6>
                         )}
                         <div className="text-gray-300 text-sm leading-relaxed">
                           {content.split('**').map((part, i) =>
@@ -1040,7 +1040,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <h5 className="font-medium mb-2 text-yellow-400">Warnings</h5>
                   <ul className="space-y-1">
                     {analysis.recommendation.warnings.map((warning, index) => (
-                      <li key={index} className="text-sm text-yellow-300 flex items-start">
+                      <li key={index} className="text-sm text-amber-400 flex items-start">
                         <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                         {warning}
                       </li>
@@ -1055,12 +1055,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   <h5 className="font-medium mb-3">What to Watch</h5>
                   <div className="space-y-4">
                     {analysis.earningsAndEvents.whatToWatch.map((section, idx) => (
-                      <div key={idx} className="glass-item">
-                        <h6 className="font-medium text-primary-400 mb-2">{section.category}</h6>
+                      <div key={idx} className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
+                        <h6 className="font-medium text-blue-400 mb-2">{section.category}</h6>
                         <ul className="space-y-1">
                           {section.items.map((item, itemIdx) => (
                             <li key={itemIdx} className="text-xs text-gray-300 flex items-start">
-                              <span className="text-primary-500 mr-2">•</span>
+                              <span className="text-blue-500 mr-2">•</span>
                               {item}
                             </li>
                           ))}
@@ -1074,13 +1074,13 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Chat Interface */}
-          <div className="card">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
             <button
               onClick={() => setChatOpen(!chatOpen)}
               className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
-                <MessageCircle className="h-5 w-5 text-primary-400" />
+                <MessageCircle className="h-5 w-5 text-blue-400" />
                 <h3 className="text-lg font-semibold">Ask Questions About This Trade</h3>
               </div>
               {chatOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -1089,7 +1089,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="glass-card p-4 h-80 overflow-y-auto mb-4">
+                <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.length === 0 && (
                     <div className="text-center text-gray-400 py-8">
                       <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -1105,7 +1105,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       className={`flex items-start space-x-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''
                         }`}
                     >
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'assistant' ? 'bg-primary-600' : 'bg-gray-600'}`}>
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.role === 'assistant' ? 'bg-blue-600' : 'bg-gray-600'}`}>
                         {msg.role === 'assistant' ? (
                           <Bot className="h-5 w-5 text-white" />
                         ) : (
@@ -1115,8 +1115,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                       <div className={`
                           flex-1 px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed
                           ${msg.role === 'assistant'
-                          ? 'bg-[var(--inner-card-bg)] border border-white/5 text-[var(--text-primary)]'
-                          : 'bg-blue-600/10 border border-blue-500/20 text-[var(--text-primary)]'}
+                          ? 'bg-white/[0.04] border border-white/5 text-white/85'
+                          : 'bg-blue-600/10 border border-blue-500/20 text-white/85'}
                         `}>
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       </div>
@@ -1124,11 +1124,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   ))}
                   {chatLoading && (
                     <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
                         <Bot className="h-5 w-5 text-white" />
                       </div>
-                      <div className="glass-item">
-                        <Loader className="h-5 w-5 animate-spin text-primary-400" />
+                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
+                        <Loader className="h-5 w-5 animate-spin text-blue-400" />
                       </div>
                     </div>
                   )}
@@ -1142,13 +1142,13 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask about risk management, adjustments, alternative strategies..."
-                    className="input-primary flex-1"
+                    className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all flex-1"
                     disabled={chatLoading}
                   />
                   <button
                     type="submit"
                     disabled={chatLoading || !chatInput.trim()}
-                    className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="h-5 w-5" />
                   </button>
@@ -1161,7 +1161,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
       {/* Trade History */}
       {tradeData.length > 0 && (
-        <div className="card">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Trade Analysis History</h3>
             <button
@@ -1183,7 +1183,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   onClick={() => setHistoryFilter(filter)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all ${historyFilter === filter
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                    : 'bg-[var(--inner-card-bg)] text-[var(--text-secondary)] hover:bg-white/10 hover:text-[var(--text-primary)]'
+                    : 'bg-white/[0.04] text-white/50 hover:bg-white/10 hover:text-white/85'
                     }`}
                 >
                   {filter}
@@ -1247,7 +1247,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 return (
                   <div key={index} className={`p-4 rounded-lg transition-all ${trade.closed ? 'opacity-50 grayscale bg-gray-900/40 border border-white/5' :
                     isExpired ? 'bg-orange-900/10 border border-orange-500/20' :
-                      trade.status === 'executed' ? 'bg-green-900/20 border border-green-700/30' :
+                      trade.status === 'executed' ? 'bg-emerald-500/15/20 border border-green-700/30' :
                         trade.status === 'planned' ? 'bg-blue-900/20 border border-blue-700/30' :
                           'bg-gray-700'
                     }`}>
@@ -1284,11 +1284,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           </span>
 
                           <div className="flex items-center space-x-2 ml-2 hidden md:flex">
-                            <div className="flex flex-col text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">
-                              {trade.status === 'executed' ? 'Executed' : 'Planned'}: <span className="text-[var(--text-primary)] ml-1 font-black">{formatDateDDMMYYYY(trade.status === 'executed' ? trade.executionDate : trade.timestamp)}</span>
+                            <div className="flex flex-col text-[10px] text-white/50 uppercase tracking-widest font-bold">
+                              {trade.status === 'executed' ? 'Executed' : 'Planned'}: <span className="text-white/85 ml-1 font-black">{formatDateDDMMYYYY(trade.status === 'executed' ? trade.executionDate : trade.timestamp)}</span>
                             </div>
-                            <div className="flex flex-col text-[10px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">
-                              Expires: <span className="text-[var(--text-primary)] ml-1 font-black">{formatDateDDMMYYYY(trade.expirationDate)}</span>
+                            <div className="flex flex-col text-[10px] text-white/50 uppercase tracking-widest font-bold">
+                              Expires: <span className="text-white/85 ml-1 font-black">{formatDateDDMMYYYY(trade.expirationDate)}</span>
                             </div>
                             {trade.closed && (
                               <span className={`px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest ${trade.result === 'assigned' ? 'bg-red-500/20 border-red-500/40 text-red-400' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'}`}>
@@ -1328,7 +1328,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           {trade.status === 'planned' && !trade.closed && (
                             <button
                               onClick={() => handleConvertToExecuted(trade)}
-                              className="p-2 hover:bg-green-900/50 rounded-lg transition-colors"
+                              className="p-2 hover:bg-emerald-500/15/50 rounded-lg transition-colors"
                               title="Convert to executed trade"
                             >
                               <CheckCircle className="h-4 w-4 text-green-400" />
@@ -1336,7 +1336,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           )}
                           <button
                             onClick={() => handleDeleteTrade(trade.id)}
-                            className="p-2 hover:bg-red-900/50 rounded-lg transition-colors"
+                            className="p-2 hover:bg-rose-500/15/50 rounded-lg transition-colors"
                             title="Delete trade"
                           >
                             <Trash2 className="h-4 w-4 text-red-400" />
@@ -1348,16 +1348,16 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                     {/* Trade Details Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-[var(--text-secondary)] uppercase font-black tracking-widest mb-1">Current Price</span>
-                        <div className="text-lg font-black text-[var(--text-primary)] font-mono leading-none">
+                        <span className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Current Price</span>
+                        <div className="text-lg font-black text-white/85 font-mono leading-none">
                           ${displayPrice.toFixed(2)}
                         </div>
                       </div>
                       <div className="flex flex-col items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                        <span className="text-[10px] text-[var(--text-secondary)] uppercase font-black tracking-widest mb-1">Strike</span>
-                        <div className="text-lg font-black text-[var(--text-primary)] font-mono leading-none">${trade.strikePrice?.toFixed(2)}</div>
+                        <span className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Strike</span>
+                        <div className="text-lg font-black text-white/85 font-mono leading-none">${trade.strikePrice?.toFixed(2)}</div>
                       </div>
-                      <div className="glass-item">
+                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
                         <div className="text-xs text-gray-400 mb-1">Variance</div>
                         <div className={`text-lg font-bold ${priceDiff > 0 ? 'text-green-400' : 'text-red-400'}`}>
                           ${priceDiff.toFixed(2)}
@@ -1366,11 +1366,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           </span>
                         </div>
                       </div>
-                      <div className="glass-item">
+                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
                         <div className="text-xs text-gray-400 mb-1">Premium</div>
                         <div className="text-lg font-bold text-emerald-400">${trade.premium?.toFixed(2)}</div>
                       </div>
-                      <div className="glass-item">
+                      <div className="bg-white/[0.05] border border-white/[0.06] rounded-xl px-3 py-2">
                         <div className="text-xs text-gray-400 mb-1">Days Left</div>
                         <div className="text-lg font-bold text-blue-400">
                           {Math.ceil((new Date(trade.expirationDate) - new Date()) / (1000 * 60 * 60 * 24))}d

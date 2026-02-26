@@ -58,7 +58,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
   const glowColor = isMaxAchieved ? 'rgba(16, 185, 129, 0.3)' : isMinAchieved ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.15)'
 
   return (
-    <div className="glass-card group relative overflow-hidden flex flex-col h-full !p-6">
+    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-4 sm:p-6 group relative overflow-hidden flex flex-col h-full">
       {/* Background glow pulse */}
       <div
         className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] transition-all duration-700 group-hover:blur-[60px]"
@@ -70,34 +70,34 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
         <div className={`p-2 rounded-lg ${isMaxAchieved ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
           <Icon className={`h-5 w-5 ${isMaxAchieved ? 'text-emerald-400' : 'text-blue-400'}`} />
         </div>
-        <h3 className="text-sm font-black tracking-[0.2em] text-[var(--text-secondary)] uppercase">{label} Earnings</h3>
+        <h3 className="text-sm font-black tracking-[0.2em] text-white/50 uppercase">{label} Earnings</h3>
       </div>
 
       <div className="flex-1 flex flex-col justify-between relative z-10">
         {/* New 3-Column Metrics Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {/* Target Card */}
-          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group/card shadow-black/20">
+          <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group/card shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 to-emerald-500/50"></div>
-            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2">Target</p>
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-2">Target</p>
             <span className="text-lg lg:text-xl font-black text-emerald-400 font-mono tracking-tight">
               ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
 
           {/* Current Card */}
-          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
+          <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white/10 to-white/30"></div>
-            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2">Current</p>
-            <span className="text-lg lg:text-xl font-black text-[var(--text-primary)] font-mono tracking-tight">
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-2">Current</p>
+            <span className="text-lg lg:text-xl font-black text-white/85 font-mono tracking-tight">
               ${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </span>
           </div>
 
           {/* % Target Card */}
-          <div className="bg-[var(--inner-card-bg)] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
+          <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden shadow-black/20">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/20 to-yellow-500/50"></div>
-            <p className="text-[10px] text-[var(--text-secondary)] font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
+            <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em] mb-2 whitespace-nowrap">% Target</p>
             <span className={`text-lg lg:text-xl font-black font-mono tracking-tight ${isMinAchieved ? 'text-yellow-400' : 'text-orange-400'}`}>
               {((current / max) * 100).toFixed(0)}%
             </span>
@@ -141,7 +141,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
             <div className="absolute top-1/2 -translate-y-1/2 z-30" style={{ left: `${minPos}%` }}>
               <div className="relative flex flex-col items-center -translate-x-1/2">
                 <div className="absolute bottom-2 flex flex-col items-center pb-1">
-                  <span className="bg-[#1e1e1e] text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl whitespace-nowrap mb-1">
+                  <span className="bg-white/[0.05] text-yellow-600 dark:text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl whitespace-nowrap mb-1">
                     MIN ${min.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                   <div className="h-4 w-[1px] bg-yellow-500/50"></div>
@@ -154,7 +154,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
             <div className="absolute top-1/2 -translate-y-1/2 z-40" style={{ left: `${maxPos}%` }}>
               <div className="relative flex flex-col items-center -translate-x-1/2">
                 <div className="absolute bottom-2 flex flex-col items-center pb-1">
-                  <span className="bg-[#022c22] text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl shadow-emerald-900/20 whitespace-nowrap mb-1">
+                  <span className="bg-emerald-900/30 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl shadow-emerald-900/20 whitespace-nowrap mb-1">
                     GOAL ${max.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                   <div className="h-8 w-[1px] bg-emerald-500/50"></div>
@@ -168,7 +168,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
               <div className="absolute top-1/2 -translate-y-1/2 z-20" style={{ left: `${Math.min(projectionPos, 100)}%` }}>
                 <div className="relative flex flex-col items-center -translate-x-1/2">
                   <div className="absolute bottom-2 flex flex-col items-center pb-1">
-                    <span className="bg-blue-950/80 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl backdrop-blur-sm whitespace-nowrap mb-1">
+                    <span className="bg-blue-950/80 dark:bg-blue-950/80 bg-white text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider shadow-xl backdrop-blur-sm whitespace-nowrap mb-1">
                       PROJECTED ${projection.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
                     <div className="h-12 w-[1px] bg-blue-500/30 border-l border-dashed border-blue-400/50"></div>
@@ -183,22 +183,22 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
         {/* Status Messaging */}
         <div className="mt-4">
           {isMaxAchieved ? (
-            <div className="flex items-center justify-center space-x-2 text-emerald-400 bg-emerald-950/30 py-3 px-4 rounded-xl border border-emerald-500/20 shadow-lg">
+            <div className="flex items-center justify-center space-x-2 text-emerald-400 bg-[#022c22] py-3 px-4 rounded-xl border border-emerald-500/20 shadow-lg">
               <CheckCircle className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">Incredible performance! Goal smashed 🚀</span>
             </div>
           ) : isMinAchieved ? (
-            <div className="flex items-center justify-center space-x-2 text-green-400 bg-green-950/30 py-3 px-4 rounded-xl border border-green-500/20 shadow-lg">
+            <div className="flex items-center justify-center space-x-2 text-blue-400 bg-[#081a3e] py-3 px-4 rounded-xl border border-blue-500/20 shadow-lg">
               <CheckCircle className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">Minimum floor reached. Great job! 🎉</span>
             </div>
           ) : projection >= max ? (
-            <div className="flex items-center justify-center space-x-2 text-blue-400 bg-blue-950/30 py-3 px-4 rounded-xl border border-blue-500/20 shadow-lg">
+            <div className="flex items-center justify-center space-x-2 text-blue-400 bg-[#081a3e] py-3 px-4 rounded-xl border border-blue-500/20 shadow-lg">
               <TrendingUp className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">On track to hit your targets 📈</span>
             </div>
           ) : current > 0 && (
-            <div className="flex items-center justify-center space-x-2 text-yellow-400 bg-yellow-950/20 py-3 px-4 rounded-xl border border-yellow-500/20 shadow-lg">
+            <div className="flex items-center justify-center space-x-2 text-yellow-400 bg-[#1e1e1e] py-3 px-4 rounded-xl border border-yellow-500/20 shadow-lg">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">Keep pushing to reach that goal</span>
             </div>
@@ -222,34 +222,34 @@ const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
   const currentMonthIdx = new Date().getMonth()
 
   return (
-    <div className="glass-card !p-8 animate-slide-in-up">
+    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-8 animate-slide-in-up">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
             <Calendar className="h-5 w-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-sm font-black tracking-[0.2em] text-[var(--text-primary)] uppercase">Annual Performance Roadmap</h3>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-1">Month-by-month target achievement</p>
+            <h3 className="text-sm font-black tracking-[0.2em] text-white/85 uppercase">Annual Performance Roadmap</h3>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mt-1">Month-by-month target achievement</p>
           </div>
         </div>
         <div className="flex items-center space-x-4 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
           <div className="flex items-center space-x-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Goal Reached</span>
+            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Goal Reached</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">Min Reached</span>
+            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Min Reached</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-            <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">On Track</span>
+            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">On Track</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {months.map((name, idx) => {
           const stats = history[idx] || { premium: 0 }
           const isAchieved = stats.premium >= monthlyTarget.max
@@ -264,11 +264,11 @@ const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
               className={`relative p-4 rounded-2xl border transition-all duration-300 group/month ${isFutureMonth ? 'bg-gray-900/5 border-white/5 opacity-50' :
                 isCurrentMonth ? 'bg-blue-500/5 border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]' :
                   isAchieved ? 'bg-emerald-500/5 border-emerald-500/20' :
-                    'bg-[var(--inner-card-bg)] border-white/5'
+                    'bg-white/[0.04] border-white/5'
                 }`}
             >
               <div className="flex justify-between items-start mb-3">
-                <span className={`text-xs font-black tracking-widest ${isCurrentMonth ? 'text-blue-400' : 'text-[var(--text-secondary)]'}`}>
+                <span className={`text-xs font-black tracking-widest ${isCurrentMonth ? 'text-blue-400' : 'text-white/50'}`}>
                   {name}
                 </span>
                 <div className="flex items-center space-x-2">
@@ -286,7 +286,7 @@ const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
               </div>
 
               <div className="space-y-1">
-                <div className="text-sm font-black text-[var(--text-primary)] font-mono">
+                <div className="text-sm font-black text-white/85 font-mono">
                   ${stats.premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </div>
                 <div className="w-full bg-gray-900 rounded-full h-1.5 overflow-hidden">
@@ -546,62 +546,62 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     <div className="space-y-6">
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="stat-card-primary flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
               <DollarSign className="h-6 w-6 text-blue-400" />
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Portfolio Size</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Portfolio Size</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">at start of year</p>
+            <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">at start of year</p>
           </div>
         </div>
 
 
-        <div className="stat-card-success flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-emerald-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400">
               <TrendingUp className="h-6 w-6" />
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
+            <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
           </div>
         </div>
 
-        <div className="stat-card-primary border-purple-500/20 flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-purple-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
               <Target className="h-6 w-6 text-purple-400" />
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Allocated Capital</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Allocated Capital</p>
           </div>
           <div>
             <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
               ${dashboardStats.totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
           </div>
         </div>
 
-        <div className="stat-card-warning flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
               <Calendar className="h-6 w-6 text-orange-400" />
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Active Trades</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Active Trades</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-[var(--text-primary)] font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
+            <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
           </div>
         </div>
 
-        <div className={`stat-card-primary flex flex-col justify-between ${dashboardStats.totalStockPnL >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border \${dashboardStats.totalStockPnL >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-4">
             <div className={`p-3 rounded-2xl border ${dashboardStats.totalStockPnL >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
               {dashboardStats.totalStockPnL >= 0 ? (
@@ -610,13 +610,13 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                 <TrendingDown className="h-6 w-6 text-red-400" />
               )}
             </div>
-            <p className="text-[11px] text-[var(--text-secondary)] uppercase font-black tracking-[0.2em]">Stock P&L</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Stock P&L</p>
           </div>
           <div>
             <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.totalStockPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {dashboardStats.totalStockPnL >= 0 ? '+' : ''}${dashboardStats.totalStockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
           </div>
         </div>
       </div>
@@ -656,7 +656,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
       {/* Risk Alerts */}
       {dashboardStats.highRiskTrades > 0 && (
-        <div className="glass-card border-l-4 border-l-red-500 bg-gradient-to-br from-red-500/5 to-transparent animate-slide-in-up">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-l-4 border-l-rose-500 border-white/[0.08] rounded-[20px] p-5 animate-slide-in-up">
           <div className="flex items-center space-x-3">
             <AlertCircle className="h-6 w-6 text-red-400" />
             <div>

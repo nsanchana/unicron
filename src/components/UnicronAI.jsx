@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, Mic, Sparkles, MessageSquare, Trash2, X, ChevronRight, ChevronLeft, Volume2, StopCircle, RefreshCw } from 'lucide-react'
+import { Send, Mic, Sparkles, MessageSquare, Trash2, ChevronRight, ChevronLeft, StopCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { UNICRON_AI_VERSION } from '../config'
@@ -13,26 +13,21 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
     const [isListening, setIsListening] = useState(false)
     const messagesEndRef = useRef(null)
     const recognitionRef = useRef(null)
-    const isFirstRender = useRef(true)
     const shouldScrollRef = useRef(false)
 
-    // Initialize active session
     useEffect(() => {
         if (chatHistory && chatHistory.length > 0) {
             if (!activeSessionId) {
-                // Default to most recent session
                 const lastSession = [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))[0] || chatHistory[chatHistory.length - 1]
                 setActiveSessionId(lastSession.id)
                 setMessages(lastSession.messages)
             } else {
-                // If activeSessionId is set, make sure messages are in sync with chatHistory (e.g. from cloud)
                 const currentSession = chatHistory.find(s => s.id === activeSessionId)
                 if (currentSession && JSON.stringify(currentSession.messages) !== JSON.stringify(messages)) {
                     setMessages(currentSession.messages)
                 }
             }
         } else if (!activeSessionId) {
-            // No history, create first session
             handleNewChat(true)
         }
     }, [chatHistory])
@@ -40,23 +35,13 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
     const handleNewChat = (isInitial = false) => {
         const newId = `session-${Date.now()}`
         const welcomeMessage = [{
-            id: 'welcome',
-            role: 'assistant',
+            id: 'welcome', role: 'assistant',
             content: `I am Unicron AI. Greetings, ${userName}! I have access to your portfolio, trades, and strategy. How can I assist you today?`
         }]
-
         setActiveSessionId(newId)
         setMessages(welcomeMessage)
-
-        const newSession = {
-            id: newId,
-            title: 'New Chat',
-            messages: welcomeMessage,
-            lastModified: new Date().toISOString()
-        }
-
-        const updatedHistory = isInitial ? [newSession] : [...chatHistory, newSession]
-        onUpdateHistory(updatedHistory)
+        const newSession = { id: newId, title: 'New Chat', messages: welcomeMessage, lastModified: new Date().toISOString() }
+        onUpdateHistory(isInitial ? [newSession] : [...chatHistory, newSession])
         if (!isInitial) setIsSidebarOpen(false)
     }
 
@@ -70,139 +55,75 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
         }
     }
 
-    // Scroll to bottom on new message
     useEffect(() => {
         if (shouldScrollRef.current) {
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-            shouldScrollRef.current = false // Reset
+            shouldScrollRef.current = false
         }
     }, [messages])
 
-    // Voice Recognition Setup
     useEffect(() => {
         if ('webkitSpeechRecognition' in window) {
             const recognition = new window.webkitSpeechRecognition()
             recognition.continuous = false
             recognition.interimResults = false
             recognition.lang = 'en-US'
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript
-                setInput(prev => prev ? `${prev} ${transcript}` : transcript)
-                setIsListening(false)
-            }
-
-            recognition.onerror = (event) => {
-                console.error('Speech recognition error', event.error)
-                setIsListening(false)
-            }
-
-            recognition.onend = () => {
-                setIsListening(false)
-            }
-
+            recognition.onresult = (event) => { setInput(prev => prev ? `${prev} ${event.results[0][0].transcript}` : event.results[0][0].transcript); setIsListening(false) }
+            recognition.onerror = () => setIsListening(false)
+            recognition.onend = () => setIsListening(false)
             recognitionRef.current = recognition
         }
     }, [])
 
     const toggleListening = () => {
-        if (isListening) {
-            recognitionRef.current?.stop()
-        } else {
-            setIsListening(true)
-            recognitionRef.current?.start()
-        }
+        if (isListening) { recognitionRef.current?.stop() } else { setIsListening(true); recognitionRef.current?.start() }
     }
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return
-
         const userMessage = { id: Date.now().toString(), role: 'user', content: input }
         const updatedMessages = [...messages, userMessage]
-        shouldScrollRef.current = true // Allow scroll for manual message
+        shouldScrollRef.current = true
         setMessages(updatedMessages)
         setInput('')
         setIsLoading(true)
 
-        // Prepare context
-        const portfolioValue = settings.portfolioSize // Simplified, ideally calculated from stockData + cash
-        // We can calculate actual total value if we had available cash + stock value
-        // For now, let's use what we have available directly or assume settings.portfolioSize is the base capital
-
-        // Construct simplified context summary
         const userContext = {
             userName,
             portfolio: {
                 totalValue: settings.portfolioSize,
-                allocated: tradeData.reduce((acc, t) => acc + (t.status !== 'Closed' ? (t.strike * 100) : 0), 0), // Rough estimate of exposure
+                allocated: tradeData.reduce((acc, t) => acc + (t.status !== 'Closed' ? (t.strike * 100) : 0), 0),
                 activeTradesCount: tradeData.filter(t => t.status !== 'Closed').length
             },
             strategyNotes,
-            recentTrades: tradeData.slice(0, 5).map(t => ({
-                symbol: t.symbol,
-                type: t.type,
-                strike: t.strike,
-                expirationDate: t.expirationDate,
-                premium: t.premium,
-                status: t.status
-            })),
-            researchSummary: researchData.slice(0, 5).map(r => ({
-                symbol: r.symbol,
-                rating: r.overallRating
-            }))
+            recentTrades: tradeData.slice(0, 5).map(t => ({ symbol: t.symbol, type: t.type, strike: t.strike, expirationDate: t.expirationDate, premium: t.premium, status: t.status })),
+            researchSummary: researchData.slice(0, 5).map(r => ({ symbol: r.symbol, rating: r.overallRating }))
         }
 
         try {
             const response = await fetch('/api/unicron-ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: input,
-                    userContext,
-                    history: messages.map(m => ({ role: m.role, content: m.content }))
-                })
+                body: JSON.stringify({ message: input, userContext, history: messages.map(m => ({ role: m.role, content: m.content })) })
             })
-
             const data = await response.json()
-
             if (response.ok) {
                 const aiMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: data.response }
                 const finalMessages = [...updatedMessages, aiMessage]
-                shouldScrollRef.current = true // Allow scroll for AI response
+                shouldScrollRef.current = true
                 setMessages(finalMessages)
-
-                // Update history item in the array
-                const updatedHistory = chatHistory.map(s => {
-                    if (s.id === activeSessionId) {
-                        const isNewChat = s.title === 'New Chat'
-                        return {
-                            ...s,
-                            messages: finalMessages,
-                            lastModified: new Date().toISOString(),
-                            title: isNewChat ? (input.substring(0, 30) + (input.length > 30 ? '...' : '')) : s.title
-                        }
-                    }
-                    return s
-                })
-                onUpdateHistory(updatedHistory)
+                onUpdateHistory(chatHistory.map(s => s.id === activeSessionId
+                    ? { ...s, messages: finalMessages, lastModified: new Date().toISOString(), title: s.title === 'New Chat' ? (input.substring(0, 30) + (input.length > 30 ? '...' : '')) : s.title }
+                    : s))
             } else {
-                const detailedError = data.details ? `${data.error}: ${data.details}` : data.error
-                throw new Error(detailedError || 'Failed to get response')
+                throw new Error(data.details ? `${data.error}: ${data.details}` : data.error || 'Failed to get response')
             }
         } catch (error) {
-            console.error('Chat error:', error)
-            const errorMessage = error.message || "I'm having trouble connecting to the neural network. Please try again."
-            shouldScrollRef.current = true // Allow scroll for error message
-            const errorMessages = [...updatedMessages, { id: Date.now().toString(), role: 'assistant', content: `❌ **Error**: ${errorMessage}` }]
+            const errorMsg = error.message || "I'm having trouble connecting. Please try again."
+            shouldScrollRef.current = true
+            const errorMessages = [...updatedMessages, { id: Date.now().toString(), role: 'assistant', content: `❌ **Error**: ${errorMsg}` }]
             setMessages(errorMessages)
-
-            // Still save the user message even if AI failed
-            const updatedHistory = chatHistory.map(s =>
-                s.id === activeSessionId
-                    ? { ...s, messages: errorMessages, lastModified: new Date().toISOString() }
-                    : s
-            )
-            onUpdateHistory(updatedHistory)
+            onUpdateHistory(chatHistory.map(s => s.id === activeSessionId ? { ...s, messages: errorMessages, lastModified: new Date().toISOString() } : s))
         } finally {
             setIsLoading(false)
         }
@@ -210,214 +131,147 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
 
     const handleDeleteSession = (sessionId, e) => {
         e.stopPropagation()
-        if (confirm('Delete this chat history?')) {
-            const updatedHistory = chatHistory.filter(s => s.id !== sessionId)
-            onUpdateHistory(updatedHistory)
-
-            if (activeSessionId === sessionId) {
-                if (updatedHistory.length > 0) {
-                    const last = updatedHistory[0]
-                    setActiveSessionId(last.id)
-                    setMessages(last.messages)
-                } else {
-                    handleNewChat(true)
-                }
-            }
+        if (!confirm('Delete this chat session?')) return
+        const updatedHistory = chatHistory.filter(s => s.id !== sessionId)
+        onUpdateHistory(updatedHistory)
+        if (activeSessionId === sessionId) {
+            if (updatedHistory.length > 0) { const last = updatedHistory[0]; setActiveSessionId(last.id); setMessages(last.messages) }
+            else handleNewChat(true)
         }
     }
 
     const handleClearHistory = () => {
-        if (confirm('Clear ALL chat sessions? This cannot be undone.')) {
-            onUpdateHistory([])
-            handleNewChat(true)
-        }
+        if (confirm('Clear ALL chat sessions? This cannot be undone.')) { onUpdateHistory([]); handleNewChat(true) }
     }
 
     return (
-        <div className="mt-12 mb-8 relative group">
-            {/* "Flashy" Background Glows */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-blue-600 to-emerald-600 rounded-2xl opacity-20 blur-xl group-hover:opacity-40 transition duration-1000 animate-pulse"></div>
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[680px] animate-fade-in">
 
-            <div className="relative glass-card border border-white/10 overflow-hidden flex flex-col md:flex-row h-[800px] transition-all duration-500">
-
-                {/* Sidebar (Chat History / Settings) */}
-                <div className={`
-          ${isSidebarOpen ? 'w-64' : 'w-0'} 
-          bg-[var(--bg-primary)] backdrop-blur-xl border-r border-white/5 transition-all duration-300 relative overflow-hidden flex flex-col z-20
-        `}>
-                    <div className="p-4 border-b border-white/5 whitespace-nowrap space-y-4">
-                        <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
-                            <MessageSquare className="h-3 w-3" /> History
-                        </h3>
-                        <button
-                            onClick={() => handleNewChat()}
-                            className="w-full flex items-center justify-center gap-2 p-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 border border-white/10"
-                        >
-                            <Sparkles className="h-3 w-3" /> New Chat
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide">
-                        {chatHistory && [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified)).map(session => (
-                            <div
-                                key={session.id}
-                                onClick={() => handleSwitchSession(session.id)}
-                                className={`p-3 rounded-xl border cursor-pointer hover:bg-white/10 transition-all group/item relative ${activeSessionId === session.id ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/5 border-white/5'
-                                    }`}
-                            >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                        <div className={`text-xs font-bold truncate ${activeSessionId === session.id ? 'text-blue-400' : 'text-[var(--text-primary)]'}`}>
-                                            {session.title}
-                                        </div>
-                                        <div className="text-[10px] text-[var(--text-secondary)] truncate mt-1">
-                                            {session.messages[session.messages.length - 1]?.content || 'Empty Chat'}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={(e) => handleDeleteSession(session.id, e)}
-                                        className="opacity-0 group-hover/item:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 transition-all"
-                                        title="Delete Session"
-                                    >
-                                        <Trash2 className="h-3 w-3" />
-                                    </button>
+            {/* Sidebar */}
+            <div className={`${isSidebarOpen ? 'w-60' : 'w-0'} border-r border-white/[0.06] transition-all duration-300 overflow-hidden flex flex-col flex-shrink-0`}>
+                <div className="p-4 border-b border-white/[0.06] space-y-3">
+                    <h3 className="text-xs font-semibold text-white/40 flex items-center gap-2">
+                        <MessageSquare className="h-3 w-3" /> Chat History
+                    </h3>
+                    <button onClick={() => handleNewChat()}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-xs font-semibold transition-all">
+                        <Sparkles className="h-3 w-3" /> New Chat
+                    </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                    {chatHistory && [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified)).map(session => (
+                        <div key={session.id} onClick={() => handleSwitchSession(session.id)}
+                            className={`p-2.5 rounded-xl border cursor-pointer transition-all group/item relative ${
+                                activeSessionId === session.id
+                                    ? 'bg-blue-500/15 border-blue-500/25'
+                                    : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.07]'
+                            }`}>
+                            <div className="flex items-start justify-between gap-1.5">
+                                <div className="flex-1 min-w-0">
+                                    <p className={`text-xs font-medium truncate ${activeSessionId === session.id ? 'text-blue-400' : 'text-white/70'}`}>{session.title}</p>
+                                    <p className="text-[10px] text-white/30 truncate mt-0.5">{session.messages[session.messages.length - 1]?.content?.substring(0, 40) || '...'}</p>
                                 </div>
-                                {activeSessionId === session.id && (
-                                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                                )}
+                                <button onClick={(e) => handleDeleteSession(session.id, e)}
+                                    className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-rose-500/20 rounded-lg text-rose-400 transition-all flex-shrink-0">
+                                    <Trash2 className="h-3 w-3" />
+                                </button>
                             </div>
-                        ))}
-                    </div>
-                    <div className="p-4 border-t border-white/5">
-                        <button
-                            onClick={handleClearHistory}
-                            className="w-full flex items-center justify-center gap-2 p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-colors text-[10px] font-bold uppercase tracking-wider"
-                        >
-                            <Trash2 className="h-3 w-3" /> Wipe All History
+                        </div>
+                    ))}
+                </div>
+                <div className="p-3 border-t border-white/[0.06]">
+                    <button onClick={handleClearHistory}
+                        className="w-full flex items-center justify-center gap-2 py-1.5 text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all text-xs font-medium">
+                        <Trash2 className="h-3 w-3" /> Clear All
+                    </button>
+                </div>
+            </div>
+
+            {/* Main chat */}
+            <div className="flex-1 flex flex-col min-w-0">
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className="p-1.5 hover:bg-white/[0.08] rounded-lg text-white/40 hover:text-white transition-all">
+                            {isSidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                         </button>
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
+                                <Sparkles className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-sm font-semibold text-white">Unicron AI</h2>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/25 font-medium">BETA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                        <span className="text-[10px] text-white/30 font-medium hidden sm:block">{isLoading ? 'Thinking…' : 'Online'}</span>
                     </div>
                 </div>
 
-                {/* Main Chat Area */}
-                <div className="flex-1 flex flex-col h-full bg-[var(--bg-primary)]">
-
-                    {/* Header */}
-                    <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/5 backdrop-blur-md">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                                className="p-2 hover:bg-white/10 rounded-lg text-[var(--text-secondary)] transition-colors"
-                                title="Toggle Sidebar"
-                            >
-                                {isSidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg shadow-lg shadow-purple-500/20">
-                                    <Sparkles className="h-5 w-5 text-white animate-pulse" />
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 custom-scrollbar">
+                    {messages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[82%] px-4 py-3 text-sm leading-relaxed ${
+                                msg.role === 'user'
+                                    ? 'bg-blue-500/20 text-white rounded-[18px] rounded-br-sm'
+                                    : 'bg-white/[0.06] text-white/90 rounded-[18px] rounded-bl-sm'
+                            }`}>
+                                <div className={`text-[10px] font-semibold mb-1.5 ${msg.role === 'user' ? 'text-blue-400 text-right' : 'text-purple-400'}`}>
+                                    {msg.role === 'user' ? 'You' : 'Unicron AI'}
                                 </div>
-                                <div>
-                                    <h2 className="text-lg font-black tracking-tight text-[var(--text-primary)] flex items-center gap-2">
-                                        UNICRON AI <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">BETA</span>
-                                        <span className="text-[9px] text-[var(--text-secondary)] font-medium ml-1 opacity-50">{UNICRON_AI_VERSION}</span>
-                                    </h2>
+                                <div className={`prose max-w-none text-sm ${theme === 'dark' ? 'prose-invert' : 'prose-slate'} prose-p:mb-3 prose-p:leading-relaxed last:prose-p:mb-0 prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-headings:mb-2`}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                                 </div>
                             </div>
                         </div>
-                        {/* Status Indicator */}
-                        <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-400 animate-ping' : 'bg-emerald-400'}`}></div>
-                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest hidden sm:block">
-                                {isLoading ? 'Processing...' : 'Online'}
-                            </span>
+                    ))}
+                    {isLoading && (
+                        <div className="flex justify-start">
+                            <div className="bg-white/[0.06] rounded-[18px] rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+                                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
                         </div>
-                    </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
 
-                    {/* Messages List */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-                        {messages.map((msg, index) => (
-                            <div
-                                key={index}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div className={`
-                  max-w-[85%] rounded-2xl p-5 shadow-xl backdrop-blur-sm
-                  ${msg.role === 'user'
-                                        ? 'bg-blue-600/10 border border-blue-500/30 text-[var(--text-primary)] rounded-tr-md'
-                                        : 'bg-[var(--inner-card-bg)] border border-white/10 text-[var(--text-primary)] rounded-tl-md'}
-                `}>
-                                    <div className="flex flex-col gap-1">
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${msg.role === 'user' ? 'text-blue-500 text-right' : 'text-purple-400'}`}>
-                                            {msg.role === 'user' ? 'You' : 'Unicron AI'}
-                                        </span>
-                                        <div className={`text-[15px] leading-relaxed max-w-none tracking-tight prose ${theme === 'dark' ? 'prose-invert' : 'prose-slate'} prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-img:rounded-xl prose-img:shadow-2xl prose-img:border prose-img:border-white/10 prose-headings:mb-3 prose-p:mb-4 last:prose-p:mb-0`}>
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                {msg.content}
-                                            </ReactMarkdown>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {isLoading && (
-                            <div className="flex justify-start">
-                                <div className="bg-[#1e293b]/50 border border-white/5 rounded-2xl p-4 rounded-tl-md flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input Area */}
-                    <div className="p-4 bg-black/5 border-t border-white/10 backdrop-blur-md">
-                        <div className="flex items-end gap-3 max-w-4xl mx-auto">
-                            <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-1 pl-4 flex items-center focus-within:bg-white/10 focus-within:border-white/20 transition-all shadow-inner">
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                                    placeholder="Ask about your portfolio, specific trades, or market strategy..."
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-[var(--text-primary)] placeholder-gray-500 h-12 text-sm"
-                                    disabled={isLoading}
-                                />
-
-                                {/* Voice Button */}
-                                <button
-                                    onClick={toggleListening}
-                                    className={`
-                      p-3 rounded-xl transition-all duration-300 mx-1
-                      ${isListening
-                                            ? 'bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/10'}
-                    `}
-                                    title="Voice Input"
-                                >
-                                    {isListening ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                                </button>
-                            </div>
-
-                            <button
-                                onClick={handleSend}
-                                disabled={!input.trim() || isLoading}
-                                className={`
-                   h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg
-                   ${!input.trim() || isLoading
-                                        ? 'bg-white/5 text-gray-600 border border-white/5 cursor-not-allowed'
-                                        : 'bg-gradient-to-br from-blue-600 to-purple-600 text-white hover:shadow-blue-500/25 hover:scale-105 border border-white/10'}
-                 `}
-                            >
-                                <Send className="h-6 w-6" />
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-white/[0.06] bg-white/[0.02]">
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1 bg-white/[0.06] border border-white/[0.10] rounded-2xl px-4 py-2.5 flex items-center gap-2 focus-within:border-blue-500/30 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                            <input
+                                type="text" value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                placeholder="Ask about trades, portfolio, or strategy…"
+                                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                                disabled={isLoading}
+                            />
+                            <button onClick={toggleListening}
+                                className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${isListening ? 'bg-rose-500 text-white animate-pulse' : 'text-white/30 hover:text-white hover:bg-white/10'}`}>
+                                {isListening ? <StopCircle className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                             </button>
                         </div>
-                        <div className="text-center mt-2">
-                            <p className="text-[10px] text-gray-600 font-medium">
-                                AI can make mistakes. Consider checking important information.
-                            </p>
-                        </div>
+                        <button onClick={handleSend} disabled={!input.trim() || isLoading}
+                            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                                !input.trim() || isLoading
+                                    ? 'bg-white/[0.06] text-white/20 cursor-not-allowed border border-white/[0.06]'
+                                    : 'bg-blue-500 hover:bg-blue-600 text-white hover:scale-105 active:scale-95'
+                            }`}>
+                            <Send className="h-4 w-4" />
+                        </button>
                     </div>
-
+                    <p className="text-[10px] text-white/20 text-center mt-2">AI responses may contain errors. Verify before acting.</p>
                 </div>
             </div>
         </div>
