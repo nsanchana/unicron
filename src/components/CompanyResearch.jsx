@@ -84,8 +84,8 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   const chatEndRef = useRef(null)
 
   // Sorting state for research history
-  const [sortBy, setSortBy] = useState('date')
-  const [sortOrder, setSortOrder] = useState('desc')
+  const [sortBy, setSortBy] = useState(() => localStorage.getItem('research_sort_by') || 'rating')
+  const [sortOrder, setSortOrder] = useState(() => localStorage.getItem('research_sort_order') || 'desc')
 
   // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
@@ -369,10 +369,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   // Sorting function for research history
   const handleSort = (newSortBy) => {
     if (sortBy === newSortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      const newOrder = sortOrder === 'asc' ? 'desc' : 'asc'
+      setSortOrder(newOrder)
+      localStorage.setItem('research_sort_order', newOrder)
     } else {
       setSortBy(newSortBy)
       setSortOrder('desc')
+      localStorage.setItem('research_sort_by', newSortBy)
+      localStorage.setItem('research_sort_order', 'desc')
     }
   }
 
