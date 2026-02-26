@@ -614,7 +614,7 @@ function App() {
   const tabs = [
     { id: 'dashboard',  label: 'Dashboard',         shortLabel: 'Home',     icon: BarChart3  },
     { id: 'unicron-ai', label: 'Unicron AI',         shortLabel: 'AI',       icon: Sparkles   },
-    { id: 'research',   label: 'Company Research',   shortLabel: 'Research', icon: BarChart3  },
+    { id: 'research',   label: 'Research',           shortLabel: 'Research', icon: BarChart3  },
     { id: 'trades',     label: 'Trades',             shortLabel: 'Trades',   icon: TrendingUp },
     { id: 'stocks',     label: 'Stocks',             shortLabel: 'Stocks',   icon: Briefcase  },
     { id: 'settings',   label: 'Settings',           shortLabel: 'Settings', icon: Settings   },
@@ -626,11 +626,11 @@ function App() {
       {/* ── Top Navigation (desktop) ─────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 gap-4">
+          <div className="flex items-center justify-between h-16 gap-4">
 
             {/* Logo */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <img src="/unicron-logo.jpg" alt="Unicron" className="h-8 w-8 rounded-xl object-contain border-0 outline-none" />
+              <img src="/unicron-logo.jpg" alt="Unicron" className="h-11 w-11 rounded-2xl object-contain border-0 outline-none" />
               <span className="text-base font-semibold text-white tracking-tight">Unicron</span>
             </div>
 
