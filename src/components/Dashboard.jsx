@@ -483,19 +483,21 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const totalAllocated = activeTrades
       .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
       .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
-    const allocationPercentage = (totalAllocated / pSize) * 100
+    const allocationPercentage = availableCash > 0 ? (totalAllocated / availableCash) * 100 : 0
 
-    // Total Stock P&L (Unrealized + Realized)
-    const totalStockPnL = (stockData || []).reduce((sum, s) => {
-      const sold = parseFloat(s.soldPrice)
-      const assigned = parseFloat(s.assignedPrice) || 0
-      const current = parseFloat(s.currentPrice)
-      const shares = parseFloat(s.shares) || 0
-
-      if (sold) return sum + ((sold - assigned) * shares)
-      if (current) return sum + ((current - assigned) * shares)
-      return sum
+    // Stock totals — currently held (no soldPrice / dateSold)
+    const heldStocks = (stockData || []).filter(s => !s.soldPrice && !s.dateSold)
+    const totalInvested = heldStocks.reduce((sum, s) =>
+      sum + ((parseFloat(s.assignedPrice) || 0) * (parseFloat(s.shares) || 0)), 0)
+    const currentStockValue = heldStocks.reduce((sum, s) => {
+      const price = parseFloat(s.currentPrice) || parseFloat(s.assignedPrice) || 0
+      return sum + (price * (parseFloat(s.shares) || 0))
     }, 0)
+    const stockPnL = currentStockValue - totalInvested
+    const stockPnLPct = totalInvested > 0 ? (stockPnL / totalInvested) * 100 : 0
+
+    // Cash available after buying stocks
+    const availableCash = pSize - totalInvested
 
     // Calculate Run Rate Projection
     const startOfYr = startOfYear(now)
@@ -531,7 +533,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       highRiskTrades: executedTrades.filter(t => (t.riskMetrics?.allocationPercentage || 0) > settings.maxTradePercentage).length,
       totalResearch: researchData.length,
       totalTrades: tradeData.length,
-      totalStockPnL,
+      totalInvested,
+      currentStockValue,
+      stockPnL,
+      stockPnLPct,
+      availableCash,
       monthlyHistory
     }
   }, [researchData, tradeData, settings, stockData])
@@ -546,24 +552,40 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     <div className="space-y-6">
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 flex flex-col justify-between">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-              <DollarSign className="h-6 w-6 text-blue-400" />
+
+        {/* Card 1 — Stocks: Invested / Current Value / P&L */}
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.stockPnL >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
+          <div className="flex items-center space-x-4 mb-3">
+            <div className={`p-3 rounded-2xl border ${dashboardStats.stockPnL >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+              {dashboardStats.stockPnL >= 0 ? <TrendingUp className="h-6 w-6 text-emerald-400" /> : <TrendingDown className="h-6 w-6 text-red-400" />}
             </div>
-            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Portfolio Size</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Stocks</p>
           </div>
-          <div>
-            <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">${dashboardStats.portfolioSize.toLocaleString()}</p>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">at start of year</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Invested</span>
+              <span className="text-sm font-black text-white/70 font-mono">${dashboardStats.totalInvested.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Current</span>
+              <span className="text-sm font-black text-white/85 font-mono">${dashboardStats.currentStockValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            </div>
+            <div className="h-px bg-white/[0.06] my-1" />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">P&L</span>
+              <span className={`text-sm font-black font-mono ${dashboardStats.stockPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {dashboardStats.stockPnL >= 0 ? '+' : ''}${dashboardStats.stockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                <span className="text-[10px] ml-1 opacity-70">({dashboardStats.stockPnLPct >= 0 ? '+' : ''}{dashboardStats.stockPnLPct.toFixed(1)}%)</span>
+              </span>
+            </div>
           </div>
         </div>
 
-
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-emerald-500/20 rounded-[20px] p-5 flex flex-col justify-between">
+        {/* Card 2 — Est. Annual Return */}
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-blue-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400">
-              <TrendingUp className="h-6 w-6" />
+            <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
             </div>
             <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
           </div>
@@ -573,6 +595,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
 
+        {/* Card 3 — Allocated Capital (% of available cash) */}
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-purple-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
@@ -584,10 +607,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${getAllocationColor(dashboardStats.allocationPercentage)}`}>
               ${dashboardStats.totalAllocated.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of portfolio</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">{dashboardStats.allocationPercentage.toFixed(1)}% of available cash</p>
           </div>
         </div>
 
+        {/* Card 4 — Active Trades */}
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
@@ -601,24 +625,24 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
 
-        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border \${dashboardStats.totalStockPnL >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
+        {/* Card 5 — Available Cash */}
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.availableCash >= 0 ? 'border-sky-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-4">
-            <div className={`p-3 rounded-2xl border ${dashboardStats.totalStockPnL >= 0 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-              {dashboardStats.totalStockPnL >= 0 ? (
-                <TrendingUp className="h-6 w-6 text-green-400" />
-              ) : (
-                <TrendingDown className="h-6 w-6 text-red-400" />
-              )}
+            <div className={`p-3 rounded-2xl border ${dashboardStats.availableCash >= 0 ? 'bg-sky-500/10 border-sky-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+              <DollarSign className={`h-6 w-6 ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`} />
             </div>
-            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Stock P&L</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Available Cash</p>
           </div>
           <div>
-            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.totalStockPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {dashboardStats.totalStockPnL >= 0 ? '+' : ''}${dashboardStats.totalStockPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`}>
+              ${dashboardStats.availableCash.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">Unrealized + Realized</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">
+              {((dashboardStats.availableCash / dashboardStats.portfolioSize) * 100).toFixed(1)}% of portfolio undeployed
+            </p>
           </div>
         </div>
+
       </div>
 
       {/* Premium Progress Bars */}
