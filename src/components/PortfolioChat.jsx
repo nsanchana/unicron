@@ -133,7 +133,8 @@ export default function PortfolioChat({ tradeData = [], stockData = [], settings
     if (chatHistory?.length > 0 && !sessionId) {
       const last = [...chatHistory].sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))[0]
       setSessionId(last.id)
-      setMessages(last.messages)
+      // Strip any old stored welcome messages — we render welcome live now
+      setMessages((last.messages || []).filter(m => m.id !== 'welcome'))
     } else if (!sessionId) {
       startNewSession(true)
     }
@@ -141,14 +142,10 @@ export default function PortfolioChat({ tradeData = [], stockData = [], settings
 
   const startNewSession = (silent = false) => {
     const id = `pc-${Date.now()}`
-    const welcome = [{
-      id: 'welcome', role: 'assistant',
-      content: `I have your full portfolio loaded — **${context.openPositions.length} open position${context.openPositions.length !== 1 ? 's' : ''}**, **${context.closedCount} closed trades**, **${context.winRate}% win rate**, and **$${context.totalNetPremium.toLocaleString()} total net premium** collected.\n\nUse the quick prompts above or ask me anything about your positions, patterns, or next moves.`
-    }]
     setSessionId(id)
-    setMessages(welcome)
+    setMessages([])
     if (!silent) {
-      const newHistory = [{ id, title: 'New Chat', messages: welcome, lastModified: new Date().toISOString() }, ...(chatHistory || [])]
+      const newHistory = [{ id, title: 'New Chat', messages: [], lastModified: new Date().toISOString() }, ...(chatHistory || [])]
       onUpdateHistory?.(newHistory)
     }
   }
@@ -302,6 +299,27 @@ export default function PortfolioChat({ tradeData = [], stockData = [], settings
 
         {/* Message thread */}
         <div className="h-96 overflow-y-auto px-4 py-4 space-y-4">
+
+          {/* Live welcome banner — shown when no messages yet, always reflects current data */}
+          {messages.length === 0 && !loading && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-7 h-7 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+              </div>
+              <div className="bg-white/[0.05] border border-white/[0.07] rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-white/85 max-w-[85%]">
+                {context.closedCount > 0 ? (
+                  <p className="leading-relaxed">
+                    Portfolio loaded — <strong className="text-white">{context.openPositions.length} open position{context.openPositions.length !== 1 ? 's' : ''}</strong>, <strong className="text-white">{context.closedCount} closed trades</strong>, <strong className="text-emerald-400">{context.winRate}% win rate</strong>, and <strong className="text-emerald-400">${context.totalNetPremium.toLocaleString()} net premium</strong> collected. Ask me anything.
+                  </p>
+                ) : (
+                  <p className="leading-relaxed text-white/60">
+                    Ready to help. Add some trades and I&apos;ll have full context on your portfolio, patterns, and positions.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {messages.map(msg => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
