@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DollarSign, TrendingUp, TrendingDown, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit, RefreshCw } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit, RefreshCw, Briefcase } from 'lucide-react'
 import {
   startOfWeek, endOfWeek,
   startOfMonth, endOfMonth,
@@ -44,7 +44,7 @@ const getDaysLeft = (dateString) => {
 }
 
 // Reusable Progress Bar Component with Premium Aesthetic
-const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }) => {
+const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection, subtitle }) => {
   const barScaleValue = Math.max(max, current, projection || 0) / 0.8
   const minPos = (min / barScaleValue) * 100
   const maxPos = (max / barScaleValue) * 100
@@ -202,6 +202,9 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection }
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">Keep pushing to reach that goal</span>
             </div>
+          )}
+          {subtitle && (
+            <p className="text-center text-[10px] text-white/35 font-mono mt-2 tracking-wide">{subtitle}</p>
           )}
         </div>
       </div>
@@ -545,6 +548,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       stockPnL,
       stockPnLPct,
       availableCash,
+      portfolioTotal: currentStockValue + availableCash,
       monthlyHistory
     }
   }, [researchData, tradeData, settings, stockData])
@@ -560,11 +564,48 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 
-        {/* Card 1 — Stocks: Invested / Current Value / P&L */}
-        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.stockPnL >= 0 ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
+        {/* Card 1 — Portfolio Total */}
+        {(() => {
+          const totalReturn = dashboardStats.portfolioSize > 0
+            ? ((dashboardStats.portfolioTotal - dashboardStats.portfolioSize) / dashboardStats.portfolioSize) * 100
+            : 0
+          const isUp = dashboardStats.portfolioTotal >= dashboardStats.portfolioSize
+          return (
+            <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${isUp ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
+              <div className="flex items-center space-x-4 mb-3">
+                <div className={`p-3 rounded-2xl border ${isUp ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                  <Briefcase className={`h-6 w-6 ${isUp ? 'text-emerald-400' : 'text-red-400'}`} />
+                </div>
+                <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Portfolio</p>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Total Value</span>
+                  <span className={`text-sm font-black font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                    ${dashboardStats.portfolioTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Initial</span>
+                  <span className="text-sm font-black text-white/50 font-mono">${dashboardStats.portfolioSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                </div>
+                <div className="h-px bg-white/[0.06] my-1" />
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Total Return</span>
+                  <span className={`text-sm font-black font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Card 2 — Stocks Value */}
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.stockPnL >= 0 ? 'border-violet-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-3">
-            <div className={`p-3 rounded-2xl border ${dashboardStats.stockPnL >= 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-              {dashboardStats.stockPnL >= 0 ? <TrendingUp className="h-6 w-6 text-emerald-400" /> : <TrendingDown className="h-6 w-6 text-red-400" />}
+            <div className={`p-3 rounded-2xl border ${dashboardStats.stockPnL >= 0 ? 'bg-violet-500/10 border-violet-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+              {dashboardStats.stockPnL >= 0 ? <TrendingUp className="h-6 w-6 text-violet-400" /> : <TrendingDown className="h-6 w-6 text-red-400" />}
             </div>
             <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Stocks</p>
           </div>
@@ -588,21 +629,25 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
 
-        {/* Card 2 — Est. Annual Return */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-blue-500/20 rounded-[20px] p-5 flex flex-col justify-between">
+        {/* Card 3 — Available Cash */}
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.availableCash >= 0 ? 'border-sky-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-              <TrendingUp className="h-6 w-6 text-blue-400" />
+            <div className={`p-3 rounded-2xl border ${dashboardStats.availableCash >= 0 ? 'bg-sky-500/10 border-sky-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+              <DollarSign className={`h-6 w-6 ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`} />
             </div>
-            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Est. Annual Return</p>
+            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Available Cash</p>
           </div>
           <div>
-            <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">~{((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}%</p>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">Based on YTD premium</p>
+            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`}>
+              ${dashboardStats.availableCash.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">
+              {((dashboardStats.availableCash / dashboardStats.portfolioSize) * 100).toFixed(1)}% of portfolio undeployed
+            </p>
           </div>
         </div>
 
-        {/* Card 3 — Allocated Capital (% of available cash) */}
+        {/* Card 4 — Allocated Capital */}
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-purple-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
@@ -618,7 +663,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
 
-        {/* Card 4 — Active Trades */}
+        {/* Card 5 — Active Trades */}
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-500/20 rounded-[20px] p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
@@ -629,24 +674,6 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           <div>
             <p className="text-3xl font-black text-white/85 font-mono leading-none tracking-tighter">{dashboardStats.activeTradesCount}</p>
             <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">{dashboardStats.totalTrades} total trades</p>
-          </div>
-        </div>
-
-        {/* Card 5 — Available Cash */}
-        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.availableCash >= 0 ? 'border-sky-500/20' : 'border-red-500/20'}`}>
-          <div className="flex items-center space-x-4 mb-4">
-            <div className={`p-3 rounded-2xl border ${dashboardStats.availableCash >= 0 ? 'bg-sky-500/10 border-sky-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-              <DollarSign className={`h-6 w-6 ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`} />
-            </div>
-            <p className="text-[11px] text-white/50 uppercase font-black tracking-[0.2em]">Available Cash</p>
-          </div>
-          <div>
-            <p className={`text-3xl font-black font-mono leading-none tracking-tighter ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`}>
-              ${dashboardStats.availableCash.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </p>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">
-              {((dashboardStats.availableCash / dashboardStats.portfolioSize) * 100).toFixed(1)}% of portfolio undeployed
-            </p>
           </div>
         </div>
 
@@ -675,6 +702,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           max={dashboardStats.yearlyTarget.max}
           icon={TrendingUp}
           projection={dashboardStats.yearlyProjection}
+          subtitle={`~${((dashboardStats.yearlyProjection / dashboardStats.portfolioSize) * 100).toFixed(1)}% est. annual return on portfolio`}
         />
       </div>
 
