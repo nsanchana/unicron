@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Search, Loader, Loader2, ChevronDown, ChevronUp, ChevronLeft, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp, Plus, Bookmark, ExternalLink } from 'lucide-react'
-
-const WATCHLIST_KEY = 'unicron_watchlist'
 import { scrapeCompanyData } from '../services/webScraping'
 import { fetchPrices as yahooFetchPrices } from '../services/priceService'
 import { COMPANY_RESEARCH_VERSION } from '../config'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
+
+const WATCHLIST_KEY = 'unicron_watchlist'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
