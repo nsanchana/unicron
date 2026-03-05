@@ -7,6 +7,7 @@ import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
 import UnicronAI from './components/UnicronAI'
+import Performance from './components/Performance'
 import StrategySection from './components/StrategySection'
 import Watchlist from './components/Watchlist'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
@@ -600,7 +601,7 @@ function App() {
 
   const tabs = [
     { id: 'dashboard',  label: 'Dashboard',         shortLabel: 'Home',     icon: BarChart3  },
-    { id: 'unicron-ai', label: 'Unicron AI',         shortLabel: 'AI',       icon: Sparkles   },
+    { id: 'performance', label: 'Performance',        shortLabel: 'Perf',     icon: TrendingUp },
     { id: 'research',   label: 'Research',           shortLabel: 'Research', icon: BarChart3  },
     { id: 'trades',     label: 'Trades',             shortLabel: 'Trades',   icon: TrendingUp },
     { id: 'stocks',     label: 'Stocks',             shortLabel: 'Stocks',   icon: Briefcase  },
@@ -729,6 +730,13 @@ function App() {
                 })
               }
             }}
+          />
+        )}
+        {activeTab === 'performance' && (
+          <Performance
+            tradeData={tradeData}
+            stockData={stockData}
+            settings={settings}
           />
         )}
         {activeTab === 'unicron-ai' && (
