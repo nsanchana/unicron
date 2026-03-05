@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { TrendingUp, TrendingDown, Target, Calendar, Award, Clock, BarChart2, Percent, DollarSign, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, Calendar, Award, Clock, BarChart2, Percent, DollarSign, Activity, Shield, PhoneCall, LineChart } from 'lucide-react'
 import PortfolioChat from './PortfolioChat'
 
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
@@ -23,17 +23,17 @@ function fmt$(n, decimals = 0) {
 }
 
 // ── sub-components ─────────────────────────────────────────────────────────
-function MetricCard({ icon: Icon, label, value, sub, colour = 'text-white/85', border = 'border-white/[0.08]' }) {
+function MetricCard({ icon: Icon, label, value, sub, colour = 'text-white/85', border = 'border-white/[0.08]', iconBg = 'bg-white/[0.06]', iconColour = 'text-white/40' }) {
   return (
-    <div className={`bg-white/[0.05] backdrop-blur-2xl border ${border} rounded-[20px] p-5 flex flex-col justify-between`}>
-      <div className="flex items-center gap-2 mb-3">
-        <div className="p-2 bg-white/[0.06] rounded-xl border border-white/[0.06]">
-          <Icon className="h-4 w-4 text-white/50" />
+    <div className={`bg-white/[0.05] backdrop-blur-2xl border ${border} rounded-[28px] p-5 flex flex-col justify-between`}>
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className={`p-2 ${iconBg} rounded-xl`}>
+          <Icon className={`h-4 w-4 ${iconColour}`} />
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">{label}</span>
+        <span className="text-[11px] font-semibold text-white/40">{label}</span>
       </div>
       <div>
-        <div className={`text-2xl font-black font-mono leading-none tracking-tight ${colour}`}>{value}</div>
+        <div className={`text-2xl font-bold font-mono leading-none tracking-tight ${colour}`}>{value}</div>
         {sub && <div className="text-[11px] text-white/35 mt-1.5">{sub}</div>}
       </div>
     </div>
@@ -45,8 +45,8 @@ function MonthBar({ label, value, maxValue, isFuture, isCurrentMonth, isYearView
   const isNeg = value < 0
   const barColour = isFuture ? 'bg-white/10' : isNeg ? 'bg-rose-500/60' : value > 0 ? 'bg-emerald-500/70' : 'bg-white/15'
   const borderColour = isCurrentMonth ? 'border-blue-500/30 shadow-[0_0_16px_rgba(59,130,246,0.1)]' : isFuture ? 'border-white/[0.04]' : 'border-white/[0.06]'
-  const labelSize = isYearView ? 'text-base font-black tracking-wide' : 'text-[10px] font-black tracking-widest'
-  const valueSize = isYearView ? 'text-sm font-black font-mono' : 'text-[10px] font-mono font-bold'
+  const labelSize = isYearView ? 'text-base font-bold tracking-tight' : 'text-[10px] font-semibold tracking-wide'
+  const valueSize = isYearView ? 'text-sm font-bold font-mono' : 'text-[10px] font-mono font-semibold'
   const barWidth  = isYearView ? 'w-12' : 'w-5'
   const barHeight = isYearView ? 96 : 64
   return (
@@ -172,21 +172,23 @@ export default function Performance({ tradeData = [], stockData = [], settings =
     <div className="space-y-6">
 
       {/* ── Year Selector ────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center">
+        <div className="flex bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-2xl gap-0.5">
         {YEARS.map(yr => (
           <button
             key={yr}
             onClick={() => setSelectedYear(yr)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${
+            className={`px-4 py-1.5 rounded-xl text-sm font-semibold transition-all ${
               selectedYear === yr
-                ? 'bg-white/20 border-white/25 text-white shadow-sm'
-                : 'bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.08]'
+                ? 'bg-white/20 text-white shadow-lg'
+                : 'text-white/40 hover:text-white/70 hover:bg-white/[0.08]'
             }`}
           >
             {yr}
           </button>
         ))}
-        <span className="text-[11px] text-white/30 ml-2">
+        </div>
+        <span className="text-[11px] text-white/30 ml-3">
           {stats.count} closed trade{stats.count !== 1 ? 's' : ''}
           {stats.soldStocks.length > 0 && ` · ${stats.soldStocks.length} stock exit${stats.soldStocks.length !== 1 ? 's' : ''}`}
         </span>
@@ -201,6 +203,8 @@ export default function Performance({ tradeData = [], stockData = [], settings =
           sub={stats.stockPnL !== 0 ? `Options ${fmt$(stats.optionPnL)} · Stocks ${fmt$(stats.stockPnL)}` : `Options only`}
           colour={stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}
           border={stats.totalPnL >= 0 ? 'border-emerald-500/20' : 'border-rose-500/20'}
+          iconBg={stats.totalPnL >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}
+          iconColour={stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}
         />
         <MetricCard
           icon={Award}
@@ -208,39 +212,49 @@ export default function Performance({ tradeData = [], stockData = [], settings =
           value={`${stats.winRate.toFixed(1)}%`}
           sub="Expired worthless"
           colour="text-emerald-400"
+          iconBg="bg-emerald-500/10"
+          iconColour="text-emerald-400"
         />
         <MetricCard
           icon={Activity}
           label="Trades Closed"
           value={stats.count}
           sub={`${stats.byType.cashSecuredPut.count} CSP · ${stats.byType.coveredCall.count} CC`}
-          colour="text-white/85"
+          colour="text-blue-400"
+          iconBg="bg-blue-500/10"
+          iconColour="text-blue-400"
         />
         <MetricCard
           icon={TrendingUp}
           label="Avg Net Premium"
           value={fmt$(stats.avgPremium, 0)}
           sub="Per closed trade"
-          colour="text-blue-400"
+          colour="text-sky-400"
+          iconBg="bg-sky-500/10"
+          iconColour="text-sky-400"
         />
         <MetricCard
           icon={Percent}
           label="Assignment Rate"
           value={`${stats.assignRate.toFixed(1)}%`}
           sub="CSP assigned"
-          colour={stats.assignRate > 20 ? 'text-amber-400' : 'text-white/85'}
+          colour={stats.assignRate > 20 ? 'text-amber-400' : 'text-white/70'}
+          iconBg={stats.assignRate > 20 ? 'bg-amber-500/10' : 'bg-white/[0.06]'}
+          iconColour={stats.assignRate > 20 ? 'text-amber-400' : 'text-white/40'}
         />
         <MetricCard
           icon={Clock}
           label="Avg Days Held"
           value={stats.avgDaysHeld > 0 ? `${Math.round(stats.avgDaysHeld)}d` : '—'}
           sub={stats.avgDTE > 0 ? `Opened at ${Math.round(stats.avgDTE)}DTE` : ''}
-          colour="text-white/85"
+          colour="text-purple-400"
+          iconBg="bg-purple-500/10"
+          iconColour="text-purple-400"
         />
       </div>
 
       {/* ── Income Roadmap ────────────────────────────────────────────────── */}
-      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
             <Calendar className="h-5 w-5 text-purple-400" />
@@ -252,10 +266,10 @@ export default function Performance({ tradeData = [], stockData = [], settings =
             <p className="text-[11px] text-white/40 mt-0.5">Options premiums + stock gains</p>
           </div>
           <div className="ml-auto text-right">
-            <div className={`text-lg font-black font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className={`text-lg font-bold font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
               {fmt$(stats.totalPnL)}
             </div>
-            <div className="text-[10px] text-white/35">period total</div>
+            <div className="text-[11px] text-white/35">period total</div>
           </div>
         </div>
 
@@ -298,7 +312,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* P&L by Symbol */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
               <BarChart2 className="h-4 w-4 text-blue-400" />
@@ -311,9 +325,9 @@ export default function Performance({ tradeData = [], stockData = [], settings =
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {stats.symbolList.map(({ sym, count, net, winRate }) => (
                 <div key={sym} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${net >= 0 ? 'bg-emerald-500/[0.04] border-emerald-500/10' : 'bg-rose-500/[0.04] border-rose-500/10'}`}>
-                  <span className={`text-xs font-black w-12 ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{sym}</span>
+                  <span className={`text-xs font-bold w-12 ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{sym}</span>
                   <span className="text-[11px] text-white/35 w-16">{count} trade{count !== 1 ? 's' : ''}</span>
-                  <span className={`text-sm font-black font-mono flex-1 ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(net)}</span>
+                  <span className={`text-sm font-bold font-mono flex-1 ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(net)}</span>
                   <span className="text-[11px] text-white/40 font-mono">{winRate.toFixed(0)}% win</span>
                 </div>
               ))}
@@ -322,26 +336,26 @@ export default function Performance({ tradeData = [], stockData = [], settings =
         </div>
 
         {/* Income Sources Breakdown */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
               <Target className="h-4 w-4 text-amber-400" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-white/85">Income Sources</h3>
-              <p className="text-[10px] text-white/35 mt-0.5">Where you made your money</p>
+              <p className="text-[11px] text-white/35 mt-0.5">Where you made your money</p>
             </div>
             <div className="ml-auto text-right">
-              <div className={`text-base font-black font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stats.totalPnL)}</div>
-              <div className="text-[10px] text-white/30">combined</div>
+              <div className={`text-base font-bold font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stats.totalPnL)}</div>
+              <div className="text-[11px] text-white/30">combined</div>
             </div>
           </div>
           <div className="space-y-3">
-            {/* Cash Secured Puts */}
+            {/* Cash Secured Puts + Covered Calls */}
             {[
-              { key: 'cashSecuredPut', label: 'Cash Secured Puts', colour: 'blue' },
-              { key: 'coveredCall',    label: 'Covered Calls',     colour: 'violet' },
-            ].map(({ key, label, colour }) => {
+              { key: 'cashSecuredPut', label: 'Cash Secured Puts', colour: 'blue',   Icon: Shield     },
+              { key: 'coveredCall',    label: 'Covered Calls',     colour: 'violet', Icon: PhoneCall  },
+            ].map(({ key, label, colour, Icon }) => {
               const d = stats.byType[key]
               const wr = d.denom > 0 ? (d.wins / d.denom * 100).toFixed(1) : '0'
               const avg = d.count > 0 ? d.net / d.count : 0
@@ -349,24 +363,29 @@ export default function Performance({ tradeData = [], stockData = [], settings =
               return (
                 <div key={key} className={`p-4 bg-${colour}-500/[0.05] border border-${colour}-500/15 rounded-2xl`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold text-${colour}-400`}>{label}</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-${colour}-500/10 text-${colour}-400`}>{sharePct}% of total</span>
+                      <div className={`p-1.5 bg-${colour}-500/10 rounded-lg`}>
+                        <Icon className={`h-3.5 w-3.5 text-${colour}-400`} />
+                      </div>
+                      <span className={`text-xs font-semibold text-${colour}-400`}>{label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full bg-${colour}-500/10 text-${colour}-400`}>{sharePct}% of total</span>
                       <span className="text-[11px] text-white/35">{d.count} trades</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Total P&L</div>
-                      <div className={`text-base font-black font-mono ${d.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(d.net)}</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Total P&L</div>
+                      <div className={`text-base font-bold font-mono ${d.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(d.net)}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Win Rate</div>
-                      <div className="text-base font-black font-mono text-white/85">{wr}%</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Win Rate</div>
+                      <div className="text-base font-bold font-mono text-white/85">{wr}%</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Avg Per Trade</div>
-                      <div className="text-base font-black font-mono text-white/85">{fmt$(avg)}</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Avg / Trade</div>
+                      <div className="text-base font-bold font-mono text-white/85">{fmt$(avg)}</div>
                     </div>
                   </div>
                 </div>
@@ -384,24 +403,29 @@ export default function Performance({ tradeData = [], stockData = [], settings =
               return (
                 <div className="p-4 bg-emerald-500/[0.05] border border-emerald-500/15 rounded-2xl">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-emerald-400">Stock Capital Gains</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">{sharePct}% of total</span>
+                      <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                        <LineChart className="h-3.5 w-3.5 text-emerald-400" />
+                      </div>
+                      <span className="text-xs font-semibold text-emerald-400">Stock Capital Gains</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">{sharePct}% of total</span>
                       <span className="text-[11px] text-white/35">{stCount} exit{stCount !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Total P&L</div>
-                      <div className={`text-base font-black font-mono ${stNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stNet)}</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Total P&L</div>
+                      <div className={`text-base font-bold font-mono ${stNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stNet)}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Win Rate</div>
-                      <div className="text-base font-black font-mono text-white/85">{stWinRate}%</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Win Rate</div>
+                      <div className="text-base font-bold font-mono text-white/85">{stWinRate}%</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Avg Per Exit</div>
-                      <div className="text-base font-black font-mono text-white/85">{fmt$(stAvg)}</div>
+                      <div className="text-[11px] text-white/35 font-medium mb-1">Avg / Exit</div>
+                      <div className="text-base font-bold font-mono text-white/85">{fmt$(stAvg)}</div>
                     </div>
                   </div>
                 </div>
@@ -413,9 +437,24 @@ export default function Performance({ tradeData = [], stockData = [], settings =
 
       {/* ── Duration Stats ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MetricCard icon={Clock}    label="Avg DTE at Entry"      value={stats.avgDTE > 0 ? `${Math.round(stats.avgDTE)}d` : '—'} sub="Days to expiry when opened" />
-        <MetricCard icon={Calendar} label="Avg Days Held"          value={stats.avgDaysHeld > 0 ? `${Math.round(stats.avgDaysHeld)}d` : '—'} sub="All closed trades" />
-        <MetricCard icon={TrendingDown} label="Avg Early Close"   value={stats.avgEarlyClose > 0 ? `${Math.round(stats.avgEarlyClose)}d` : '—'} sub="Trades closed before expiry" />
+        <MetricCard
+          icon={Clock} label="Avg DTE at Entry"
+          value={stats.avgDTE > 0 ? `${Math.round(stats.avgDTE)}d` : '—'}
+          sub="Days to expiry when opened"
+          colour="text-purple-400" iconBg="bg-purple-500/10" iconColour="text-purple-400"
+        />
+        <MetricCard
+          icon={Calendar} label="Avg Days Held"
+          value={stats.avgDaysHeld > 0 ? `${Math.round(stats.avgDaysHeld)}d` : '—'}
+          sub="All closed trades"
+          colour="text-sky-400" iconBg="bg-sky-500/10" iconColour="text-sky-400"
+        />
+        <MetricCard
+          icon={TrendingDown} label="Avg Early Close"
+          value={stats.avgEarlyClose > 0 ? `${Math.round(stats.avgEarlyClose)}d` : '—'}
+          sub="Trades closed before expiry"
+          colour="text-rose-400" iconBg="bg-rose-500/10" iconColour="text-rose-400"
+        />
       </div>
 
       {/* ── Unicron AI Chat ───────────────────────────────────────────────── */}
