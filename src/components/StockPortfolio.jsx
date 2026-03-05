@@ -1,10 +1,39 @@
-import { useState } from 'react'
-import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X } from 'lucide-react'
 import CompanyLogo from './CompanyLogo'
 import { fetchPrices } from '../services/priceService'
 
+const STATUS_OPTS = ['All', 'Active', 'Closed']
+const PNL_OPTS    = ['All', 'Winners', 'Losers']
+const YEAR_OPTS   = ['All', '2024', '2025', '2026']
+
+function FilterPills({ label, options, value, onChange }) {
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className="text-[10px] text-white/30 font-medium uppercase tracking-wider mr-0.5">{label}</span>
+      {options.map(opt => (
+        <button
+          key={opt}
+          onClick={() => onChange(opt)}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
+            value === opt
+              ? 'bg-white/20 border-white/25 text-white shadow-sm'
+              : 'bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/70 hover:bg-white/[0.08]'
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function StockPortfolio({ stockData, onUpdate }) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading]           = useState(false)
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [pnlFilter, setPnlFilter]       = useState('All')
+  const [yearFilter, setYearFilter]     = useState('All')
+  const [symbolSearch, setSymbolSearch] = useState('')
 
   const handleAddRow = () => {
     const newStock = {
@@ -84,6 +113,43 @@ function StockPortfolio({ stockData, onUpdate }) {
   const realisedPnL = closedStocks.reduce((sum, i) => sum + (calculatePnL(i) ?? 0), 0)
   const totalPnL = unrealisedPnL + realisedPnL
 
+  // ── Sort: active first, then newest dateAssigned within each group ──────
+  const sortedData = useMemo(() => {
+    return [...stockData].sort((a, b) => {
+      const aClosed = isClosed(a) ? 1 : 0
+      const bClosed = isClosed(b) ? 1 : 0
+      if (aClosed !== bClosed) return aClosed - bClosed
+      // Within same group: newest first
+      const dateA = new Date(a.dateAssigned || 0).getTime()
+      const dateB = new Date(b.dateAssigned || 0).getTime()
+      return dateB - dateA
+    })
+  }, [stockData])
+
+  // ── Apply filters to sorted data ────────────────────────────────────────
+  const visibleData = useMemo(() => {
+    return sortedData.filter(item => {
+      const closed = isClosed(item)
+      if (statusFilter === 'Active' && closed) return false
+      if (statusFilter === 'Closed' && !closed) return false
+
+      const pnl = calculatePnL(item)
+      if (pnlFilter === 'Winners' && (pnl === null || pnl < 0)) return false
+      if (pnlFilter === 'Losers'  && (pnl === null || pnl >= 0)) return false
+
+      const itemYear = (item.dateAssigned || '').slice(0, 4)
+      if (yearFilter !== 'All' && itemYear !== yearFilter) return false
+
+      if (symbolSearch.trim()) {
+        if (!item.symbol?.toUpperCase().includes(symbolSearch.toUpperCase().trim())) return false
+      }
+
+      return true
+    })
+  }, [sortedData, statusFilter, pnlFilter, yearFilter, symbolSearch])
+
+  const hasActiveFilters = statusFilter !== 'All' || pnlFilter !== 'All' || yearFilter !== 'All' || symbolSearch.trim()
+
   return (
     <div className="space-y-5 pb-12">
 
@@ -138,6 +204,50 @@ function StockPortfolio({ stockData, onUpdate }) {
         </div>
       )}
 
+      {/* Filter bar */}
+      {stockData.length > 0 && (
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3 flex flex-col sm:flex-row gap-3 sm:items-center flex-wrap">
+          <FilterPills label="Status" options={STATUS_OPTS} value={statusFilter} onChange={setStatusFilter} />
+          <div className="hidden sm:block w-px h-4 bg-white/10" />
+          <FilterPills label="P&L"    options={PNL_OPTS}    value={pnlFilter}    onChange={setPnlFilter}    />
+          <div className="hidden sm:block w-px h-4 bg-white/10" />
+          <FilterPills label="Year"   options={YEAR_OPTS}   value={yearFilter}   onChange={setYearFilter}   />
+          <div className="hidden sm:block w-px h-4 bg-white/10" />
+          {/* Symbol search */}
+          <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+            <Search className="h-3.5 w-3.5 text-white/25 flex-shrink-0" />
+            <input
+              type="text"
+              value={symbolSearch}
+              onChange={e => setSymbolSearch(e.target.value)}
+              placeholder="Search ticker…"
+              className="bg-transparent text-xs text-white/70 placeholder:text-white/25 focus:outline-none w-full"
+            />
+            {symbolSearch && (
+              <button onClick={() => setSymbolSearch('')} className="text-white/25 hover:text-white/60 transition-colors">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          {/* Clear all */}
+          {hasActiveFilters && (
+            <button
+              onClick={() => { setStatusFilter('All'); setPnlFilter('All'); setYearFilter('All'); setSymbolSearch('') }}
+              className="text-[11px] text-white/35 hover:text-white/70 underline underline-offset-2 transition-colors ml-auto whitespace-nowrap"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Row count when filtered */}
+      {hasActiveFilters && stockData.length > 0 && (
+        <div className="text-[11px] text-white/35">
+          Showing {visibleData.length} of {stockData.length} position{stockData.length !== 1 ? 's' : ''}
+        </div>
+      )}
+
       {/* Empty state */}
       {stockData.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
@@ -157,7 +267,10 @@ function StockPortfolio({ stockData, onUpdate }) {
         <>
           {/* ── Mobile cards ── */}
           <div className="md:hidden space-y-3">
-            {stockData.map((item) => {
+            {visibleData.length === 0 && (
+              <div className="text-center py-12 text-white/30 text-sm">No positions match the current filters.</div>
+            )}
+            {visibleData.map((item) => {
               const pnl = calculatePnL(item)
               const pnlPct = calculatePnLPct(item)
               const closed = isClosed(item)
@@ -280,7 +393,10 @@ function StockPortfolio({ stockData, onUpdate }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04]">
-                  {stockData.map((item) => {
+                  {visibleData.length === 0 && (
+                    <tr><td colSpan="9" className="text-center py-12 text-white/30 text-sm">No positions match the current filters.</td></tr>
+                  )}
+                  {visibleData.map((item) => {
                     const pnl = calculatePnL(item)
                     const pnlPct = calculatePnLPct(item)
                     const totalCost = (parseFloat(item.shares) || 0) * (parseFloat(item.assignedPrice) || 0)
@@ -405,7 +521,7 @@ function StockPortfolio({ stockData, onUpdate }) {
                 <tfoot>
                   <tr className="border-t border-white/[0.08] bg-white/[0.02]">
                     <td colSpan="2" className="px-4 py-3">
-                      <span className="text-[11px] text-white/30">{stockData.length} position{stockData.length !== 1 ? 's' : ''}</span>
+                      <span className="text-[11px] text-white/30">{visibleData.length} of {stockData.length} position{stockData.length !== 1 ? 's' : ''}</span>
                     </td>
                     <td />
                     <td className="px-4 py-3 text-right">
