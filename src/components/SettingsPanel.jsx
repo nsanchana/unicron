@@ -1,9 +1,37 @@
 import { useState } from 'react'
-import { Settings, Save, Target, AlertTriangle, Sun, Moon, Download, Check } from 'lucide-react'
+import { Settings, Save, Target, AlertTriangle, Sun, Moon, Download, Check, Wallet, PlusCircle, Trash2, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
 
 function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImportData, onExportData }) {
   const [formData, setFormData] = useState(settings)
   const [saved, setSaved] = useState(false)
+
+  const today = new Date().toISOString().split('T')[0]
+  const [newTx, setNewTx] = useState({ date: today, type: 'deposit', amount: '', note: '' })
+
+  const fundingHistory = (formData.fundingHistory || []).slice().sort((a, b) => b.date.localeCompare(a.date))
+  const totalDeposited = (formData.fundingHistory || []).reduce(
+    (s, t) => s + (t.type === 'deposit' ? t.amount : -t.amount), 0
+  )
+
+  const handleAddTransaction = () => {
+    const amount = parseFloat(newTx.amount)
+    if (!newTx.date || isNaN(amount) || amount <= 0) return
+    const tx = { id: Date.now(), date: newTx.date, type: newTx.type, amount, note: newTx.note || '' }
+    const updated = [...(formData.fundingHistory || []), tx]
+    const newTotal = updated.reduce((s, t) => s + (t.type === 'deposit' ? t.amount : -t.amount), 0)
+    const newSettings = { ...formData, fundingHistory: updated, totalDeposited: parseFloat(newTotal.toFixed(2)) }
+    setFormData(newSettings)
+    onSettingsUpdate(newSettings)
+    setNewTx({ date: today, type: 'deposit', amount: '', note: '' })
+  }
+
+  const handleDeleteTransaction = (id) => {
+    const updated = (formData.fundingHistory || []).filter(t => t.id !== id)
+    const newTotal = updated.reduce((s, t) => s + (t.type === 'deposit' ? t.amount : -t.amount), 0)
+    const newSettings = { ...formData, fundingHistory: updated, totalDeposited: parseFloat(newTotal.toFixed(2)) }
+    setFormData(newSettings)
+    onSettingsUpdate(newSettings)
+  }
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -126,6 +154,87 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Funding History */}
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6 space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2.5">
+                <Wallet className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-base font-semibold text-white">Funding History</h3>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-black font-mono text-emerald-400">${totalDeposited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-[10px] text-white/35 uppercase tracking-widest">{(formData.fundingHistory || []).length} transactions</p>
+              </div>
+            </div>
+
+            {/* Add transaction form */}
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 space-y-3">
+              <p className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Add Transaction</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                  <label className={labelCls}>Date</label>
+                  <input type="date" value={newTx.date}
+                    onChange={e => setNewTx(p => ({ ...p, date: e.target.value }))}
+                    className={inputCls + ' text-xs'}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Type</label>
+                  <select value={newTx.type}
+                    onChange={e => setNewTx(p => ({ ...p, type: e.target.value }))}
+                    className={inputCls + ' text-xs'}
+                  >
+                    <option value="deposit">Deposit</option>
+                    <option value="withdrawal">Withdrawal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Amount ($)</label>
+                  <input type="number" placeholder="0.00" value={newTx.amount}
+                    onChange={e => setNewTx(p => ({ ...p, amount: e.target.value }))}
+                    className={inputCls + ' font-mono text-xs'}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Note (optional)</label>
+                  <input type="text" placeholder="e.g. Top-up" value={newTx.note}
+                    onChange={e => setNewTx(p => ({ ...p, note: e.target.value }))}
+                    className={inputCls + ' text-xs'}
+                  />
+                </div>
+              </div>
+              <button onClick={handleAddTransaction}
+                disabled={!newTx.date || !newTx.amount || parseFloat(newTx.amount) <= 0}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-400 rounded-xl text-sm font-semibold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <PlusCircle className="h-4 w-4" /> Add
+              </button>
+            </div>
+
+            {/* Transaction log */}
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {fundingHistory.length === 0 ? (
+                <p className="text-sm text-white/30 text-center py-6">No transactions yet</p>
+              ) : fundingHistory.map(tx => (
+                <div key={tx.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${tx.type === 'deposit' ? 'bg-emerald-500/[0.04] border-emerald-500/10' : 'bg-rose-500/[0.04] border-rose-500/10'}`}>
+                  {tx.type === 'deposit'
+                    ? <ArrowDownCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+                    : <ArrowUpCircle   className="h-4 w-4 text-rose-400 shrink-0" />}
+                  <span className="text-[11px] text-white/40 font-mono w-24 shrink-0">{tx.date}</span>
+                  <span className={`text-sm font-black font-mono flex-1 ${tx.type === 'deposit' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {tx.type === 'deposit' ? '+' : '-'}${tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {tx.note && <span className="text-[11px] text-white/30 truncate max-w-[120px]">{tx.note}</span>}
+                  <button onClick={() => handleDeleteTransaction(tx.id)}
+                    className="ml-auto p-1.5 rounded-lg hover:bg-rose-500/10 text-white/20 hover:text-rose-400 transition-all shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
