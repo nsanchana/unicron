@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { TrendingUp, TrendingDown, Target, Calendar, Award, Clock, BarChart2, Percent, DollarSign, Activity } from 'lucide-react'
+import PortfolioChat from './PortfolioChat'
 
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 const YEARS = ['2024', '2025', '2026', 'All Time']
@@ -61,7 +62,7 @@ function MonthBar({ label, value, maxValue, isFuture, isCurrentMonth }) {
 }
 
 // ── main component ─────────────────────────────────────────────────────────
-export default function Performance({ tradeData = [], stockData = [], settings = {} }) {
+export default function Performance({ tradeData = [], stockData = [], settings = {}, chatHistory = [], onUpdateHistory }) {
   const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()))
   const currentMonth = new Date().getMonth()
   const currentYear  = String(new Date().getFullYear())
@@ -364,6 +365,15 @@ export default function Performance({ tradeData = [], stockData = [], settings =
         <MetricCard icon={Calendar} label="Avg Days Held"          value={stats.avgDaysHeld > 0 ? `${Math.round(stats.avgDaysHeld)}d` : '—'} sub="All closed trades" />
         <MetricCard icon={TrendingDown} label="Avg Early Close"   value={stats.avgEarlyClose > 0 ? `${Math.round(stats.avgEarlyClose)}d` : '—'} sub="Trades closed before expiry" />
       </div>
+
+      {/* ── Unicron AI Chat ───────────────────────────────────────────────── */}
+      <PortfolioChat
+        tradeData={tradeData}
+        stockData={stockData}
+        settings={settings}
+        chatHistory={chatHistory}
+        onUpdateHistory={onUpdateHistory}
+      />
 
     </div>
   )

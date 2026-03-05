@@ -737,6 +737,11 @@ function App() {
             tradeData={tradeData}
             stockData={stockData}
             settings={settings}
+            chatHistory={chatHistory}
+            onUpdateHistory={(history) => {
+              setChatHistory(history)
+              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
+            }}
           />
         )}
         {activeTab === 'unicron-ai' && (
