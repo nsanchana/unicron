@@ -478,15 +478,12 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const monthlyTarget = { min: (pSize * 0.25) / 12, max: (pSize * 0.30) / 12 }
     const yearlyTarget = { min: pSize * 0.25, max: pSize * 0.30 }
 
-    // Portfolio allocation - Sum of Strike Price * 100 for active Cash Secured Puts
+    // Active trades (open, not expired)
     const activeTrades = executedTrades.filter(t => {
       if (t.closed) return false
       const daysLeft = Math.ceil((new Date(t.expirationDate) - now) / (1000 * 60 * 60 * 24))
       return daysLeft >= 0
     })
-    const totalAllocated = activeTrades
-      .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
-      .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
 
     // Stock totals — currently held (no soldPrice / dateSold)
     const heldStocks = (stockData || []).filter(s => !s.soldPrice && !s.dateSold)
@@ -499,8 +496,14 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const stockPnL = currentStockValue - totalInvested
     const stockPnLPct = totalInvested > 0 ? (stockPnL / totalInvested) * 100 : 0
 
-    // Cash available after buying stocks
+    // Cash available after buying stocks — declared before totalAllocated to guarantee
+    // initialisation order in the minified bundle (prevents esbuild TDZ reordering)
     const availableCash = pSize - totalInvested + yearlyPremium
+
+    // Portfolio allocation - Sum of Strike Price * 100 for active Cash Secured Puts
+    const totalAllocated = activeTrades
+      .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
+      .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
     const allocationPercentage = availableCash > 0 ? (totalAllocated / availableCash) * 100 : 0
 
     // Calculate Run Rate Projection
