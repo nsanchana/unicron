@@ -451,7 +451,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const calculatePremium = (interval) => {
       const optionPremium = executedTrades
         .filter(t => isWithinInterval(new Date(t.timestamp), interval))
-        .reduce((sum, t) => sum + (t.premium * t.quantity * 100), 0)
+        .reduce((sum, t) => {
+          // Use netPremium (fees + buyback deducted) if available; fall back to gross for old trades
+          const net = t.netPremium != null ? t.netPremium : (t.premium * (t.quantity || 1) * 100)
+          return sum + net
+        }, 0)
 
       const stockPnL = (stockData || [])
         .filter(s => s.dateSold && s.soldPrice && isWithinInterval(new Date(s.dateSold), interval))
@@ -483,7 +487,6 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const totalAllocated = activeTrades
       .filter(t => t.tradeType === 'cashSecuredPut') // Only count CSPs
       .reduce((sum, t) => sum + (t.strikePrice * t.quantity * 100), 0)
-    const allocationPercentage = availableCash > 0 ? (totalAllocated / availableCash) * 100 : 0
 
     // Stock totals — currently held (no soldPrice / dateSold)
     const heldStocks = (stockData || []).filter(s => !s.soldPrice && !s.dateSold)
@@ -497,7 +500,8 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     const stockPnLPct = totalInvested > 0 ? (stockPnL / totalInvested) * 100 : 0
 
     // Cash available after buying stocks
-    const availableCash = pSize - totalInvested
+    const availableCash = pSize - totalInvested + yearlyPremium
+    const allocationPercentage = availableCash > 0 ? (totalAllocated / availableCash) * 100 : 0
 
     // Calculate Run Rate Projection
     const startOfYr = startOfYear(now)

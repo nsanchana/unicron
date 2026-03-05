@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle } from 'lucide-react'
 import CompanyLogo from './CompanyLogo'
+import { fetchPrices } from '../services/priceService'
 
 function StockPortfolio({ stockData, onUpdate }) {
   const [loading, setLoading] = useState(false)
@@ -32,24 +33,10 @@ function StockPortfolio({ stockData, onUpdate }) {
   const handleRefreshPrices = async () => {
     setLoading(true)
     const uniqueSymbols = [...new Set(stockData.filter(s => s.symbol && !s.soldPrice).map(s => s.symbol))]
-    const prices = {}
-    await Promise.all(uniqueSymbols.map(async (symbol) => {
-      try {
-        const response = await fetch('/api/scrape/stock-price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ symbol })
-        })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.price) prices[symbol] = parseFloat(data.price)
-        }
-      } catch (e) { console.error(e) }
-    }))
+    const prices = await fetchPrices(uniqueSymbols)
     onUpdate(stockData.map(item =>
-      prices[item.symbol] && !item.soldPrice
-        ? { ...item, currentPrice: prices[item.symbol], lastPriceUpdate: new Date().toISOString() }
+      prices[item.symbol?.toUpperCase()] != null && !item.soldPrice
+        ? { ...item, currentPrice: prices[item.symbol.toUpperCase()], lastPriceUpdate: new Date().toISOString() }
         : item
     ))
     setLoading(false)

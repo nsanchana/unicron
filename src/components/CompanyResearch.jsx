@@ -1,6 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
-import { Search, Loader, Loader2, ChevronDown, ChevronUp, ChevronLeft, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Search, Loader, Loader2, ChevronDown, ChevronUp, ChevronLeft, Star, AlertTriangle, CheckCircle, Save, RefreshCw, MessageCircle, Send, Bot, User, Trash2, TrendingUp, Plus, Bookmark, ExternalLink } from 'lucide-react'
+
+const WATCHLIST_KEY = 'unicron_watchlist'
 import { scrapeCompanyData } from '../services/webScraping'
+import { fetchPrices as yahooFetchPrices } from '../services/priceService'
 import { COMPANY_RESEARCH_VERSION } from '../config'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
@@ -82,6 +85,18 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const chatEndRef = useRef(null)
+
+  // Watchlist state (merged with research)
+  const [watchlist, setWatchlist] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY)) || [] }
+    catch { return [] }
+  })
+  const [watchInput, setWatchInput] = useState('')
+  const [prices, setPrices] = useState({})
+  const [priceSources, setPriceSources] = useState({})
+  const [googleFailed, setGoogleFailed] = useState(false)
+  const [priceLoading, setPriceLoading] = useState(false)
+  const [lastPriceUpdate, setLastPriceUpdate] = useState(null)
 
   // Sorting state for research history
   const [sortBy, setSortBy] = useState(() => localStorage.getItem('research_sort_by') || 'rating')
@@ -366,6 +381,55 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     }
   }
 
+  // Watchlist helpers
+  const saveWatchlist = (list) => {
+    setWatchlist(list)
+    localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list))
+  }
+  const handleAddToWatch = () => {
+    const sym = watchInput.trim().toUpperCase()
+    if (!sym) return
+    if (!watchlist.some(w => w.symbol === sym)) {
+      const updated = [...watchlist, { id: Date.now(), symbol: sym, addedAt: new Date().toISOString() }]
+      saveWatchlist(updated)
+      fetchPrices([sym])
+    }
+    setWatchInput('')
+  }
+  const handleRemoveFromWatch = (symbol) => {
+    saveWatchlist(watchlist.filter(w => w.symbol !== symbol))
+  }
+
+  // Price fetching via /api/prices (Google Finance primary → Yahoo fallback)
+  const fetchPrices = useCallback(async (symbols) => {
+    if (!symbols || symbols.length === 0) return
+    setPriceLoading(true)
+    try {
+      const priceMap = await yahooFetchPrices(symbols)
+      const sources = priceMap.__sources || {}
+      const gFailed = priceMap.__googleFailed || false
+      // Strip metadata keys before storing
+      const clean = Object.fromEntries(Object.entries(priceMap).filter(([k]) => !k.startsWith('__')))
+      setPrices(prev => ({ ...prev, ...clean }))
+      setPriceSources(prev => ({ ...prev, ...sources }))
+      setGoogleFailed(gFailed)
+      setLastPriceUpdate(new Date())
+    } catch (err) {
+      console.error('Price fetch failed:', err)
+    } finally {
+      setPriceLoading(false)
+    }
+  }, [])
+
+  // Fetch prices for all tracked symbols on mount
+  useEffect(() => {
+    const allSymbols = [...new Set([
+      ...watchlist.map(w => w.symbol),
+      ...researchData.map(r => r.symbol)
+    ])]
+    if (allSymbols.length > 0) fetchPrices(allSymbols)
+  }, []) // eslint-disable-line
+
   // Sorting function for research history
   const handleSort = (newSortBy) => {
     if (sortBy === newSortBy) {
@@ -404,6 +468,16 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         aValue = aTarget ? parseFloat(aTarget.replace(/[$,]/g, '')) : 0
         bValue = bTarget ? parseFloat(bTarget.replace(/[$,]/g, '')) : 0
         break
+      case 'noResearch':
+        // No research first, then by symbol
+        if (!a.overallRating && b.overallRating) return -1
+        if (a.overallRating && !b.overallRating) return 1
+        aValue = a.symbol; bValue = b.symbol
+        break
+      case 'stalest':
+        aValue = a.date ? new Date(a.date) : new Date(0)
+        bValue = b.date ? new Date(b.date) : new Date(0)
+        break
       case 'symbol':
         aValue = a.symbol
         bValue = b.symbol
@@ -417,6 +491,54 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
     } else {
       return aValue < bValue ? 1 : aValue > bValue ? -1 : 0
     }
+  })
+
+  // Unified watchlist + research list
+  const allTrackedSymbols = [...new Set([
+    ...watchlist.map(w => w.symbol),
+    ...researchData.map(r => r.symbol)
+  ])]
+
+  const unifiedCards = allTrackedSymbols.map(sym => {
+    const latestResearch = researchData
+      .filter(r => r.symbol === sym)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+    const watchItem = watchlist.find(w => w.symbol === sym)
+    // Live price from fetch; fall back to price stored in last research run
+    const livePrice = prices[sym] ?? prices[sym?.toUpperCase()] ?? null
+    const priceSource = priceSources[sym] || priceSources[sym?.toUpperCase()] || null
+    const storedPrice = latestResearch?.technicalAnalysis?.currentPrice ||
+      latestResearch?.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
+    return { symbol: sym, research: latestResearch, watchItem, livePrice, storedPrice, priceSource }
+  }).sort((a, b) => {
+    if (sortBy === 'noResearch') {
+      if (!a.research && b.research) return -1
+      if (a.research && !b.research) return 1
+      return a.symbol.localeCompare(b.symbol)
+    }
+    if (sortBy === 'stalest') {
+      const aD = a.research ? new Date(a.research.date) : new Date(0)
+      const bD = b.research ? new Date(b.research.date) : new Date(0)
+      return aD - bD
+    }
+    if (sortBy === 'rating') {
+      const aR = a.research?.overallRating ?? -1
+      const bR = b.research?.overallRating ?? -1
+      return sortOrder === 'desc' ? bR - aR : aR - bR
+    }
+    if (sortBy === 'symbol') {
+      return sortOrder === 'desc' ? b.symbol.localeCompare(a.symbol) : a.symbol.localeCompare(b.symbol)
+    }
+    if (sortBy === 'date') {
+      const aD = a.research ? new Date(a.research.date) : (a.watchItem ? new Date(a.watchItem.addedAt) : new Date(0))
+      const bD = b.research ? new Date(b.research.date) : (b.watchItem ? new Date(b.watchItem.addedAt) : new Date(0))
+      return sortOrder === 'desc' ? bD - aD : aD - bD
+    }
+    if (sortBy === 'currentPrice') {
+      const aP = a.livePrice || 0; const bP = b.livePrice || 0
+      return sortOrder === 'desc' ? bP - aP : aP - bP
+    }
+    return 0
   })
 
   const handleRerunResearch = async (oldSymbol) => {
@@ -1019,32 +1141,68 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
         </div>
       )}
 
-      {/* Research History */}
-      {researchData.length > 0 && (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
-
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <TrendingUp className="h-4 w-4 text-blue-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white/90">Research History</h3>
-                  <span className="px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/40">{researchData.length}</span>
+      {/* Unified Watchlist + Research Grid */}
+      {allTrackedSymbols.length > 0 && (
+        <div className="space-y-4">
+          {/* Header + Controls */}
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                  <Bookmark className="h-4 w-4 text-blue-400" />
                 </div>
-                <p className="text-[11px] text-white/40 mt-0.5">{researchData.length === 1 ? '1 company' : `${researchData.length} companies`} analysed · tap to view full report</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-white/90">Tracked Companies</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-[11px] font-medium text-white/40">{allTrackedSymbols.length}</span>
+                  </div>
+                  <p className="text-[11px] text-white/40 mt-0.5">
+                    {researchData.length} researched · {allTrackedSymbols.length - researchData.filter(r => allTrackedSymbols.includes(r.symbol)).length > 0 ? `${allTrackedSymbols.length - [...new Set(researchData.map(r => r.symbol))].length} watching` : 'all researched'}
+                    {lastPriceUpdate && <span className="ml-2">· prices {lastPriceUpdate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</span>}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  const syms = [...new Set([...watchlist.map(w => w.symbol), ...researchData.map(r => r.symbol)])]
+                  fetchPrices(syms)
+                }}
+                disabled={priceLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-medium rounded-full disabled:opacity-30 transition-all flex-shrink-0"
+              >
+                <RefreshCw className={`h-3 w-3 ${priceLoading ? 'animate-spin' : ''}`} />
+                Refresh Prices
+              </button>
             </div>
+
+            {/* Add to watchlist input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={watchInput}
+                onChange={e => setWatchInput(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === 'Enter' && handleAddToWatch()}
+                placeholder="Add ticker to watch e.g. NVDA"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-2.5 text-sm font-semibold text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all flex-1 max-w-xs uppercase"
+              />
+              <button
+                onClick={handleAddToWatch}
+                disabled={!watchInput.trim()}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-semibold transition-all disabled:opacity-40"
+              >
+                <Plus className="h-4 w-4" /> Watch
+              </button>
+            </div>
+
             {/* Sort pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-shrink-0 pb-0.5">
+            <div className="flex items-center gap-1.5 mt-3 overflow-x-auto scrollbar-hide pb-0.5">
               {[
-                { key: 'date', label: 'Recent' },
-                { key: 'rating', label: 'Score' },
-                { key: 'currentPrice', label: 'Price' },
-                { key: 'targetPrice', label: 'Target' },
-                { key: 'symbol', label: 'A–Z' },
+                { key: 'rating',       label: 'Score'       },
+                { key: 'date',         label: 'Recent'      },
+                { key: 'currentPrice', label: 'Price'       },
+                { key: 'symbol',       label: 'A–Z'         },
+                { key: 'stalest',      label: 'Needs Refresh' },
+                { key: 'noResearch',   label: 'No Research' },
               ].map(s => (
                 <button
                   key={s.key}
@@ -1056,44 +1214,17 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   }`}
                 >
                   {s.label}
-                  {sortBy === s.key && <span className="text-[9px] opacity-70">{sortOrder === 'desc' ? '↓' : '↑'}</span>}
+                  {sortBy === s.key && !['noResearch','stalest'].includes(s.key) && (
+                    <span className="text-[9px] opacity-70">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Select toolbar */}
-          <div className="flex items-center justify-between px-5 py-2 bg-white/[0.02] border-b border-white/[0.04]">
-            <div className="flex items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={selectedSymbols.size === researchData.slice(0, 10).length && researchData.length > 0}
-                onChange={() => {
-                  if (selectedSymbols.size === researchData.slice(0, 10).length) {
-                    setSelectedSymbols(new Set())
-                  } else {
-                    setSelectedSymbols(new Set(researchData.slice(0, 10).map(r => r.symbol)))
-                  }
-                }}
-                className="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-              />
-              <span className="text-[11px] font-medium text-white/40">
-                {selectedSymbols.size > 0 ? `${selectedSymbols.size} selected` : 'Select all'}
-              </span>
-            </div>
-            <button
-              onClick={() => { onAddToQueue([...selectedSymbols]); setSelectedSymbols(new Set()) }}
-              disabled={selectedSymbols.size === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[11px] font-medium rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <RefreshCw className={`h-3 w-3 ${researchQueue.some(t => t.status === 'processing' || t.status === 'queued') ? 'animate-spin' : ''}`} />
-              Refresh Selected
-            </button>
-          </div>
-
           {/* Research Queue */}
           {researchQueue.length > 0 && (
-            <div className="mx-5 my-3 p-3 bg-blue-500/[0.08] border border-blue-500/20 rounded-2xl">
+            <div className="p-3 bg-blue-500/[0.08] border border-blue-500/20 rounded-2xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-semibold text-blue-400">Queue</span>
@@ -1120,154 +1251,178 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             </div>
           )}
 
-          {/* Desktop column headers */}
-          <div className="hidden md:grid grid-cols-[32px_1fr_90px_60px_140px_75px_100px_75px_52px] gap-3 px-5 py-2 text-[10px] font-medium text-white/30 border-b border-white/[0.05]">
-            <div></div>
-            <div>Company</div>
-            <div>Sentiment</div>
-            <div className="text-center">Score</div>
-            <div>Price → Target</div>
-            <div className="text-center">Upside</div>
-            <div className="text-center">Earnings</div>
-            <div className="text-center">Analysed</div>
-            <div></div>
-          </div>
+          {/* Google Finance failure warning */}
+          {googleFailed && !priceLoading && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px]">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span>Google Finance unavailable — prices showing are 15-min delayed (Yahoo Finance fallback). Prices will auto-retry on next refresh.</span>
+            </div>
+          )}
 
-          {/* Rows */}
-          <div className="divide-y divide-white/[0.04]">
-            {sortedResearchData.slice(0, 10).map((item) => {
-              const itemKey = `${item.symbol}-${item.date}`
-              let currentPrice = item.technicalAnalysis?.currentPrice ||
-                item.technicalAnalysis?.metrics?.find(m => m.label === 'Current Price')?.value
-              let targetPrice = item.technicalAnalysis?.targetPrice ||
-                item.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
+          {/* Card Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {unifiedCards.map(({ symbol: sym, research: item, watchItem, livePrice, storedPrice, priceSource }) => {
+              const sentiment = item ? getSentiment(item.overallRating) : null
 
-              if (currentPrice) currentPrice = currentPrice.replace(/,\s*$/, '').trim()
+              let targetPrice = item?.technicalAnalysis?.targetPrice ||
+                item?.technicalAnalysis?.metrics?.find(m => m.label === 'Target Price')?.value
               if (targetPrice) targetPrice = targetPrice.replace(/,\s*$/, '').trim()
 
+              const fmtPrice = (p) => !p ? null : (p.startsWith('$') ? p : `$${p}`)
+              const fmtTarget = fmtPrice(targetPrice)
+
               let upsidePercent = null
-              if (currentPrice && targetPrice) {
-                const current = parseFloat(currentPrice.replace(/[$,]/g, ''))
+              if (livePrice && targetPrice) {
                 const target = parseFloat(targetPrice.replace(/[$,]/g, ''))
-                if (!isNaN(current) && !isNaN(target) && current > 0) {
-                  upsidePercent = ((target - current) / current * 100).toFixed(1)
+                if (!isNaN(target) && livePrice > 0) {
+                  upsidePercent = ((target - livePrice) / livePrice * 100).toFixed(1)
                 }
               }
 
-              const earningsDate = item.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date ||
-                item.recentDevelopments?.metrics?.find(m => m.label === 'Next Earnings' || m.label === 'Earnings Date')?.value || '-'
-
-              const sentiment = getSentiment(item.overallRating)
-              const fmtPrice = (p) => !p ? '-' : (p.startsWith('$') ? p : `$${p}`)
+              const researchAge = item ? formatRelativeDate(item.date) : null
+              const isStale = item ? Math.floor((new Date() - new Date(item.date)) / (1000 * 60 * 60 * 24)) > 14 : false
+              const earningsDate = item?.recentDevelopments?.detailedDevelopments?.nextEarningsCall?.date ||
+                item?.recentDevelopments?.metrics?.find(m => m.label === 'Next Earnings' || m.label === 'Earnings Date')?.value
 
               return (
-                <div
-                  key={itemKey}
-                  className="cursor-pointer hover:bg-white/[0.03] transition-all"
-                  onClick={() => handleViewResearch(item)}
-                >
-                  {/* Mobile card */}
-                  <div className="md:hidden flex items-center gap-3 px-4 py-3.5">
-                    <div className={`w-0.5 self-stretch rounded-full flex-shrink-0 opacity-60 ${sentiment.accent}`} />
-                    <CompanyLogo symbol={item.symbol} className="w-9 h-9 flex-shrink-0" textSize="text-[10px]" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold text-sm text-white/90">{item.symbol}</span>
-                        {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                <div key={sym} className={`bg-white/[0.05] backdrop-blur-2xl border rounded-[20px] p-5 group hover:border-white/[0.14] transition-all flex flex-col gap-4 ${item ? (sentiment?.border || 'border-white/[0.08]') : 'border-white/[0.08]'}`}>
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <CompanyLogo symbol={sym} className="w-11 h-11" />
+                      <div>
+                        <span className="text-lg font-bold text-white/90">{sym}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {sentiment ? (
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${sentiment.bg} ${sentiment.border} ${sentiment.text}`}>
+                              {sentiment.label}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/30">
+                              No Research
+                            </span>
+                          )}
+                          {researchAge && (
+                            <span className={`text-[10px] flex items-center gap-0.5 ${isStale ? 'text-amber-400' : 'text-white/25'}`}>
+                              {isStale && <AlertTriangle className="h-2.5 w-2.5" />}
+                              {researchAge}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-[10px] text-white/40 mt-0.5">{formatRelativeDate(item.date)}</div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-mono text-xs text-white/60">
-                        {fmtPrice(currentPrice)}
-                        {targetPrice && <span className="text-white/25"> → </span>}
-                        {targetPrice && <span className="text-blue-400">{fmtPrice(targetPrice)}</span>}
-                      </div>
-                      <div className={`text-[11px] font-semibold mt-0.5 ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0 text-center">
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${sentiment.bg} ${sentiment.border} ${sentiment.text}`}>
-                        {item.overallRating}
-                      </span>
-                      <div className={`text-[9px] font-medium mt-0.5 ${sentiment.text}`}>{sentiment.label}</div>
-                    </div>
-                    <div className="flex flex-col gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol) }} className="p-1.5 hover:bg-blue-500/20 text-white/20 hover:text-blue-400 rounded-lg transition-all">
-                        <RefreshCw className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); const i = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(i) }} className="p-1.5 hover:bg-rose-500/20 text-white/20 hover:text-rose-400 rounded-lg transition-all">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleRemoveFromWatch(sym)}
+                      className="p-1.5 hover:bg-rose-500/15 text-white/15 hover:text-rose-400 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      title="Remove"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
 
-                  {/* Desktop row */}
-                  <div className="hidden md:grid grid-cols-[32px_1fr_90px_60px_140px_75px_100px_75px_52px] gap-3 items-center px-5 py-2.5">
-                    {/* Checkbox */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" checked={selectedSymbols.has(item.symbol)}
-                        onChange={() => { const next = new Set(selectedSymbols); next.has(item.symbol) ? next.delete(item.symbol) : next.add(item.symbol); setSelectedSymbols(next) }}
-                        className="w-3.5 h-3.5 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-0 cursor-pointer" />
-                    </div>
-                    {/* Company */}
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <CompanyLogo symbol={item.symbol} className="w-7 h-7 flex-shrink-0" textSize="text-[9px]" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-sm text-white/85 truncate">{item.symbol}</span>
-                          {item.saved && <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
+                  {/* Price row */}
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[10px] font-medium text-white/30">
+                          {livePrice ? 'Live Price' : storedPrice ? 'Last Price' : 'Price'}
+                        </span>
+                        {livePrice && priceSource === 'google' && (
+                          <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">GF</span>
+                        )}
+                        {livePrice && priceSource === 'yahoo' && (
+                          <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20" title="15-min delayed">YF</span>
+                        )}
+                      </div>
+                      {priceLoading && !livePrice && !storedPrice ? (
+                        <div className="h-7 w-20 bg-white/[0.06] rounded-lg animate-pulse" />
+                      ) : (
+                        <div className={`text-2xl font-bold font-mono ${livePrice ? 'text-white/85' : 'text-white/40'}`}>
+                          {livePrice
+                            ? `$${parseFloat(livePrice).toFixed(2)}`
+                            : storedPrice
+                              ? `$${parseFloat(storedPrice.replace(/[$,]/g, '')).toFixed(2)}`
+                              : '—'}
                         </div>
-                        {/* Section scores row */}
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {[
-                            { key: 'Co', score: item.companyAnalysis?.rating },
-                            { key: 'Fi', score: item.financialHealth?.rating },
-                            { key: 'Te', score: item.technicalAnalysis?.rating },
-                            { key: 'Ev', score: item.recentDevelopments?.rating },
-                          ].map(({ key, score }) => score ? (
-                            <span key={key} className={`text-[9px] font-semibold px-1 rounded ${score >= 70 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
-                              {key}&nbsp;{score}
-                            </span>
-                          ) : null)}
+                      )}
+                    </div>
+                    {item && (
+                      <div className="text-right">
+                        <div className="text-[10px] font-medium text-white/30 mb-1">Score</div>
+                        <div className={`text-2xl font-bold font-mono ${sentiment?.text || 'text-white/50'}`}>
+                          {item.overallRating}<span className="text-sm text-white/25">/100</span>
                         </div>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Target + Upside */}
+                  {fmtTarget && (
+                    <div className="flex items-center justify-between px-3 py-2 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                      <div>
+                        <div className="text-[10px] text-white/30 mb-0.5">Analyst Target</div>
+                        <div className="text-sm font-semibold font-mono text-blue-400">{fmtTarget}</div>
+                      </div>
+                      {upsidePercent !== null && (
+                        <div className={`text-sm font-bold ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {parseFloat(upsidePercent) >= 0 ? '+' : ''}{upsidePercent}%
+                        </div>
+                      )}
                     </div>
-                    {/* Sentiment */}
-                    <div>
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${sentiment.bg} ${sentiment.border} ${sentiment.text}`}>
-                        {sentiment.label}
-                      </span>
+                  )}
+
+                  {/* Section scores */}
+                  {item && (
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        { key: 'Co', label: 'Company',  score: item.companyAnalysis?.rating },
+                        { key: 'Fi', label: 'Financial', score: item.financialHealth?.rating },
+                        { key: 'Te', label: 'Technical', score: item.technicalAnalysis?.rating },
+                        { key: 'Ev', label: 'Events',   score: item.recentDevelopments?.rating },
+                      ].map(({ key, label, score }) => (
+                        <div key={key} className="flex flex-col items-center p-1.5 bg-white/[0.04] rounded-lg border border-white/[0.05]">
+                          <div className="text-[9px] text-white/30 mb-0.5">{key}</div>
+                          <div className={`text-[11px] font-semibold ${!score ? 'text-white/20' : score >= 70 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                            {score || '—'}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    {/* Score */}
-                    <div className="text-center">
-                      <span className={`text-sm font-semibold ${sentiment.text}`}>{item.overallRating}</span>
-                      <span className="text-[10px] text-white/25">/100</span>
+                  )}
+
+                  {/* Earnings */}
+                  {earningsDate && (
+                    <div className="text-[11px] text-amber-400/80 flex items-center gap-1">
+                      <Star className="h-3 w-3" /> Next earnings: {earningsDate}
                     </div>
-                    {/* Price → Target */}
-                    <div className="font-mono text-xs">
-                      <span className="text-white/60">{fmtPrice(currentPrice)}</span>
-                      {targetPrice && <span className="text-white/25"> → </span>}
-                      {targetPrice && <span className="text-blue-400">{fmtPrice(targetPrice)}</span>}
-                    </div>
-                    {/* Upside */}
-                    <div className={`text-center text-xs font-semibold ${parseFloat(upsidePercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {upsidePercent !== null ? `${parseFloat(upsidePercent) >= 0 ? '+' : ''}${upsidePercent}%` : '-'}
-                    </div>
-                    {/* Earnings */}
-                    <div className="text-center text-[11px] font-medium text-amber-400/80">{earningsDate}</div>
-                    {/* Analysed */}
-                    <div className="text-center text-[11px] text-white/30">{formatRelativeDate(item.date)}</div>
-                    {/* Actions */}
-                    <div className="flex gap-0.5 justify-end" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={(e) => { e.stopPropagation(); handleRerunResearch(item.symbol) }} className="p-1.5 hover:bg-blue-500/20 text-white/20 hover:text-blue-400 rounded-lg transition-all" title="Rerun">
-                        <RefreshCw className="h-3 w-3" />
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-auto pt-1">
+                    {item ? (
+                      <>
+                        <button
+                          onClick={() => handleViewResearch(item)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] text-white/60 hover:text-white/90 rounded-xl text-[11px] font-semibold transition-all"
+                        >
+                          <ExternalLink className="h-3 w-3" /> View Report
+                        </button>
+                        <button
+                          onClick={() => handleRerunResearch(sym)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-xl text-[11px] font-semibold transition-all"
+                          title="Re-run Research"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => { setSymbol(sym); handleSearch(null, sym) }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-[11px] font-semibold transition-all"
+                      >
+                        <Search className="h-3 w-3" /> Run Research
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); const i = researchData.findIndex(r => r.symbol === item.symbol && r.date === item.date); handleDeleteResearch(i) }} className="p-1.5 hover:bg-rose-500/20 text-white/20 hover:text-rose-400 rounded-lg transition-all" title="Delete">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+                    )}
                   </div>
                 </div>
               )
@@ -1275,7 +1430,19 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
           </div>
         </div>
       )}
-    </div>
+
+      {/* Empty state when nothing tracked */}
+      {allTrackedSymbols.length === 0 && !companyData && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="p-4 bg-white/[0.04] rounded-2xl mb-4">
+            <Bookmark className="h-8 w-8 text-white/20" />
+          </div>
+          <p className="text-sm font-medium text-white/30">No companies tracked yet</p>
+          <p className="text-[11px] text-white/15 mt-1">Run research above or add a ticker to watch</p>
+        </div>
+      )}
+
+          </div>
   )
 }
 

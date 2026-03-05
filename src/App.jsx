@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles, Bookmark } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -8,7 +8,10 @@ import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
 import UnicronAI from './components/UnicronAI'
 import StrategySection from './components/StrategySection'
+import Watchlist from './components/Watchlist'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
+import { scrapeCompanyData } from './services/webScraping'
+import { fetchPrices } from './services/priceService'
 import { API_BASE_URL } from './config'
 
 // Helper function to format time as HH:MM:SS with DD/MM/YYYY
@@ -116,7 +119,6 @@ function App() {
 
           while (attempts < maxAttempts && !sectionData) {
             try {
-              const { scrapeCompanyData } = await import('./services/webScraping')
               sectionData = await scrapeCompanyData(symbol, section)
             } catch (err) {
               attempts++
@@ -223,48 +225,28 @@ function App() {
         return
       }
 
-      // 2. Fetch prices in batch (Optimized)
-      const response = await fetch('/api/scrape/batch-prices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ symbols: uniqueSymbols })
-      })
-
-      if (!response.ok) throw new Error('Batch price fetch failed')
-
-      const data = await response.json()
-      const priceMap = data.prices || {}
+      // 2. Fetch prices in batch via Yahoo Finance (client-side, no server needed)
+      const priceMap = await fetchPrices(uniqueSymbols)
 
       const now = new Date().toISOString()
       let updatedCount = 0
 
       // 3. Update Trade Data
       const updatedTradeData = tradeData.map(trade => {
-        const priceInfo = priceMap[trade.symbol.toUpperCase()]
-        if (!trade.closed && priceInfo) {
+        const price = priceMap[trade.symbol.toUpperCase()]
+        if (!trade.closed && price != null) {
           updatedCount++
-          return {
-            ...trade,
-            currentMarketPrice: priceInfo.price,
-            lastPriceUpdate: now,
-            priceSource: priceInfo.source
-          }
+          return { ...trade, currentMarketPrice: price, lastPriceUpdate: now, priceSource: 'yahoo_finance' }
         }
         return trade
       })
 
       // 4. Update Stock Data
       const updatedStockData = stockData.map(stock => {
-        const priceInfo = priceMap[stock.symbol.toUpperCase()]
-        if (!stock.soldPrice && priceInfo) {
+        const price = priceMap[stock.symbol.toUpperCase()]
+        if (!stock.soldPrice && price != null) {
           updatedCount++
-          return {
-            ...stock,
-            currentPrice: priceInfo.price,
-            lastPriceUpdate: now,
-            priceSource: priceInfo.source
-          }
+          return { ...stock, currentPrice: price, lastPriceUpdate: now, priceSource: 'yahoo_finance' }
         }
         return stock
       })
@@ -794,6 +776,9 @@ function App() {
               saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
             }}
           />
+        )}
+        {activeTab === 'watchlist' && (
+          <Watchlist researchData={researchData} />
         )}
         {activeTab === 'settings' && (
           <SettingsPanel

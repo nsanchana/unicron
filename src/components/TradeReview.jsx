@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { fetchPrice, fetchPrices } from '../services/priceService'
 import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw, Sparkles } from 'lucide-react'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
@@ -29,6 +30,21 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   const [historyFilter, setHistoryFilter] = useState(() => localStorage.getItem('trades_filter') || 'executed')
   const [sortBy, setSortBy] = useState(() => localStorage.getItem('trades_sort') || 'variance')
   const [editingId, setEditingId] = useState(null)
+
+  // Feature: per-trade notes
+  const [notes, setNotes] = useState('')
+
+  // Feature: fees per trade
+  const [fees, setFees] = useState('0.65')
+
+  // Feature: roll tracking
+  const [isRoll, setIsRoll] = useState(false)
+  const [rolledFromId, setRolledFromId] = useState('')
+  const [buybackCost, setBuybackCost] = useState('')   // per-share price paid to close old contract
+  const [buybackFees, setBuybackFees] = useState('0.65') // commission on the buyback leg
+
+  // Feature: expanded notes cards
+  const [expandedNotes, setExpandedNotes] = useState(new Set())
 
   // Chat state
   const [chatOpen, setChatOpen] = useState(false)
@@ -93,23 +109,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   // Get available symbols from research data
   const availableSymbols = [...new Set(researchData.map(item => item.symbol))]
 
-  // Fetch current market price from stockanalysis.com
+  // Fetch current market price via Yahoo Finance (client-side)
   const getPrice = async (symbol) => {
     try {
-      const response = await fetch(`/api/scrape/stock-price`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ symbol })
-      })
-
-      if (!response.ok) throw new Error('Failed to fetch price')
-
-      const data = await response.json()
-      if (data.price) {
-        return data.price.toString()
-      }
-      return null
+      const price = await fetchPrice(symbol)
+      return price != null ? price.toString() : null
     } catch (error) {
       console.error('Error fetching price:', error)
       return null
@@ -139,23 +143,16 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     const activeTrades = tradeData.filter(t => !t.closed)
     const uniqueSymbols = [...new Set(activeTrades.map(t => t.symbol))]
 
-    // Create a map of symbol -> new price
-    const priceMap = {}
-
-    for (const symbol of uniqueSymbols) {
-      const price = await getPrice(symbol)
-      if (price) {
-        priceMap[symbol] = parseFloat(price)
-      }
-    }
+    // Batch fetch all prices at once via Yahoo Finance
+    const priceMap = await fetchPrices(uniqueSymbols)
 
     // Update trade data
     const updatedTradeData = tradeData.map(trade => {
-      // Only update if we have a new price and the trade is active or recently closed
-      if (priceMap[trade.symbol]) {
+      const price = priceMap[trade.symbol?.toUpperCase()]
+      if (price != null) {
         return {
           ...trade,
-          currentMarketPrice: priceMap[trade.symbol],
+          currentMarketPrice: price,
           lastPriceUpdate: new Date().toISOString()
         }
       }
@@ -185,22 +182,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       if (needsUpdate) {
         // Silent update
         const uniqueSymbols = [...new Set(activeTrades.map(t => t.symbol))]
-        const priceMap = {}
-
-        for (const symbol of uniqueSymbols) {
-          const price = await getPrice(symbol)
-          if (price) {
-            priceMap[symbol] = parseFloat(price)
-          }
-        }
+        const priceMap = await fetchPrices(uniqueSymbols)
 
         const updatedTradeData = tradeData.map(trade => {
-          if (priceMap[trade.symbol]) {
-            return {
-              ...trade,
-              currentMarketPrice: priceMap[trade.symbol],
-              lastPriceUpdate: new Date().toISOString()
-            }
+          const price = priceMap[trade.symbol?.toUpperCase()]
+          if (price != null) {
+            return { ...trade, currentMarketPrice: price, lastPriceUpdate: new Date().toISOString() }
           }
           return trade
         })
@@ -293,6 +280,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     const stPrice = parseFloat(strikePrice)
     const prem = parseFloat(premium)
     const qty = parseInt(quantity) || 1
+    const tradeFees = parseFloat(fees) || 0
+    const bbCost = isRoll ? (parseFloat(buybackCost) || 0) : 0
+    const bbFees = isRoll ? (parseFloat(buybackFees) || 0) : 0
+    const netPremium = (prem * qty * 100) - tradeFees - (bbCost * qty * 100) - bbFees
 
     // Create timestamp from selected trade date
     // Set time to noon to avoid timezone issues shifting the date
@@ -373,11 +364,24 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           rating: 5
         },
         hasResearchData: false,
-        quickSave: true
+        quickSave: true,
+        notes: notes.trim() || null,
+        rolledFromId: isRoll && rolledFromId ? rolledFromId : null,
+        fees: tradeFees,
+        buybackCost: bbCost,
+        buybackFees: bbFees,
+        netPremium,
       }
 
-      setTradeData(prev => [quickTrade, ...prev])
-      saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, [quickTrade, ...tradeData])
+      // If this is a roll, auto-close the source trade
+      let baseData = isRoll && rolledFromId
+        ? tradeData.map(t => String(t.id) === String(rolledFromId)
+            ? { ...t, closed: true, closedAt: new Date().toISOString(), closedReason: 'Rolled', result: 'rolled' }
+            : t)
+        : tradeData
+
+      setTradeData([quickTrade, ...baseData])
+      saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, [quickTrade, ...baseData])
       alert(tradeStatus === 'executed' ? `${selectedSymbol} trade saved as EXECUTED!` : `${selectedSymbol} trade saved as PLANNED!`)
     }
 
@@ -389,6 +393,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     setPremium('')
     setQuantity('1')
     setPriceError('')
+    setNotes('')
+    setFees('0.65')
+    setIsRoll(false)
+    setRolledFromId('')
+    setBuybackCost('')
+    setBuybackFees('0.65')
     // Keep the date as is, user might be entering multiple historic trades
   }
 
@@ -403,6 +413,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     const stPrice = parseFloat(strikePrice)
     const prem = parseFloat(premium)
     const qty = parseInt(quantity) || 1
+    const tradeFees2 = parseFloat(fees) || 0
+    const bbCost2 = isRoll ? (parseFloat(buybackCost) || 0) : 0
+    const bbFees2 = isRoll ? (parseFloat(buybackFees) || 0) : 0
+    const netPremium2 = (prem * qty * 100) - tradeFees2 - (bbCost2 * qty * 100) - bbFees2
     const timestamp = new Date(tradeDate)
     timestamp.setHours(12, 0, 0, 0)
     const timestampIso = timestamp.toISOString()
@@ -421,10 +435,23 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       riskAssessment: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
       riskMetrics: { overallRisk: 'Medium', maxLoss: stPrice * 100, factors: [] },
       recommendation: { action: 'Analyzing…', confidence: 0, rationale: 'AI review in progress…', rating: 5 },
-      hasResearchData: false, aiReviewPending: true, aiReviewed: false
+      hasResearchData: false, aiReviewPending: true, aiReviewed: false,
+      notes: notes.trim() || null,
+      rolledFromId: isRoll && rolledFromId ? rolledFromId : null,
+      fees: tradeFees2,
+      buybackCost: bbCost2,
+      buybackFees: bbFees2,
+      netPremium: netPremium2,
     }
 
-    const newData = [baseTrade, ...tradeData]
+    // If this is a roll, auto-close the source trade first
+    let baseData = isRoll && rolledFromId
+      ? tradeData.map(t => String(t.id) === String(rolledFromId)
+          ? { ...t, closed: true, closedAt: new Date().toISOString(), closedReason: 'Rolled', result: 'rolled' }
+          : t)
+      : tradeData
+
+    const newData = [baseTrade, ...baseData]
     setTradeData(newData)
     saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, newData)
 
@@ -436,6 +463,12 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     setPremium('')
     setQuantity('1')
     setPriceError('')
+    setNotes('')
+    setFees('0.65')
+    setIsRoll(false)
+    setRolledFromId('')
+    setBuybackCost('')
+    setBuybackFees('0.65')
 
     // Run analysis in background
     setLoading(true)
@@ -632,7 +665,9 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       planned: tradeStatus === 'planned',
       status: tradeStatus,
       // Execution date matches the trade date for consistency if executed immediately
-      executionDate: tradeStatus === 'executed' ? analysis.timestamp : null
+      executionDate: tradeStatus === 'executed' ? analysis.timestamp : null,
+      notes: analysis.notes ?? (notes.trim() || null),
+      rolledFromId: analysis.rolledFromId ?? (isRoll && rolledFromId ? rolledFromId : null),
     }
 
     // Update the current analysis
@@ -690,6 +725,14 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
         setTradeDate(new Date().toISOString().split('T')[0])
       }
     }
+
+    // Restore notes, fees and roll state
+    setNotes(trade.notes || '')
+    setFees((trade.fees != null ? trade.fees : 0.65).toString())
+    setIsRoll(!!trade.rolledFromId)
+    setRolledFromId(trade.rolledFromId ? String(trade.rolledFromId) : '')
+    setBuybackCost(trade.buybackCost ? trade.buybackCost.toString() : '')
+    setBuybackFees((trade.buybackFees != null ? trade.buybackFees : 0.65).toString())
 
     // Set the analysis to the trade so it can be updated
     setAnalysis(trade)
@@ -803,7 +846,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
             {/* Symbol */}
             <div className="col-span-2 md:col-span-1 lg:col-span-1 space-y-2">
               <label className="block text-[11px] font-medium text-white/40">Symbol</label>
@@ -893,6 +936,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                 className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
               />
             </div>
+
+            {/* Fees */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-medium text-white/40">Fees ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={fees}
+                onChange={(e) => setFees(e.target.value)}
+                placeholder="0.65"
+                className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-3 text-base font-semibold text-amber-400 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full"
+              />
+            </div>
           </div>
 
           {priceError && (
@@ -900,6 +956,96 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               <AlertTriangle className="h-3 w-3" /> {priceError}
             </p>
           )}
+
+          {/* Roll tracking */}
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => { setIsRoll(v => !v); if (isRoll) setRolledFromId('') }}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all border ${
+                  isRoll
+                    ? 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400'
+                    : 'bg-white/[0.06] border-white/[0.10] text-white/40 hover:text-white/60'
+                }`}
+              >
+                🔄 Rolling an existing position?
+              </button>
+            </div>
+            {isRoll && (
+              <div className="space-y-3">
+                <select
+                  value={rolledFromId}
+                  onChange={e => setRolledFromId(e.target.value)}
+                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/30 transition-all w-full max-w-md dark:[color-scheme:dark]"
+                >
+                  <option value="">— Select position being rolled —</option>
+                  {tradeData.filter(t => t.executed && !t.closed).map(t => (
+                    <option key={t.id} value={String(t.id)}>
+                      {t.symbol} — ${t.strikePrice?.toFixed(2)} — {t.expirationDate}
+                    </option>
+                  ))}
+                </select>
+                {/* Buyback cost fields */}
+                <div className="grid grid-cols-2 gap-3 max-w-md">
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-medium text-rose-400/80">Buyback Price ($/share)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={buybackCost}
+                      onChange={e => setBuybackCost(e.target.value)}
+                      placeholder="e.g. 0.15"
+                      className="bg-white/[0.06] border border-rose-500/20 rounded-xl px-3 py-2.5 text-sm font-semibold text-rose-400 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all w-full"
+                    />
+                    <p className="text-[10px] text-white/25">Price you paid per share to close old contract</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-medium text-rose-400/80">Buyback Fees ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={buybackFees}
+                      onChange={e => setBuybackFees(e.target.value)}
+                      placeholder="0.65"
+                      className="bg-white/[0.06] border border-rose-500/20 rounded-xl px-3 py-2.5 text-sm font-semibold text-rose-400 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all w-full"
+                    />
+                    <p className="text-[10px] text-white/25">Commission on the buyback trade</p>
+                  </div>
+                </div>
+                {/* Live net preview */}
+                {premium && (
+                  <div className="max-w-md px-3 py-2 bg-cyan-500/[0.06] border border-cyan-500/15 rounded-xl">
+                    <div className="text-[11px] text-white/40 mb-1">Roll net preview</div>
+                    <div className="flex items-center gap-2 text-[12px] font-mono flex-wrap">
+                      <span className="text-emerald-400">+${(parseFloat(premium || 0) * (parseInt(quantity) || 1) * 100).toFixed(0)} new</span>
+                      {buybackCost && <><span className="text-white/30">−</span><span className="text-rose-400">${(parseFloat(buybackCost || 0) * (parseInt(quantity) || 1) * 100).toFixed(0)} buyback</span></>}
+                      <span className="text-white/30">−</span><span className="text-amber-400">${((parseFloat(fees || 0)) + (buybackCost ? parseFloat(buybackFees || 0) : 0)).toFixed(2)} fees</span>
+                      <span className="text-white/30">=</span>
+                      <span className={`font-semibold ${
+                        (parseFloat(premium || 0) * (parseInt(quantity) || 1) * 100) - (parseFloat(buybackCost || 0) * (parseInt(quantity) || 1) * 100) - (parseFloat(fees || 0)) - (buybackCost ? parseFloat(buybackFees || 0) : 0) >= 0
+                          ? 'text-emerald-400' : 'text-rose-400'
+                      }`}>
+                        ${((parseFloat(premium || 0) * (parseInt(quantity) || 1) * 100) - (parseFloat(buybackCost || 0) * (parseInt(quantity) || 1) * 100) - (parseFloat(fees || 0)) - (buybackCost ? parseFloat(buybackFees || 0) : 0)).toFixed(2)} net
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Trade notes */}
+          <div className="mt-4 space-y-1.5">
+            <label className="block text-[11px] font-medium text-white/40">Trade Notes <span className="text-white/20 font-normal">(optional)</span></label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Why did you take this trade? What was your thesis?"
+              rows={2}
+              className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full resize-none"
+            />
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -933,7 +1079,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
           {editingId && (
             <button
-              onClick={() => { setEditingId(null); setSelectedSymbol(''); setStrikePrice(''); setExpirationDate(''); setCurrentPrice(''); setPremium(''); setAnalysis(null) }}
+              onClick={() => { setEditingId(null); setSelectedSymbol(''); setStrikePrice(''); setExpirationDate(''); setCurrentPrice(''); setPremium(''); setAnalysis(null); setNotes(''); setIsRoll(false); setRolledFromId('') }}
               className="flex items-center gap-2 px-5 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/40 rounded-full text-sm font-medium transition-all"
             >
               Cancel
@@ -1410,10 +1556,28 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                                 <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">Expired</span>
                               )}
                               {trade.closed && (
-                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${trade.result === 'assigned' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-white/[0.06] border-white/[0.08] text-white/40'}`}>
-                                  {trade.result === 'assigned' ? 'Assigned' : 'Expired Worthless'}
+                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${trade.result === 'assigned' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : trade.result === 'rolled' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' : 'bg-white/[0.06] border-white/[0.08] text-white/40'}`}>
+                                  {trade.result === 'assigned' ? 'Assigned' : trade.result === 'rolled' ? 'Rolled' : 'Expired Worthless'}
                                 </span>
                               )}
+                              {/* Roll: source badge */}
+                              {trade.rolledFromId && (() => {
+                                const src = tradeData.find(t => String(t.id) === String(trade.rolledFromId))
+                                return src ? (
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                                    🔄 Rolled from {src.symbol} ${src.strikePrice?.toFixed(0)}
+                                  </span>
+                                ) : null
+                              })()}
+                              {/* Roll: successor badge */}
+                              {(() => {
+                                const successor = tradeData.find(t => String(t.rolledFromId) === String(trade.id))
+                                return successor ? (
+                                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                                    → Rolled to {successor.symbol} ${successor.strikePrice?.toFixed(0)}
+                                  </span>
+                                ) : null
+                              })()}
                             </div>
                             <div className="flex items-center gap-2 mt-1 text-[10px] text-white/30">
                               <span>{isExecuted ? 'Executed' : 'Planned'} {formatDateDDMMYYYY(trade.executionDate || trade.timestamp)}</span>
@@ -1484,16 +1648,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0">
-                              <div className="text-[11px] font-medium text-white/40 mb-1">Total Premium</div>
-                              <div className="text-2xl font-semibold font-mono text-emerald-400">${totalPremium.toFixed(0)}</div>
-                              <div className="text-[11px] text-white/30 mt-0.5">${trade.premium?.toFixed(2)}/share × {(trade.quantity || 1) * 100} shares</div>
+                              <div className="text-[11px] font-medium text-white/40 mb-1">Net Premium</div>
+                              <div className="text-2xl font-semibold font-mono text-emerald-400">
+                                ${(trade.netPremium != null ? trade.netPremium : totalPremium).toFixed(0)}
+                              </div>
+                              <div className="text-[11px] text-white/30 mt-0.5">${trade.premium?.toFixed(2)}/sh × {(trade.quantity || 1) * 100}</div>
+                              {trade.fees > 0 && <div className="text-[10px] text-amber-400/60 mt-0.5">−${(trade.fees + (trade.buybackFees || 0)).toFixed(2)} fees</div>}
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* Stats row */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                         <div className="p-3 bg-white/[0.04] rounded-xl border border-white/[0.05]">
                           <div className="text-[10px] font-medium text-white/40 mb-1">Current Price</div>
                           <div className="text-base font-semibold font-mono text-white/85">${displayPrice?.toFixed(2)}</div>
@@ -1503,9 +1670,30 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           <div className="text-base font-semibold font-mono text-white/85">${trade.strikePrice?.toFixed(2)}</div>
                         </div>
                         <div className="p-3 bg-white/[0.04] rounded-xl border border-white/[0.05]">
-                          <div className="text-[10px] font-medium text-white/40 mb-1">Premium</div>
-                          <div className="text-base font-semibold font-mono text-emerald-400">${trade.premium?.toFixed(2)}</div>
+                          <div className="text-[10px] font-medium text-white/40 mb-1">Net Premium</div>
+                          <div className="text-base font-semibold font-mono text-emerald-400">
+                            ${(trade.netPremium != null ? trade.netPremium : trade.premium * (trade.quantity || 1) * 100).toFixed(0)}
+                          </div>
+                          {trade.fees > 0 && (
+                            <div className="text-[9px] text-white/25 mt-0.5">−${trade.fees.toFixed(2)} fees</div>
+                          )}
+                          {trade.buybackCost > 0 && (
+                            <div className="text-[9px] text-rose-400/50 mt-0.5">−${(trade.buybackCost * (trade.quantity || 1) * 100).toFixed(0)} buyback</div>
+                          )}
                         </div>
+                        {/* Break-even (active executed trades only) */}
+                        {isExecuted && !trade.closed && (() => {
+                          const be = trade.tradeType === 'cashSecuredPut'
+                            ? (trade.strikePrice - trade.premium)
+                            : (trade.stockPrice - trade.premium)
+                          const atRisk = displayPrice && displayPrice < be
+                          return (
+                            <div className={`p-3 rounded-xl border ${atRisk ? 'bg-rose-500/[0.06] border-rose-500/15' : 'bg-white/[0.04] border-white/[0.05]'}`}>
+                              <div className="text-[10px] font-medium text-white/40 mb-1">Break-even</div>
+                              <div className={`text-base font-semibold font-mono ${atRisk ? 'text-rose-400' : 'text-white/85'}`}>${be.toFixed(2)}</div>
+                            </div>
+                          )
+                        })()}
                         <div className={`p-3 rounded-xl border ${isExpired ? 'bg-white/[0.04] border-white/[0.05]' : daysLeft <= 7 ? 'bg-rose-500/10 border-rose-500/20' : daysLeft <= 14 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-white/[0.04] border-white/[0.05]'}`}>
                           <div className="text-[10px] font-medium text-white/40 mb-1">Days to Expiry</div>
                           <div className={`text-base font-semibold font-mono ${isExpired ? 'text-white/30' : daysLeft <= 7 ? 'text-rose-400' : daysLeft <= 14 ? 'text-amber-400' : 'text-white/85'}`}>
@@ -1553,6 +1741,28 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                         </div>
                       )}
 
+                      {/* Per-trade notes */}
+                      {trade.notes && (
+                        <div className="mt-3">
+                          <button
+                            onClick={() => setExpandedNotes(prev => {
+                              const next = new Set(prev)
+                              next.has(trade.id) ? next.delete(trade.id) : next.add(trade.id)
+                              return next
+                            })}
+                            className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/50 transition-colors"
+                          >
+                            📝 <span className="font-medium">Notes</span>
+                            <span className="text-white/20">{expandedNotes.has(trade.id) ? '▲' : '▼'}</span>
+                          </button>
+                          {expandedNotes.has(trade.id) && (
+                            <div className="mt-2 bg-white/[0.04] border border-white/[0.06] rounded-xl p-3">
+                              <p className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Expired: close actions */}
                       {isExpired && !trade.closed && (
                         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1574,8 +1784,6 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
         )
       })()}
-      )
-      }
     </div >
   )
 }
