@@ -566,10 +566,11 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
         {/* Card 1 — Portfolio Total */}
         {(() => {
-          const totalReturn = dashboardStats.portfolioSize > 0
-            ? ((dashboardStats.portfolioTotal - dashboardStats.portfolioSize) / dashboardStats.portfolioSize) * 100
+          const deposited = parseFloat(settings?.totalDeposited) || dashboardStats.portfolioSize
+          const totalReturn = deposited > 0
+            ? ((dashboardStats.portfolioTotal - deposited) / deposited) * 100
             : 0
-          const isUp = dashboardStats.portfolioTotal >= dashboardStats.portfolioSize
+          const isUp = dashboardStats.portfolioTotal >= deposited
           return (
             <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${isUp ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
               <div className="flex items-center space-x-4 mb-3">
@@ -586,8 +587,8 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Initial</span>
-                  <span className="text-sm font-black text-white/50 font-mono">${dashboardStats.portfolioSize.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Deposited</span>
+                  <span className="text-sm font-black text-white/50 font-mono">${deposited.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </div>
                 <div className="h-px bg-white/[0.06] my-1" />
                 <div className="flex items-center justify-between">
