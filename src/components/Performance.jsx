@@ -40,21 +40,25 @@ function MetricCard({ icon: Icon, label, value, sub, colour = 'text-white/85', b
   )
 }
 
-function MonthBar({ label, value, maxValue, isFuture, isCurrentMonth }) {
+function MonthBar({ label, value, maxValue, isFuture, isCurrentMonth, isYearView = false }) {
   const pct = maxValue > 0 ? Math.min(Math.abs(value) / maxValue * 100, 100) : 0
   const isNeg = value < 0
   const barColour = isFuture ? 'bg-white/10' : isNeg ? 'bg-rose-500/60' : value > 0 ? 'bg-emerald-500/70' : 'bg-white/15'
   const borderColour = isCurrentMonth ? 'border-blue-500/30 shadow-[0_0_16px_rgba(59,130,246,0.1)]' : isFuture ? 'border-white/[0.04]' : 'border-white/[0.06]'
+  const labelSize = isYearView ? 'text-base font-black tracking-wide' : 'text-[10px] font-black tracking-widest'
+  const valueSize = isYearView ? 'text-sm font-black font-mono' : 'text-[10px] font-mono font-bold'
+  const barWidth  = isYearView ? 'w-12' : 'w-5'
+  const barHeight = isYearView ? 96 : 64
   return (
-    <div className={`relative bg-white/[0.04] border ${borderColour} rounded-2xl p-3 flex flex-col items-center gap-2`}>
-      <span className={`text-[10px] font-black tracking-widest ${isCurrentMonth ? 'text-blue-400' : 'text-white/40'}`}>{label}</span>
-      <div className="w-full flex-1 flex items-end justify-center" style={{ height: 64 }}>
+    <div className={`relative bg-white/[0.04] border ${borderColour} rounded-2xl ${isYearView ? 'p-5' : 'p-3'} flex flex-col items-center gap-2`}>
+      <span className={`${labelSize} ${isCurrentMonth ? 'text-blue-400' : 'text-white/60'}`}>{label}</span>
+      <div className="w-full flex-1 flex items-end justify-center" style={{ height: barHeight }}>
         <div
-          className={`w-5 rounded-t-md transition-all duration-500 ${barColour}`}
+          className={`${barWidth} rounded-t-md transition-all duration-500 ${barColour}`}
           style={{ height: isFuture ? '4px' : `${Math.max(pct, 3)}%` }}
         />
       </div>
-      <span className={`text-[10px] font-mono font-bold ${isFuture ? 'text-white/20' : isNeg ? 'text-rose-400' : value > 0 ? 'text-emerald-400' : 'text-white/30'}`}>
+      <span className={`${valueSize} ${isFuture ? 'text-white/20' : isNeg ? 'text-rose-400' : value > 0 ? 'text-emerald-400' : 'text-white/30'}`}>
         {isFuture ? '—' : value === 0 ? '$0' : fmt$(value)}
       </span>
     </div>
@@ -257,7 +261,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
 
         {selectedYear === 'All Time' ? (
           /* Year-by-year bars */
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-6">
             {['2024', '2025', '2026'].map((yr, i) => (
               <MonthBar
                 key={yr}
@@ -266,6 +270,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
                 maxValue={maxYearly}
                 isFuture={yr > currentYear}
                 isCurrentMonth={yr === currentYear}
+                isYearView={true}
               />
             ))}
           </div>
@@ -316,15 +321,23 @@ export default function Performance({ tradeData = [], stockData = [], settings =
           )}
         </div>
 
-        {/* Trade Type Breakdown */}
+        {/* Income Sources Breakdown */}
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
               <Target className="h-4 w-4 text-amber-400" />
             </div>
-            <h3 className="text-sm font-semibold text-white/85">CSP vs Covered Call</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-white/85">Income Sources</h3>
+              <p className="text-[10px] text-white/35 mt-0.5">Where you made your money</p>
+            </div>
+            <div className="ml-auto text-right">
+              <div className={`text-base font-black font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stats.totalPnL)}</div>
+              <div className="text-[10px] text-white/30">combined</div>
+            </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
+            {/* Cash Secured Puts */}
             {[
               { key: 'cashSecuredPut', label: 'Cash Secured Puts', colour: 'blue' },
               { key: 'coveredCall',    label: 'Covered Calls',     colour: 'violet' },
@@ -332,11 +345,15 @@ export default function Performance({ tradeData = [], stockData = [], settings =
               const d = stats.byType[key]
               const wr = d.denom > 0 ? (d.wins / d.denom * 100).toFixed(1) : '0'
               const avg = d.count > 0 ? d.net / d.count : 0
+              const sharePct = stats.totalPnL !== 0 ? Math.abs(d.net / stats.totalPnL * 100).toFixed(0) : '0'
               return (
                 <div key={key} className={`p-4 bg-${colour}-500/[0.05] border border-${colour}-500/15 rounded-2xl`}>
                   <div className="flex items-center justify-between mb-3">
                     <span className={`text-xs font-bold text-${colour}-400`}>{label}</span>
-                    <span className="text-[11px] text-white/35">{d.count} trades</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-${colour}-500/10 text-${colour}-400`}>{sharePct}% of total</span>
+                      <span className="text-[11px] text-white/35">{d.count} trades</span>
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
@@ -348,13 +365,48 @@ export default function Performance({ tradeData = [], stockData = [], settings =
                       <div className="text-base font-black font-mono text-white/85">{wr}%</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Avg Premium</div>
+                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Avg Per Trade</div>
                       <div className="text-base font-black font-mono text-white/85">{fmt$(avg)}</div>
                     </div>
                   </div>
                 </div>
               )
             })}
+
+            {/* Stock Capital Gains */}
+            {(() => {
+              const stNet = stats.stockPnL
+              const stCount = stats.soldStocks.length
+              const stAvg = stCount > 0 ? stNet / stCount : 0
+              const stWinners = stats.soldStocks.filter(s => (parseFloat(s.stockPnL) || 0) > 0).length
+              const stWinRate = stCount > 0 ? (stWinners / stCount * 100).toFixed(1) : '0'
+              const sharePct = stats.totalPnL !== 0 ? Math.abs(stNet / stats.totalPnL * 100).toFixed(0) : '0'
+              return (
+                <div className="p-4 bg-emerald-500/[0.05] border border-emerald-500/15 rounded-2xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold text-emerald-400">Stock Capital Gains</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">{sharePct}% of total</span>
+                      <span className="text-[11px] text-white/35">{stCount} exit{stCount !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Total P&L</div>
+                      <div className={`text-base font-black font-mono ${stNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stNet)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Win Rate</div>
+                      <div className="text-base font-black font-mono text-white/85">{stWinRate}%</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">Avg Per Exit</div>
+                      <div className="text-base font-black font-mono text-white/85">{fmt$(stAvg)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
       </div>
