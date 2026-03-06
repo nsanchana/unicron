@@ -609,105 +609,102 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex">
 
-      {/* ── Top Navigation (desktop) ─────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+      {/* ── Sidebar (desktop only) ────────────────────────────────────── */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-40">
 
-            {/* Logo */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <img src="/unicron-logo.png" alt="Unicron" className="h-11 w-11 rounded-2xl object-cover border-0 outline-none" />
-              <span className="text-base font-semibold text-white tracking-tight">Unicron</span>
+        {/* Logo */}
+        <div className="px-4 py-5 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0">
+              <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
             </div>
-
-            {/* Desktop tabs */}
-            <nav className="hidden md:flex items-center gap-1 flex-1 overflow-x-auto">
-              {tabs.map(tab => {
-                const Icon = tab.icon
-                const isActive = activeTab === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      isActive
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </nav>
-
-            {/* Right actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-
-              {/* Cloud sync status */}
-              <div
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all"
-                title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}
-                style={{
-                  background: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.08)' :
-                              cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.05)',
-                  borderColor: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.2)' :
-                               cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.08)',
-                  color: cloudSyncStatus === 'synced' ? '#34d399' :
-                         cloudSyncStatus === 'syncing' ? '#fbbf24' : 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {cloudSyncStatus === 'syncing' ? (
-                  <RefreshCw className="h-3 w-3 animate-spin" />
-                ) : cloudSyncStatus === 'synced' ? (
-                  <Cloud className="h-3 w-3" />
-                ) : (
-                  <CloudOff className="h-3 w-3" />
-                )}
-                <span className="hidden lg:inline">
-                  {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
-                </span>
-              </div>
-
-              {/* Market open badge */}
-              {isUSTradingHours() && (
-                <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs font-medium text-emerald-400">
-                  <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                  Live
-                </div>
-              )}
-
-              {/* Refresh prices */}
-              <button
-                onClick={() => handleGlobalPriceUpdate()}
-                disabled={refreshingPrices}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] rounded-full text-xs font-medium text-white/60 hover:text-white transition-all disabled:opacity-50"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${refreshingPrices ? 'animate-spin' : ''}`} />
-                <span className="hidden lg:inline">{refreshingPrices ? 'Updating…' : 'Prices'}</span>
-              </button>
-
-              {/* User + logout */}
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:block text-xs font-semibold text-blue-400">{user.username}</span>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 bg-white/[0.06] hover:bg-rose-500/20 border border-white/[0.08] hover:border-rose-500/20 text-white/50 hover:text-rose-400 rounded-xl transition-all"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
+            <div>
+              <div className="text-base font-bold text-white leading-none tracking-tight">Unicron</div>
+              <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Options Tracker</div>
             </div>
           </div>
         </div>
-      </header>
+
+        {/* Nav items */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {tabs.map(tab => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.05] border border-transparent'
+                }`}
+              >
+                <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-white/40'}`} />
+                {tab.label}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Sidebar footer — sync, market status, refresh, user */}
+        <div className="px-3 py-4 border-t border-white/[0.06] space-y-2">
+
+          {/* Sync status */}
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium"
+            title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}
+            style={{
+              background: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.06)' :
+                          cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.03)',
+              borderColor: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.2)' :
+                           cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.06)',
+              color: cloudSyncStatus === 'synced' ? '#34d399' :
+                     cloudSyncStatus === 'syncing' ? '#fbbf24' : 'rgba(255,255,255,0.3)',
+            }}
+          >
+            {cloudSyncStatus === 'syncing' ? <RefreshCw className="h-3 w-3 animate-spin" /> :
+             cloudSyncStatus === 'synced'  ? <Cloud className="h-3 w-3" /> :
+                                             <CloudOff className="h-3 w-3" />}
+            {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
+            {isUSTradingHours() && (
+              <span className="ml-auto flex items-center gap-1 text-emerald-400">
+                <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
+                Live
+              </span>
+            )}
+          </div>
+
+          {/* Refresh prices */}
+          <button
+            onClick={() => handleGlobalPriceUpdate()}
+            disabled={refreshingPrices}
+            className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-xs font-medium text-white/50 hover:text-white transition-all disabled:opacity-40"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshingPrices ? 'animate-spin' : ''}`} />
+            {refreshingPrices ? 'Updating prices…' : 'Refresh Prices'}
+          </button>
+
+          {/* User + logout */}
+          <div className="flex items-center justify-between px-1 pt-1">
+            <span className="text-xs font-semibold text-blue-400">{user.username}</span>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.06] hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-lg transition-all"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+
+        </div>
+      </aside>
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+      <main className="flex-1 md:ml-56 min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
@@ -803,6 +800,7 @@ function App() {
             onExportData={handleExportData}
           />
         )}
+      </div>
       </main>
 
       {/* ── Mobile Bottom Tab Bar ────────────────────────────────────── */}
