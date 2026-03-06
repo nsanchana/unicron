@@ -617,12 +617,12 @@ function App() {
         {/* Logo */}
         <div className="px-4 py-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0">
               <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="text-base font-bold text-white leading-none tracking-tight">Unicron</div>
-              <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Options Tracker</div>
+              <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Stock Trades</div>
             </div>
           </div>
         </div>
