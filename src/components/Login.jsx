@@ -58,7 +58,7 @@ function Login({ onLoginSuccess }) {
         {/* Logo + title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-white/[0.06] border border-white/[0.10] mb-5 animate-float">
-            <img src="/unicron-logo.jpg" alt="Unicron" className="h-11 w-11 object-contain rounded-xl border-0 outline-none" />
+            <img src="/unicron-logo.png" alt="Unicron" className="h-11 w-11 object-cover rounded-xl border-0 outline-none" />
           </div>
           <h1 className="text-2xl font-semibold text-white tracking-tight mb-1">Unicron</h1>
           <p className="text-sm text-white/40 font-medium">Options Intelligence Terminal</p>

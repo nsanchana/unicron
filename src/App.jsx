@@ -618,7 +618,7 @@ function App() {
 
             {/* Logo */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <img src="/unicron-logo.jpg" alt="Unicron" className="h-11 w-11 rounded-2xl object-contain border-0 outline-none" />
+              <img src="/unicron-logo.png" alt="Unicron" className="h-11 w-11 rounded-2xl object-cover border-0 outline-none" />
               <span className="text-base font-semibold text-white tracking-tight">Unicron</span>
             </div>
 
