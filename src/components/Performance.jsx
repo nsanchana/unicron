@@ -185,13 +185,13 @@ export default function Performance({ tradeData = [], stockData = [], settings =
       </header>
 
       {/* ── Year Selector ────────────────────────────────────────────────── */}
-      <div className="flex items-center">
-        <div className="flex bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-2xl gap-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-2xl gap-0.5 w-fit">
         {YEARS.map(yr => (
           <button
             key={yr}
             onClick={() => setSelectedYear(yr)}
-            className={`px-4 py-1.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
               selectedYear === yr
                 ? 'bg-white/20 text-white shadow-lg'
                 : 'text-white/40 hover:text-white/70 hover:bg-white/[0.08]'
@@ -201,7 +201,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
           </button>
         ))}
         </div>
-        <span className="text-[11px] text-white/30 ml-3">
+        <span className="text-[11px] text-white/30">
           {stats.count} closed trade{stats.count !== 1 ? 's' : ''}
           {stats.soldStocks.length > 0 && ` · ${stats.soldStocks.length} stock exit${stats.soldStocks.length !== 1 ? 's' : ''}`}
         </span>
@@ -268,17 +268,19 @@ export default function Performance({ tradeData = [], stockData = [], settings =
 
       {/* ── Income Roadmap ────────────────────────────────────────────────── */}
       <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
-            <Calendar className="h-5 w-5 text-purple-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 flex-shrink-0">
+              <Calendar className="h-5 w-5 text-purple-400" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-white/85 truncate">
+                {selectedYear === 'All Time' ? 'All-Time Year-by-Year Income' : `${selectedYear} Monthly Income`}
+              </h3>
+              <p className="text-[11px] text-white/40 mt-0.5">Options premiums + stock gains</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white/85">
-              {selectedYear === 'All Time' ? 'All-Time Year-by-Year Income' : `${selectedYear} Monthly Income`}
-            </h3>
-            <p className="text-[11px] text-white/40 mt-0.5">Options premiums + stock gains</p>
-          </div>
-          <div className="ml-auto text-right">
+          <div className="sm:text-right">
             <div className={`text-lg font-bold font-mono ${stats.totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
               {fmt$(stats.totalPnL)}
             </div>

@@ -686,7 +686,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     <div className="flex items-center justify-between">
                       <span className="text-white/50 text-sm">Current Price</span>
                       {/* Root symbol or local state fallback */}
-                      <span className="text-3xl font-black text-white/85">
+                      <span className="text-xl sm:text-3xl font-bold text-white/85">
                         {(companyData?.symbol || symbol || 'SYMBOL').toUpperCase()} ${data.metrics.find(m => m.label === 'Current Price')?.value || '0.00'}
                       </span>
                     </div>
@@ -1049,7 +1049,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className={`text-5xl font-semibold font-mono ${companyData.overallRating >= 75 ? 'text-emerald-400' : companyData.overallRating >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  <div className={`text-3xl sm:text-5xl font-semibold font-mono ${companyData.overallRating >= 75 ? 'text-emerald-400' : companyData.overallRating >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
                     {companyData.overallRating}
                   </div>
                   <div className="text-[11px] text-white/30 mt-0.5">Overall Score</div>
