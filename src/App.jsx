@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles, Bookmark, Menu, X } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Menu, X } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
 import StockPortfolio from './components/StockPortfolio'
 import SettingsPanel from './components/SettingsPanel'
 import Login from './components/Login'
-import UnicronAI from './components/UnicronAI'
 import Performance from './components/Performance'
 import StrategySection from './components/StrategySection'
 import Watchlist from './components/Watchlist'
@@ -603,7 +602,6 @@ function App() {
 
   const tabs = [
     { id: 'dashboard',   label: 'Dashboard',   shortLabel: 'Home',     icon: BarChart3  },
-    { id: 'unicron-ai',  label: 'Unicron AI',  shortLabel: 'AI',       icon: Sparkles   },
     { id: 'performance', label: 'Performance', shortLabel: 'Perf',     icon: TrendingUp },
     { id: 'research',    label: 'Research',    shortLabel: 'Research', icon: BarChart3  },
     { id: 'trades',      label: 'Trades',      shortLabel: 'Trades',   icon: TrendingUp },
@@ -616,18 +614,18 @@ function App() {
 
       {/* ── Mobile Top Header ─────────────────────────────────────────── */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#0a0a0f] border-b border-white/[0.06] flex items-center justify-between px-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
-            <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
-          </div>
-          <span className="text-sm font-bold text-white tracking-tight">Unicron</span>
-        </div>
         <button
           onClick={() => setIsMobileMenuOpen(prev => !prev)}
           className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all"
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+            <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-sm font-bold text-white tracking-tight">Unicron</span>
+        </div>
       </header>
 
       {/* ── Mobile Sidebar Overlay ────────────────────────────────────── */}
@@ -764,22 +762,6 @@ function App() {
             stockData={stockData}
             settings={settings}
             chatHistory={chatHistory}
-            onUpdateHistory={(history) => {
-              setChatHistory(history)
-              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-            }}
-          />
-        )}
-        {activeTab === 'unicron-ai' && (
-          <UnicronAI
-            userName={user?.username || 'Trader'}
-            researchData={researchData}
-            tradeData={tradeData}
-            stockData={stockData}
-            settings={settings}
-            strategyNotes={strategyNotes}
-            chatHistory={chatHistory}
-            theme={theme}
             onUpdateHistory={(history) => {
               setChatHistory(history)
               saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
