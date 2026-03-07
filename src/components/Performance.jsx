@@ -178,9 +178,9 @@ export default function Performance({ tradeData = [], stockData = [], settings =
             <div className="p-2.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
               <TrendingUp className="h-6 w-6 text-emerald-400" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Performance</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Performance</h1>
           </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Track your trading performance and P&L analytics.</p>
+          <p className="text-white/40 font-medium text-sm ml-0 sm:ml-[52px]">Track your trading performance and P&L analytics.</p>
         </div>
       </header>
 
@@ -303,7 +303,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
           </div>
         ) : (
           /* Monthly bars */
-          <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1.5">
             {MONTHS.map((m, i) => {
               const isFuture = selectedYear === currentYear && i > currentMonth
               return (
@@ -387,7 +387,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
                       <span className="text-[11px] text-white/35">{d.count} trades</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <div className="text-[11px] text-white/35 font-medium mb-1">Total P&L</div>
                       <div className={`text-base font-bold font-mono ${d.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(d.net)}</div>
@@ -427,7 +427,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
                       <span className="text-[11px] text-white/35">{stCount} exit{stCount !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <div className="text-[11px] text-white/35 font-medium mb-1">Total P&L</div>
                       <div className={`text-base font-bold font-mono ${stNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{fmt$(stNet)}</div>

@@ -903,15 +903,15 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
             <div className="p-2.5 bg-violet-500/10 rounded-2xl border border-violet-500/20">
               <Search className="h-6 w-6 text-violet-400" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Company Research</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Company Research</h1>
           </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Deep-dive analysis and ratings for your watchlist.</p>
+          <p className="text-white/40 font-medium text-sm ml-0 sm:ml-[52px]">Deep-dive analysis and ratings for your watchlist.</p>
         </div>
       </header>
 
       {/* Search Form */}
       <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 shadow-blue-500/5">
-        <form onSubmit={handleSearch} className="flex gap-4">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-white/50 group-focus-within:text-blue-400 transition-colors" />
@@ -920,14 +920,14 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="SEARCH ASSET (E.G. AAPL, TSLA, NVDA)"
-              className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full pl-12 py-4 text-lg font-black tracking-widest placeholder:text-white/50"
+              placeholder="AAPL, TSLA, NVDA..."
+              className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 transition-all w-full pl-12 py-4 text-base font-semibold tracking-wider placeholder:text-white/50"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center space-x-3"
+            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-4 sm:py-0 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 flex-shrink-0"
           >
             {loading ? (
               <RefreshCw className="h-5 w-5" />
@@ -962,7 +962,7 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                 ></div>
               </div>
 
-              <div className="mt-4 grid grid-cols-4 gap-2">
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['Company', 'Financial', 'Technical', 'Events'].map((step, i) => {
                   const isCompleted = loadingProgress > (i * 25);
                   const isActive = loadingProgress > (i * 25) && loadingProgress <= ((i + 1) * 25);
