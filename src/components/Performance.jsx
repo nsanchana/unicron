@@ -171,6 +171,19 @@ export default function Performance({ tradeData = [], stockData = [], settings =
   return (
     <div className="space-y-6">
 
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+              <TrendingUp className="h-6 w-6 text-emerald-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Performance</h1>
+          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Track your trading performance and P&L analytics.</p>
+        </div>
+      </header>
+
       {/* ── Year Selector ────────────────────────────────────────────────── */}
       <div className="flex items-center">
         <div className="flex bg-white/5 backdrop-blur-md border border-white/10 p-1 rounded-2xl gap-0.5">

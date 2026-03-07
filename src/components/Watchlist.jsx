@@ -86,17 +86,18 @@ function Watchlist({ researchData = [] }) {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                            <Bookmark className="h-4 w-4 text-blue-400" />
+
+            {/* Page Header */}
+            <header className="pb-6 border-b border-white/[0.06] space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                                <Bookmark className="h-6 w-6 text-blue-400" />
+                            </div>
+                            <h1 className="text-3xl font-bold tracking-tight text-white">Watchlist</h1>
                         </div>
-                        <div>
-                            <h3 className="text-sm font-semibold text-white/90">Watchlist</h3>
-                            <p className="text-[11px] text-white/40 mt-0.5">Track tickers with live prices and research ratings</p>
-                        </div>
+                        <p className="text-white/40 font-medium text-sm ml-[52px]">Track tickers with live prices and research ratings.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         {lastUpdated && (
@@ -112,7 +113,6 @@ function Watchlist({ researchData = [] }) {
                         </button>
                     </div>
                 </div>
-
                 {/* Add ticker */}
                 <div className="flex gap-2">
                     <input
@@ -131,7 +131,7 @@ function Watchlist({ researchData = [] }) {
                         <Plus className="h-4 w-4" /> Add
                     </button>
                 </div>
-            </div>
+            </header>
 
             {/* Empty state */}
             {watchlist.length === 0 && (

@@ -64,23 +64,23 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
 
-      {/* Page header */}
-      <div className="flex items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-500/15 rounded-2xl border border-blue-500/20">
-            <Settings className="h-5 w-5 text-blue-400" />
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-slate-500/10 rounded-2xl border border-slate-500/20">
+              <Settings className="h-6 w-6 text-slate-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Settings</h1>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">Settings</h2>
-            <p className="text-sm text-white/40 font-medium">Configure portfolio &amp; trading guardrails</p>
-          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Configure your portfolio and trading guardrails.</p>
         </div>
         {saved && (
           <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium">
             <Check className="h-4 w-4" /> Saved
           </div>
         )}
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">

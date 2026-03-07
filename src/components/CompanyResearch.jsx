@@ -895,6 +895,20 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-violet-500/10 rounded-2xl border border-violet-500/20">
+              <Search className="h-6 w-6 text-violet-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Company Research</h1>
+          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Deep-dive analysis and ratings for your watchlist.</p>
+        </div>
+      </header>
+
       {/* Search Form */}
       <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 shadow-blue-500/5">
         <form onSubmit={handleSearch} className="flex gap-4">

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { DollarSign, TrendingUp, TrendingDown, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit, RefreshCw, Briefcase } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Target, Calendar, AlertCircle, CheckCircle, Trash2, Edit, RefreshCw, Briefcase, BarChart3 } from 'lucide-react'
 import {
   startOfWeek, endOfWeek,
   startOfMonth, endOfMonth,
@@ -561,6 +561,20 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
   return (
     <div className="space-y-6">
+
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+              <BarChart3 className="h-6 w-6 text-blue-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Your portfolio overview and key metrics.</p>
+        </div>
+      </header>
+
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 

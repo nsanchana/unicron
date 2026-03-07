@@ -204,6 +204,21 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
     }
 
     return (
+        <div className="space-y-6">
+
+        {/* Page Header */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+            <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-purple-500/10 rounded-2xl border border-purple-500/20">
+                        <Sparkles className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white">Unicron AI</h1>
+                </div>
+                <p className="text-white/40 font-medium text-sm ml-[52px]">Your AI portfolio analyst and trading assistant.</p>
+            </div>
+        </header>
+
         <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[780px] animate-fade-in">
 
             {/* Sidebar */}
@@ -351,6 +366,8 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                     <p className="text-[10px] text-white/20 text-center mt-2">AI responses may contain errors. Verify before acting.</p>
                 </div>
             </div>
+        </div>
+
         </div>
     )
 }

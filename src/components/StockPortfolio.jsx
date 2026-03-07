@@ -153,16 +153,16 @@ function StockPortfolio({ stockData, onUpdate }) {
   return (
     <div className="space-y-5 pb-12">
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-500/15 rounded-2xl border border-blue-500/20">
-            <Briefcase className="h-5 w-5 text-blue-400" />
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-sky-500/10 rounded-2xl border border-sky-500/20">
+              <Briefcase className="h-6 w-6 text-sky-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Stock Portfolio</h1>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">Stocks</h2>
-            <p className="text-[11px] text-white/40 font-medium">Assigned shares &amp; P&amp;L tracking</p>
-          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Assigned shares &amp; P&amp;L tracking.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={handleRefreshPrices} disabled={loading}
@@ -176,7 +176,7 @@ function StockPortfolio({ stockData, onUpdate }) {
             Add Stock
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Summary bar */}
       {stockData.length > 0 && (

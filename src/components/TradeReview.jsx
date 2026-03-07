@@ -809,6 +809,20 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* Page Header */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+              <TrendingUp className="h-6 w-6 text-amber-400" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Trade Log</h1>
+          </div>
+          <p className="text-white/40 font-medium text-sm ml-[52px]">Log, analyze, and review your options trades.</p>
+        </div>
+      </header>
+
       {/* Log Trade Form */}
       <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
 

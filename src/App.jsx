@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles, Bookmark } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Sparkles, Bookmark, Menu, X } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -58,10 +58,12 @@ function App() {
     if (searchParams.has('ticker')) return 'research'
     return localStorage.getItem('active_tab') || 'dashboard'
   })
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
     localStorage.setItem('active_tab', tab)
+    setIsMobileMenuOpen(false)
   }
   const [researchData, setResearchData] = useState([])
   const [tradeData, setTradeData] = useState([])
@@ -600,19 +602,46 @@ function App() {
   }
 
   const tabs = [
-    { id: 'dashboard',  label: 'Dashboard',         shortLabel: 'Home',     icon: BarChart3  },
-    { id: 'performance', label: 'Performance',        shortLabel: 'Perf',     icon: TrendingUp },
-    { id: 'research',   label: 'Research',           shortLabel: 'Research', icon: BarChart3  },
-    { id: 'trades',     label: 'Trades',             shortLabel: 'Trades',   icon: TrendingUp },
-    { id: 'stocks',     label: 'Stocks',             shortLabel: 'Stocks',   icon: Briefcase  },
-    { id: 'settings',   label: 'Settings',           shortLabel: 'Settings', icon: Settings   },
+    { id: 'dashboard',   label: 'Dashboard',   shortLabel: 'Home',     icon: BarChart3  },
+    { id: 'unicron-ai',  label: 'Unicron AI',  shortLabel: 'AI',       icon: Sparkles   },
+    { id: 'performance', label: 'Performance', shortLabel: 'Perf',     icon: TrendingUp },
+    { id: 'research',    label: 'Research',    shortLabel: 'Research', icon: BarChart3  },
+    { id: 'trades',      label: 'Trades',      shortLabel: 'Trades',   icon: TrendingUp },
+    { id: 'stocks',      label: 'Stocks',      shortLabel: 'Stocks',   icon: Briefcase  },
+    { id: 'settings',    label: 'Settings',    shortLabel: 'Settings', icon: Settings   },
   ]
 
   return (
     <div className="min-h-screen bg-black text-white flex">
 
-      {/* ── Sidebar (desktop only) ────────────────────────────────────── */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-40">
+      {/* ── Mobile Top Header ─────────────────────────────────────────── */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#0a0a0f] border-b border-white/[0.06] flex items-center justify-between px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+            <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-sm font-bold text-white tracking-tight">Unicron</span>
+        </div>
+        <button
+          onClick={() => setIsMobileMenuOpen(prev => !prev)}
+          className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all"
+        >
+          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </header>
+
+      {/* ── Mobile Sidebar Overlay ────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar (desktop always visible, mobile slide-in drawer) ──── */}
+      <aside className={`fixed left-0 top-0 h-full w-64 bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'flex translate-x-0' : 'hidden md:flex md:translate-x-0'}
+      `}>
 
         {/* Logo */}
         <div className="px-4 py-5 border-b border-white/[0.06]">
@@ -703,8 +732,8 @@ function App() {
       </aside>
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <main className="flex-1 md:ml-56 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
+      <main className="flex-1 md:ml-64 min-h-screen pt-14 md:pt-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
@@ -803,27 +832,6 @@ function App() {
       </div>
       </main>
 
-      {/* ── Mobile Bottom Tab Bar ────────────────────────────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black/90 backdrop-blur-xl border-t border-white/[0.08]">
-        <div className="flex justify-around items-center px-2 py-1 safe-area-inset-bottom">
-          {tabs.map(tab => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] py-1.5 px-2 rounded-xl transition-all ${
-                  isActive ? 'text-blue-400' : 'text-white/30 hover:text-white/60'
-                }`}
-              >
-                <Icon className={`h-5 w-5 transition-all ${isActive ? 'scale-110' : ''}`} />
-                <span className="text-[10px] font-medium">{tab.shortLabel}</span>
-              </button>
-            )
-          })}
-        </div>
-      </nav>
 
     </div>
   )
