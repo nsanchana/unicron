@@ -109,22 +109,67 @@ async function fetchYahooBatch(symbols) {
   return map
 }
 
-// ─── Yahoo Earnings Date ──────────────────────────────────────────────────────
-async function fetchEarningsDate(symbol) {
+// ─── Nasdaq Earnings Calendar ─────────────────────────────────────────────────
+// Cache fetched calendar dates in memory (per cold start)
+const nasdaqCalendarCache = {}
+
+async function fetchNasdaqCalendar(dateStr) {
+  if (nasdaqCalendarCache[dateStr]) return nasdaqCalendarCache[dateStr]
   try {
-    const path = `/v10/finance/quoteSummary/${symbol}?modules=calendarEvents`
+    const path = `/api/calendar/earnings?date=${dateStr}`
     const { status, body } = await httpsGet(
-      'query1.finance.yahoo.com', path,
-      { 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com' }
+      "api.nasdaq.com", path,
+      {
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://www.nasdaq.com",
+        "Referer": "https://www.nasdaq.com/",
+      }
     )
-    if (status !== 200) return null
+    if (status !== 200) return {}
     const json = JSON.parse(body)
-    const dates = json?.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate
-    if (!dates || dates.length === 0) return null
-    const now = Math.floor(Date.now() / 1000)
-    const future = dates.filter(d => d.raw > now)
-    return future.length > 0 ? future[0].raw : null
-  } catch { return null }
+    const rows = json?.data?.rows || []
+    // Build map of symbol -> unix timestamp for this date
+    const ts = Math.floor(new Date(dateStr + "T20:00:00Z").getTime() / 1000) // ~4pm ET as unix
+    const map = {}
+    rows.forEach(r => { if (r.symbol) map[r.symbol.toUpperCase()] = ts })
+    nasdaqCalendarCache[dateStr] = map
+    return map
+  } catch { return {} }
+}
+
+async function fetchEarningsDatesForSymbols(symbols) {
+  const result = {}
+  symbols.forEach(s => { result[s] = null })
+
+  const today = new Date()
+  // Generate next 45 days
+  const dates = []
+  for (let i = 0; i <= 45; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    // Skip weekends
+    if (d.getDay() === 0 || d.getDay() === 6) continue
+    dates.push(d.toISOString().slice(0, 10))
+  }
+
+  // Fetch in batches of 5 days at a time
+  const remaining = new Set(symbols)
+  for (let i = 0; i < dates.length; i += 5) {
+    if (remaining.size === 0) break
+    const batch = dates.slice(i, i + 5)
+    const maps = await Promise.all(batch.map(d => fetchNasdaqCalendar(d)))
+    batch.forEach((dateStr, idx) => {
+      const map = maps[idx]
+      for (const sym of [...remaining]) {
+        if (map[sym]) {
+          result[sym] = map[sym]
+          remaining.delete(sym)
+        }
+      }
+    })
+  }
+
+  return result
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -178,14 +223,10 @@ export default async function handler(req, res) {
     }
   }
 
-  // Optional: fetch earnings dates in parallel
+  // Optional: fetch earnings dates via Nasdaq calendar
   let earnings = undefined
   if (includeEarnings) {
-    const earningsResults = await Promise.allSettled(unique.map(s => fetchEarningsDate(s)))
-    earnings = {}
-    unique.forEach((s, i) => {
-      earnings[s] = earningsResults[i].status === 'fulfilled' ? earningsResults[i].value : null
-    })
+    earnings = await fetchEarningsDatesForSymbols(unique)
   }
 
   res.setHeader('Cache-Control', 'no-store')
