@@ -5,6 +5,8 @@ import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, T
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
+import EarningsBadge from "./EarningsBadge"
+import { fetchEarningsDates } from "../services/earningsService"
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -31,6 +33,15 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   const [historyFilter, setHistoryFilter] = useState(() => localStorage.getItem('trades_filter') || 'executed')
   const [sortBy, setSortBy] = useState(() => localStorage.getItem('trades_sort') || 'variance')
   const [editingId, setEditingId] = useState(null)
+  const [earningsDates, setEarningsDates] = useState({})
+
+  // After setting prices, also fetch earnings
+  useEffect(() => {
+    const activeTrades = tradeData.filter(t => !t.closed)
+    if (!activeTrades || activeTrades.length === 0) return
+    const symbols = [...new Set(activeTrades.map(t => t.symbol).filter(Boolean))]
+    fetchEarningsDates(symbols).then(dates => setEarningsDates(dates))
+  }, [tradeData])
 
   // Feature: per-trade notes
   const [notes, setNotes] = useState('')
@@ -1558,6 +1569,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                           <div>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-semibold text-base text-white/90">{trade.symbol}</span>
+                              <EarningsBadge earningsTs={earningsDates[trade.symbol?.toUpperCase()]} compact />
                               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/40">
                                 {trade.tradeType === 'cashSecuredPut' ? 'CSP' : 'Covered Call'}
                               </span>

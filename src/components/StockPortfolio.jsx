@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X } from 'lucide-react'
 import CompanyLogo from './CompanyLogo'
 import { fetchPrices } from '../services/priceService'
+import EarningsBadge from "./EarningsBadge"
+import { fetchEarningsDates } from "../services/earningsService"
 
 const STATUS_OPTS = ['All', 'Active', 'Closed']
 const PNL_OPTS    = ['All', 'Winners', 'Losers']
@@ -34,6 +36,17 @@ function StockPortfolio({ stockData, onUpdate }) {
   const [pnlFilter, setPnlFilter]       = useState('All')
   const [yearFilter, setYearFilter]     = useState('All')
   const [symbolSearch, setSymbolSearch] = useState('')
+  const [earningsDates, setEarningsDates] = useState({})
+
+  useEffect(() => {
+    const activeSymbols = stockData
+      .filter(s => !s.soldPrice)
+      .map(s => s.symbol)
+      .filter(Boolean)
+    if (activeSymbols.length === 0) return
+    const unique = [...new Set(activeSymbols.map(s => s.toUpperCase()))]
+    fetchEarningsDates(unique).then(dates => setEarningsDates(dates))
+  }, [stockData])
 
   const handleAddRow = () => {
     const newStock = {
@@ -290,6 +303,7 @@ function StockPortfolio({ stockData, onUpdate }) {
                               onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())}
                               placeholder="SYM"
                               className="bg-transparent text-base font-semibold text-white/90 focus:outline-none w-16 uppercase placeholder:text-white/25" />
+                            <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} compact />
                             {closed
                               ? <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-1.5 py-0.5 rounded-full"><CheckCircle className="h-2.5 w-2.5" />Closed</span>
                               : <span className="flex items-center gap-1 text-[9px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded-full"><span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse inline-block" />Active</span>
@@ -419,6 +433,7 @@ function StockPortfolio({ stockData, onUpdate }) {
                                   onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())}
                                   placeholder="SYM"
                                   className="bg-transparent text-sm font-semibold text-white/90 focus:outline-none w-14 uppercase placeholder:text-white/25" />
+                                <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} compact />
                                 {closed
                                   ? <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-1.5 py-0.5 rounded-full"><CheckCircle className="h-2.5 w-2.5" />Closed</span>
                                   : <span className="flex items-center gap-1 text-[9px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded-full"><span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse inline-block" />Active</span>
