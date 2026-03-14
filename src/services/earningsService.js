@@ -20,10 +20,10 @@ export async function fetchEarningsDates(symbols) {
 
   if (missing.length > 0) {
     try {
-      const res = await fetch("/api/earnings", {
+      const res = await fetch("/api/prices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symbols: missing }),
+        body: JSON.stringify({ symbols: missing, includeEarnings: true }),
       })
       if (res.ok) {
         const data = await res.json()

@@ -109,6 +109,24 @@ async function fetchYahooBatch(symbols) {
   return map
 }
 
+// ─── Yahoo Earnings Date ──────────────────────────────────────────────────────
+async function fetchEarningsDate(symbol) {
+  try {
+    const path = `/v10/finance/quoteSummary/${symbol}?modules=calendarEvents`
+    const { status, body } = await httpsGet(
+      'query1.finance.yahoo.com', path,
+      { 'Accept': 'application/json', 'Referer': 'https://finance.yahoo.com' }
+    )
+    if (status !== 200) return null
+    const json = JSON.parse(body)
+    const dates = json?.quoteSummary?.result?.[0]?.calendarEvents?.earnings?.earningsDate
+    if (!dates || dates.length === 0) return null
+    const now = Math.floor(Date.now() / 1000)
+    const future = dates.filter(d => d.raw > now)
+    return future.length > 0 ? future[0].raw : null
+  } catch { return null }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -117,8 +135,14 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   let symbols = []
-  if (req.method === 'POST') symbols = req.body?.symbols || []
-  else symbols = (req.query?.symbols || '').split(',').filter(Boolean)
+  let includeEarnings = false
+  if (req.method === 'POST') {
+    symbols = req.body?.symbols || []
+    includeEarnings = req.body?.includeEarnings === true
+  } else {
+    symbols = (req.query?.symbols || '').split(',').filter(Boolean)
+    includeEarnings = req.query?.includeEarnings === 'true'
+  }
 
   if (!symbols.length) return res.status(400).json({ error: 'symbols required' })
 
@@ -154,11 +178,22 @@ export default async function handler(req, res) {
     }
   }
 
+  // Optional: fetch earnings dates in parallel
+  let earnings = undefined
+  if (includeEarnings) {
+    const earningsResults = await Promise.allSettled(unique.map(s => fetchEarningsDate(s)))
+    earnings = {}
+    unique.forEach((s, i) => {
+      earnings[s] = earningsResults[i].status === 'fulfilled' ? earningsResults[i].value : null
+    })
+  }
+
   res.setHeader('Cache-Control', 'no-store')
   return res.status(200).json({
     prices,
     sources,
     googleFailed,
+    ...(earnings !== undefined ? { earnings } : {}),
     timestamp: Date.now(),
   })
 }
