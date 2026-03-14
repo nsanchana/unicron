@@ -1,3 +1,4 @@
+import { authHeaders } from '../utils/auth.js'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Send, Mic, MicOff, Sparkles, Trash2, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Zap, AlignLeft } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -194,7 +195,7 @@ export default function PortfolioChat({ tradeData = [], stockData = [], settings
     try {
       const resp = await fetch('/api/unicron-ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           message: msg,
           userContext: context,

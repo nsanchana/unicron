@@ -10,6 +10,7 @@ import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import { scrapeCompanyData } from '../services/webScraping'
 import CompanyLogo from './CompanyLogo'
 import StrategySection from './StrategySection'
+import DailyQuote from './DailyQuote'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -574,6 +575,9 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           <p className="text-white/40 font-medium text-sm ml-[52px]">Your portfolio overview and key metrics.</p>
         </div>
       </header>
+
+      {/* Daily Investor Quote */}
+      <DailyQuote />
 
       {/* Portfolio Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

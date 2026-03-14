@@ -41,6 +41,7 @@ function Login({ onLoginSuccess }) {
         throw new Error(errorMsg + debugInfo)
       }
 
+      if (data.token) localStorage.setItem('unicron_token', data.token)
       localStorage.setItem('unicron_user', JSON.stringify(data.user))
       onLoginSuccess(data.user)
     } catch (err) {

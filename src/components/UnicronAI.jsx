@@ -1,3 +1,4 @@
+import { authHeaders } from '../utils/auth.js'
 import { useState, useEffect, useRef } from 'react'
 import { Send, Mic, Sparkles, MessageSquare, Trash2, ChevronRight, ChevronLeft, StopCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -114,7 +115,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
         try {
             const response = await fetch('/api/unicron-ai', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders(),
                 body: JSON.stringify({ message: input, userContext, history: messages.map(m => ({ role: m.role, content: m.content })) })
             })
             const data = await response.json()
@@ -176,7 +177,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                 }
                 try {
                     const response = await fetch('/api/unicron-ai', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        method: 'POST', headers: authHeaders(),
                         body: JSON.stringify({ message: prompt, userContext, history: messages.map(m => ({ role: m.role, content: m.content })) })
                     })
                     const data = await response.json()

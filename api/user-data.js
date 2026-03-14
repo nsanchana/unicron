@@ -1,92 +1,64 @@
-import { kv } from '@vercel/kv'
+import { kv }                    from '@vercel/kv'
+import { requireAuth, setCors }  from './_auth.js'
 
 export default async function handler(req, res) {
-  // Handle CORS
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  setCors(req, res)
+  if (req.method === 'OPTIONS') return res.status(200).end()
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+  // ── Auth gate ─────────────────────────────────────────────────────────────
+  const authUsername = requireAuth(req, res)
+  if (!authUsername) return // requireAuth already sent 401
 
-  // Get user ID from request (from auth)
+  // userId must match the authenticated user — prevents accessing other users' data
   const { userId } = req.query
-
-  if (!userId) {
-    return res.status(400).json({ error: 'User ID is required' })
-  }
+  if (!userId) return res.status(400).json({ error: 'User ID is required' })
+  if (userId !== authUsername) return res.status(403).json({ error: 'Forbidden' })
 
   const userDataKey = `user:${userId}:data`
 
   try {
-    // GET - Load user data from cloud
     if (req.method === 'GET') {
       const userData = await kv.get(userDataKey)
-
       if (!userData) {
-        // Return empty data structure if no data exists
         return res.status(200).json({
           researchData: [],
-          tradeData: [],
-          stockData: [],
+          tradeData:    [],
+          stockData:    [],
           settings: {
-            portfolioSize: 71000,
-            weeklyPremiumTarget: { min: 340, max: 410 },
-            maxTradePercentage: 50
+            portfolioSize:         71000,
+            weeklyPremiumTarget:   { min: 340, max: 410 },
+            maxTradePercentage:    50
           },
-          lastSynced: null,
+          lastSynced:  null,
           chatHistory: []
         })
       }
-
       return res.status(200).json(userData)
     }
 
-    // POST/PUT - Save user data to cloud
     if (req.method === 'POST' || req.method === 'PUT') {
       const { researchData, tradeData, settings, stockData, strategyNotes, chatHistory } = req.body
-
       const userData = {
-        researchData: researchData || [],
-        tradeData: tradeData || [],
-        stockData: stockData || [],
-        settings: settings || {
-          portfolioSize: 71000,
-          weeklyPremiumTarget: { min: 340, max: 410 },
-          maxTradePercentage: 50
-        },
+        researchData:  researchData  || [],
+        tradeData:     tradeData     || [],
+        stockData:     stockData     || [],
+        settings:      settings      || { portfolioSize: 71000, weeklyPremiumTarget: { min: 340, max: 410 }, maxTradePercentage: 50 },
         strategyNotes: strategyNotes || '',
-        chatHistory: chatHistory || [],
-        lastSynced: new Date().toISOString()
+        chatHistory:   chatHistory   || [],
+        lastSynced:    new Date().toISOString()
       }
-
-      // Store in Vercel KV (data persists indefinitely)
       await kv.set(userDataKey, userData)
-
-      return res.status(200).json({
-        success: true,
-        message: 'Data saved to cloud',
-        lastSynced: userData.lastSynced
-      })
+      return res.status(200).json({ success: true, message: 'Data saved', lastSynced: userData.lastSynced })
     }
 
-    // DELETE - Clear user data from cloud
     if (req.method === 'DELETE') {
       await kv.del(userDataKey)
-      return res.status(200).json({
-        success: true,
-        message: 'Data cleared from cloud'
-      })
+      return res.status(200).json({ success: true, message: 'Data cleared' })
     }
 
     return res.status(405).json({ error: 'Method not allowed' })
   } catch (error) {
     console.error('User data error:', error)
-    return res.status(500).json({
-      error: 'Failed to process user data',
-      details: error.message
-    })
+    return res.status(500).json({ error: 'Failed to process user data', details: error.message })
   }
 }

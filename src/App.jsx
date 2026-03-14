@@ -262,7 +262,7 @@ function App() {
 
         // Final sync attempt - Use existing saveToCloud helper
         if (user) {
-          await saveToCloud(user.id || user.username, {
+          await saveToCloud(user.username, {
             researchData,
             tradeData: updatedTradeData,
             settings,
@@ -294,7 +294,7 @@ function App() {
     setSettings(newSettings)
     saveToLocalStorage(STORAGE_KEYS.PORTFOLIO_SETTINGS, newSettings)
     if (user) {
-      debouncedSaveToCloud(user.id || user.username, {
+      debouncedSaveToCloud(user.username, {
         researchData,
         tradeData,
         settings: newSettings,
@@ -333,14 +333,26 @@ function App() {
   }, [])
 
   // Load data from cloud
+  const forceRelogin = useCallback(() => {
+    localStorage.removeItem('unicron_user')
+    localStorage.removeItem('unicron_token')
+    setUser(null)
+  }, [])
+
   const loadFromCloud = useCallback(async (userId) => {
     try {
       setCloudSyncStatus('syncing')
+      const token = localStorage.getItem('unicron_token') || ''
       const response = await fetch(`/api/user-data?userId=${userId}`, {
         method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` },
         credentials: 'include'
       })
 
+      if (response.status === 401) {
+        forceRelogin()
+        return false
+      }
       if (!response.ok) throw new Error('Failed to load from cloud')
 
       const cloudData = await response.json()
@@ -382,19 +394,24 @@ function App() {
     } finally {
       setInitialCloudLoadComplete(true)
     }
-  }, [])
+  }, [forceRelogin])
 
   // Save data to cloud (debounced)
   const saveToCloud = useCallback(async (userId, data) => {
     try {
       setCloudSyncStatus('syncing')
+      const token = localStorage.getItem('unicron_token') || ''
       const response = await fetch(`/api/user-data?userId=${userId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         credentials: 'include',
         body: JSON.stringify(data)
       })
 
+      if (response.status === 401) {
+        forceRelogin()
+        return false
+      }
       if (!response.ok) throw new Error('Failed to save to cloud')
 
       const result = await response.json()
@@ -406,7 +423,7 @@ function App() {
       setCloudSyncStatus('error')
       return false
     }
-  }, [])
+  }, [forceRelogin])
 
   // Debounced auto-save to cloud
   const debouncedSaveToCloud = useCallback((userId, data) => {
@@ -458,7 +475,7 @@ function App() {
     if (savedChat) setChatHistory(migrateChatHistory(savedChat))
 
     // Then sync from cloud (will override local data if cloud has data)
-    loadFromCloud(user.id || user.username)
+    loadFromCloud(user.username)
 
     // Auto-refresh logic
     const refreshInterval = setInterval(() => {
@@ -486,7 +503,7 @@ function App() {
       (strategyNotes && strategyNotes.trim().length > 0)
 
     if (hasData) {
-      debouncedSaveToCloud(user.id || user.username, {
+      debouncedSaveToCloud(user.username, {
         researchData,
         tradeData,
         settings,
@@ -520,7 +537,7 @@ function App() {
 
       // Force a save to cloud if user is logged in
       if (user) {
-        debouncedSaveToCloud(user.id || user.username, {
+        debouncedSaveToCloud(user.username, {
           researchData: importedData.researchData || researchData,
           tradeData: importedData.tradeData || tradeData,
           stockData: importedData.stockData || stockData,
@@ -577,6 +594,7 @@ function App() {
     // Clear user and localStorage
     setUser(null)
     localStorage.removeItem('unicron_user')
+    localStorage.removeItem('unicron_token')
     // Clear local data
     setResearchData([])
     setTradeData([])
@@ -748,7 +766,7 @@ function App() {
               setStrategyNotes(notes)
               saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, notes)
               if (user) {
-                saveToCloud(user.id || user.username, {
+                saveToCloud(user.username, {
                   researchData, tradeData, settings, stockData,
                   strategyNotes: notes, chatHistory
                 })

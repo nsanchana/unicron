@@ -1,3 +1,4 @@
+import { authHeaders } from '../utils/auth.js'
 import { useState, useRef, useEffect } from 'react'
 import { fetchPrice, fetchPrices } from '../services/priceService'
 import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw, Sparkles } from 'lucide-react'
@@ -79,7 +80,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
     try {
       const response = await fetch('/api/trade-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           message: userMessage.content,
