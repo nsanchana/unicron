@@ -73,6 +73,18 @@ body {
 }
 .animate-float { animation: float 3.5s ease-in-out infinite; }
 
+/* ─── iOS Safari input zoom fix ─────────────────────────────────────── */
+/* iOS Safari auto-zooms (and scrolls to top) when focusing any input    */
+/* with font-size < 16px. The @supports block targets iOS Safari only.   */
+/* Setting 16px only on :focus means desktop layout is untouched.        */
+@supports (-webkit-touch-callout: none) {
+  input:focus,
+  textarea:focus,
+  select:focus {
+    font-size: 16px !important;
+  }
+}
+
 /* ─── Recharts overrides ─────────────────────────────────────────────── */
 .recharts-tooltip-wrapper .recharts-default-tooltip {
   background: rgba(0,0,0,0.85) !important;
