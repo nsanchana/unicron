@@ -81,14 +81,13 @@ Research is the most problematic screen. Monolithic layout with search, results,
   - Opens a bottom sheet (not inline accordion)
   - Apple Messages-style chat bubbles
   - Always accessible while reading the report
-- **Action bar**: Save Report, Share (future), Overflow menu (···)
+- **Action bar**: Save Report, Overflow menu (···)
 
 #### Files Affected
 - `src/components/CompanyResearch.jsx` — Full rewrite (split into sub-components)
 - New: `src/components/ResearchCard.jsx` — Extracted card component
 - New: `src/components/ResearchReport.jsx` — Report detail view
-- New: `src/components/SegmentedControl.jsx` — Reusable segmented control
-- New: `src/components/ChatSheet.jsx` — Bottom sheet chat component
+- New: `src/components/ChatSheet.jsx` — Bottom sheet chat component (uses `ui/BottomSheet`)
 - New: `src/components/SwipeableRow.jsx` — Swipeable list item with actions
 
 ---
