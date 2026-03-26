@@ -47,7 +47,7 @@ const StrategySection = ({ notes, onSave, theme }) => {
     const handleBlur  = () => { setIsEditing(false) }
 
     return (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden mt-6 animate-slide-in-up">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden mt-6 animate-slide-in-up">
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-white/[0.06] gap-3">

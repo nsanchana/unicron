@@ -17,7 +17,7 @@ export default function DailyQuote() {
   }
 
   return (
-    <div className="relative bg-gradient-to-br from-violet-500/[0.07] to-indigo-500/[0.04] backdrop-blur-2xl border border-violet-500/[0.15] rounded-[20px] p-5 overflow-hidden">
+    <div className="relative bg-gradient-to-br from-violet-500/[0.07] to-indigo-500/[0.04] backdrop-blur-2xl border border-violet-500/[0.15] rounded-2xl p-5 overflow-hidden">
       {/* Subtle glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/[0.06] rounded-full blur-2xl pointer-events-none" />
 

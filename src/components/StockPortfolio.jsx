@@ -255,7 +255,7 @@ function StockPortfolio({ stockData, onUpdate }) {
       {/* Empty state */}
       {stockData.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="w-14 h-14 rounded-[18px] bg-blue-500/10 border border-blue-500/15 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center">
             <Briefcase className="h-7 w-7 text-blue-400/50" />
           </div>
           <div className="text-center space-y-1">

@@ -25,14 +25,14 @@ const formatDateDDMMYYYY = (dateString) => {
 const getRecommendationColor = (action) => {
   if (!action) return 'bg-gray-600 text-gray-300'
   const lower = action.toLowerCase()
-  if (lower.includes('strong') || lower.includes('quick') || lower.includes('execute')) return 'bg-green-600 text-green-100'
+  if (lower.includes('strong') || lower.includes('quick') || lower.includes('execute')) return 'bg-emerald-600 text-emerald-100'
   if (lower.includes('consider') || lower.includes('monitor')) return 'bg-yellow-600 text-yellow-100'
   return 'bg-red-600 text-red-100'
 }
 
 const getVarianceColor = (variance) => {
   const val = parseFloat(variance)
-  if (val >= 10) return 'text-green-400'
+  if (val >= 10) return 'text-emerald-400'
   if (val >= 5) return 'text-yellow-400'
   return 'text-red-400'
 }
@@ -558,7 +558,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
   const getAllocationColor = (percentage) => {
     if (percentage > settings.maxTradePercentage) return 'text-red-400'
     if (percentage > settings.maxTradePercentage * 0.8) return 'text-yellow-400'
-    return 'text-green-400'
+    return 'text-emerald-400'
   }
 
   return (

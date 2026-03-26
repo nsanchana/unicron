@@ -652,7 +652,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   const getRiskColor = (level) => {
     switch (level) {
-      case 'Low': return 'text-green-400'
+      case 'Low': return 'text-emerald-400'
       case 'Medium': return 'text-yellow-400'
       case 'High': return 'text-red-400'
       default: return 'text-gray-400'
@@ -661,7 +661,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   const getRiskIcon = (level) => {
     switch (level) {
-      case 'Low': return <CheckCircle className="h-5 w-5 text-green-400" />
+      case 'Low': return <CheckCircle className="h-5 w-5 text-emerald-400" />
       case 'Medium': return <AlertTriangle className="h-5 w-5 text-yellow-400" />
       case 'High': return <AlertTriangle className="h-5 w-5 text-red-400" />
       default: return <AlertTriangle className="h-5 w-5 text-gray-400" />
@@ -811,8 +811,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
   const getRecommendationColor = (action) => {
     switch (action) {
-      case 'Strong Buy': return 'text-green-400 bg-emerald-500/15'
-      case 'Buy': return 'text-green-400 bg-emerald-500/15'
+      case 'Strong Buy': return 'text-emerald-400 bg-emerald-500/15'
+      case 'Buy': return 'text-emerald-400 bg-emerald-500/15'
       case 'Hold': return 'text-yellow-400 bg-amber-500/15'
       case 'Sell': return 'text-red-400 bg-rose-500/15'
       case 'Strong Sell': return 'text-red-400 bg-rose-500/15'
@@ -1149,7 +1149,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                   </div>
                 )}
                 {analysis.status === 'executed' && (
-                  <div className="flex items-center space-x-2 text-green-400">
+                  <div className="flex items-center space-x-2 text-emerald-400">
                     <CheckCircle className="h-5 w-5" />
                     <span className="text-sm font-medium">Executed Trade</span>
                   </div>
@@ -1194,9 +1194,9 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
               </div>
 
               <div className="flex items-center space-x-3">
-                <DollarSign className="h-5 w-5 text-green-400" />
+                <DollarSign className="h-5 w-5 text-emerald-400" />
                 <div>
-                  <div className="font-semibold text-green-400">
+                  <div className="font-semibold text-emerald-400">
                     ${(analysis.riskAssessment.maxLoss || 0).toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-400">Maximum Loss</div>
@@ -1273,8 +1273,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
 
                     // Determine card color based on title
                     let cardColor = 'bg-gray-700'
-                    if (title && title.includes('STRONG BUY')) cardColor = 'bg-emerald-500/15 border-l-4 border-green-500'
-                    else if (title && title.includes('BUY')) cardColor = 'bg-emerald-500/15/50 border-l-4 border-green-600'
+                    if (title && title.includes('STRONG BUY')) cardColor = 'bg-emerald-500/15 border-l-4 border-emerald-500'
+                    else if (title && title.includes('BUY')) cardColor = 'bg-emerald-500/15/50 border-l-4 border-emerald-600'
                     else if (title && title.includes('AVOID')) cardColor = 'bg-rose-500/15/50 border-l-4 border-red-600'
                     else if (title && title.includes('HOLD')) cardColor = 'bg-amber-500/15/50 border-l-4 border-yellow-600'
 

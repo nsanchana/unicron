@@ -154,7 +154,7 @@ function Watchlist({ researchData = [] }) {
                         const age       = research ? getResearchAge(research.date) : null
 
                         return (
-                            <div key={item.id} className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 group hover:border-white/[0.12] transition-all">
+                            <div key={item.id} className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 group hover:border-white/[0.12] transition-all">
                                 {/* Card header */}
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-3">
