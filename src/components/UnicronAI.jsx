@@ -220,7 +220,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
             </div>
         </header>
 
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden flex flex-col md:flex-row h-[780px] animate-fade-in">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden flex flex-col md:flex-row h-[780px] animate-fade-in">
 
             {/* Sidebar */}
             <div className={`${isSidebarOpen ? 'md:w-60' : 'md:w-0'} hidden md:flex border-r border-white/[0.06] transition-all duration-300 overflow-hidden flex-col flex-shrink-0`}>
@@ -314,8 +314,8 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[82%] px-4 py-3 text-sm leading-relaxed ${
                                 msg.role === 'user'
-                                    ? 'bg-blue-500/20 text-white rounded-[18px] rounded-br-sm'
-                                    : 'bg-white/[0.06] text-white/90 rounded-[18px] rounded-bl-sm'
+                                    ? 'bg-blue-500/20 text-white rounded-2xl rounded-br-sm'
+                                    : 'bg-white/[0.06] text-white/90 rounded-2xl rounded-bl-sm'
                             }`}>
                                 <div className={`text-[10px] font-semibold mb-1.5 ${msg.role === 'user' ? 'text-blue-400 text-right' : 'text-purple-400'}`}>
                                     {msg.role === 'user' ? 'You' : 'Unicron AI'}
@@ -328,7 +328,7 @@ const UnicronAI = ({ userName, researchData, tradeData, stockData, settings, str
                     ))}
                     {isLoading && (
                         <div className="flex justify-start">
-                            <div className="bg-white/[0.06] rounded-[18px] rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+                            <div className="bg-white/[0.06] rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
                                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                                 <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />

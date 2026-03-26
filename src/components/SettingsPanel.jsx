@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Settings, Save, Target, AlertTriangle, Sun, Moon, Download, Check, Wallet, PlusCircle, Trash2, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
+import LargeTitle from './ui/LargeTitle'
+import { useToast } from './ui/Toast'
 
 function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImportData, onExportData }) {
+  const toast = useToast()
   const [formData, setFormData] = useState(settings)
   const [saved, setSaved] = useState(false)
 
@@ -64,29 +67,18 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
 
-      {/* Page Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-500/10 rounded-2xl border border-slate-500/20">
-              <Settings className="h-6 w-6 text-slate-400" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Settings</h1>
-          </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Configure your portfolio and trading guardrails.</p>
+      <LargeTitle title="Settings" subtitle="Configure your portfolio and trading guardrails." />
+      {saved && (
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium w-fit">
+          <Check className="h-4 w-4" /> Saved
         </div>
-        {saved && (
-          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-medium">
-            <Check className="h-4 w-4" /> Saved
-          </div>
-        )}
-      </header>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
 
           {/* Portfolio & Risk */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6 space-y-6">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 space-y-6">
             <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.06]">
               <Target className="h-4 w-4 text-blue-400" />
               <h3 className="text-base font-semibold text-white">Portfolio &amp; Risk Control</h3>
@@ -158,7 +150,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
           </div>
 
           {/* Funding History */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6 space-y-5">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 space-y-5">
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-2.5">
                 <Wallet className="h-4 w-4 text-emerald-400" />
@@ -239,7 +231,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
           </div>
 
           {/* Theme */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-6">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6">
             <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.06] mb-5">
               <Sun className="h-4 w-4 text-amber-400" />
               <h3 className="text-base font-semibold text-white">Interface Theme</h3>
@@ -281,7 +273,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
 
           {/* Validation errors */}
           {errors.length > 0 && (
-            <div className="bg-rose-500/10 border border-rose-500/20 rounded-[16px] p-4 animate-shake">
+            <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 animate-shake">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-rose-400" />
                 <h4 className="text-sm font-semibold text-rose-400">Validation Errors</h4>
@@ -295,7 +287,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
           )}
 
           {/* Annual target */}
-          <div className="bg-white/[0.05] border border-white/[0.08] rounded-[16px] p-4 space-y-3">
+          <div className="bg-white/[0.05] border border-white/[0.08] rounded-2xl p-4 space-y-3">
             <h4 className="text-xs font-semibold text-white/40">Est. Annual Target</h4>
             <p className="text-lg font-bold text-white font-mono">
               ${(formData.weeklyPremiumTarget.min * 52).toLocaleString()} – ${(formData.weeklyPremiumTarget.max * 52).toLocaleString()}
@@ -315,7 +307,7 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
           </div>
 
           {/* Data backup */}
-          <div className="bg-white/[0.05] border border-white/[0.08] rounded-[16px] p-4 space-y-3">
+          <div className="bg-white/[0.05] border border-white/[0.08] rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2 pb-3 border-b border-white/[0.06]">
               <Download className="h-4 w-4 text-purple-400" />
               <h4 className="text-xs font-semibold text-white/60">Data Backup</h4>
@@ -337,8 +329,8 @@ function SettingsPanel({ settings, onSettingsUpdate, theme, onThemeToggle, onImp
                     try {
                       const data = JSON.parse(event.target.result)
                       const success = onImportData(data)
-                      if (success) { alert('Data restored successfully!'); window.location.reload() }
-                    } catch (err) { alert('Import failed: ' + err.message) }
+                      if (success) { toast('Data restored successfully!', 'success'); setTimeout(() => window.location.reload(), 1000) }
+                    } catch (err) { toast('Import failed: ' + err.message, 'error') }
                   }
                   reader.readAsText(file)
                 }}

@@ -246,7 +246,7 @@ export default function PortfolioChat({ tradeData = [], stockData = [], settings
 
   // ── render ───────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
