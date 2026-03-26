@@ -45,6 +45,22 @@ export default {
           900: '#111827',
         }
       },
+      fontSize: {
+        'large-title': ['28px', { lineHeight: '34px', fontWeight: '700', letterSpacing: '-0.5px' }],
+        'title-1': ['20px', { lineHeight: '25px', fontWeight: '600', letterSpacing: '-0.3px' }],
+        'title-2': ['16px', { lineHeight: '21px', fontWeight: '600' }],
+        'body': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'callout': ['13px', { lineHeight: '18px', fontWeight: '500' }],
+        'footnote': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+        'overline': ['10px', { lineHeight: '14px', fontWeight: '600', letterSpacing: '0.15em' }],
+      },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+      },
+      transitionDuration: {
+        'enter': '300ms',
+        'exit': '200ms',
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-in': 'slideIn 0.3s ease-out',
