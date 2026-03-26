@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Menu, X } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search, MoreHorizontal } from 'lucide-react'
+import TabBar from './components/ui/TabBar'
+import BottomSheet from './components/ui/BottomSheet'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -57,12 +59,11 @@ function App() {
     if (searchParams.has('ticker')) return 'research'
     return localStorage.getItem('active_tab') || 'dashboard'
   })
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false)
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
     localStorage.setItem('active_tab', tab)
-    setIsMobileMenuOpen(false)
   }
   const [researchData, setResearchData] = useState([])
   const [tradeData, setTradeData] = useState([])
@@ -618,54 +619,38 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
-  const tabs = [
+  const primaryTabs = [
     { id: 'dashboard',   label: 'Dashboard',   shortLabel: 'Home',     icon: BarChart3  },
-    { id: 'performance', label: 'Performance', shortLabel: 'Perf',     icon: TrendingUp },
-    { id: 'research',    label: 'Research',    shortLabel: 'Research', icon: BarChart3  },
     { id: 'trades',      label: 'Trades',      shortLabel: 'Trades',   icon: TrendingUp },
-    { id: 'stocks',      label: 'Stocks',      shortLabel: 'Stocks',   icon: Briefcase  },
-    { id: 'settings',    label: 'Settings',    shortLabel: 'Settings', icon: Settings   },
+    { id: 'research',    label: 'Research',     shortLabel: 'Research', icon: Search     },
+    { id: 'performance', label: 'Performance',  shortLabel: 'Perf',     icon: TrendingUp },
+  ]
+
+  const overflowTabs = [
+    { id: 'stocks',      label: 'Stock Portfolio', icon: Briefcase  },
+    { id: 'settings',    label: 'Settings',        icon: Settings   },
+  ]
+
+  const allTabs = [...primaryTabs, ...overflowTabs]
+
+  const tabBarTabs = [
+    ...primaryTabs,
+    { id: '__more', label: 'More', shortLabel: 'More', icon: MoreHorizontal },
   ]
 
   return (
     <div className="min-h-screen bg-black text-white flex">
 
-      {/* ── Mobile Top Header ─────────────────────────────────────────── */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#0a0a0f] border-b border-white/[0.06] flex items-center justify-between px-4">
-        <button
-          onClick={() => setIsMobileMenuOpen(prev => !prev)}
-          className="p-2 rounded-xl bg-white/[0.05] border border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.1] transition-all"
-        >
-          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
-            <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
-          </div>
-          <span className="text-sm font-bold text-white tracking-tight">Unicron</span>
-        </div>
-      </header>
-
-      {/* ── Mobile Sidebar Overlay ────────────────────────────────────── */}
-      {isMobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* ── Sidebar (desktop always visible, mobile slide-in drawer) ──── */}
-      <aside className={`fixed left-0 top-0 h-full w-64 bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? 'flex translate-x-0' : 'hidden md:flex md:translate-x-0'}
-      `}>
+      {/* ── Desktop Sidebar (≥768px) ──────────────────────────────────── */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-full bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-all duration-enter ease-spring w-[56px] lg:w-64 hover:w-64 group/sidebar">
 
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-white/[0.06]">
+        <div className="px-2 lg:px-4 group-hover/sidebar:px-4 py-5 border-b border-white/[0.06] transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0">
+            <div className="w-10 h-10 lg:w-16 lg:h-16 group-hover/sidebar:w-16 group-hover/sidebar:h-16 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0 transition-all">
               <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
             </div>
-            <div>
+            <div className="hidden lg:block group-hover/sidebar:block">
               <div className="text-base font-bold text-white leading-none tracking-tight">Unicron</div>
               <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Stock Trades</div>
             </div>
@@ -673,29 +658,29 @@ function App() {
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {tabs.map(tab => {
+        <nav className="flex-1 px-1.5 lg:px-3 group-hover/sidebar:px-3 py-4 space-y-1 overflow-y-auto transition-all">
+          {allTabs.map(tab => {
             const Icon = tab.icon
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-spring min-h-[44px] ${
                   isActive
                     ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
-                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.05] border border-transparent'
+                    : 'text-white/35 hover:text-white/60 hover:bg-white/[0.05] border border-transparent'
                 }`}
               >
-                <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-white/40'}`} />
-                {tab.label}
+                <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-white/35'}`} />
+                <span className="hidden lg:inline group-hover/sidebar:inline transition-opacity">{tab.label}</span>
               </button>
             )
           })}
         </nav>
 
         {/* Sidebar footer — sync, market status, refresh, user */}
-        <div className="px-3 py-4 border-t border-white/[0.06] space-y-2">
+        <div className="px-1.5 lg:px-3 group-hover/sidebar:px-3 py-4 border-t border-white/[0.06] space-y-2 transition-all">
 
           {/* Sync status */}
           <div
@@ -713,11 +698,13 @@ function App() {
             {cloudSyncStatus === 'syncing' ? <RefreshCw className="h-3 w-3 animate-spin" /> :
              cloudSyncStatus === 'synced'  ? <Cloud className="h-3 w-3" /> :
                                              <CloudOff className="h-3 w-3" />}
-            {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
+            <span className="hidden lg:inline group-hover/sidebar:inline">
+              {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
+            </span>
             {isUSTradingHours() && (
               <span className="ml-auto flex items-center gap-1 text-emerald-400">
                 <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
-                Live
+                <span className="hidden lg:inline group-hover/sidebar:inline">Live</span>
               </span>
             )}
           </div>
@@ -726,18 +713,20 @@ function App() {
           <button
             onClick={() => handleGlobalPriceUpdate()}
             disabled={refreshingPrices}
-            className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-xs font-medium text-white/50 hover:text-white transition-all disabled:opacity-40"
+            className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-xs font-medium text-white/50 hover:text-white transition-all disabled:opacity-40 min-h-[44px]"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${refreshingPrices ? 'animate-spin' : ''}`} />
-            {refreshingPrices ? 'Updating prices…' : 'Refresh Prices'}
+            <RefreshCw className={`h-3.5 w-3.5 flex-shrink-0 ${refreshingPrices ? 'animate-spin' : ''}`} />
+            <span className="hidden lg:inline group-hover/sidebar:inline">
+              {refreshingPrices ? 'Updating prices…' : 'Refresh Prices'}
+            </span>
           </button>
 
           {/* User + logout */}
           <div className="flex items-center justify-between px-1 pt-1">
-            <span className="text-xs font-semibold text-blue-400">{user.username}</span>
+            <span className="text-xs font-semibold text-blue-400 hidden lg:inline group-hover/sidebar:inline">{user.username}</span>
             <button
               onClick={handleLogout}
-              className="p-1.5 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.06] hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-lg transition-all"
+              className="p-1.5 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.06] hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Logout"
             >
               <LogOut className="h-4 w-4" />
@@ -747,9 +736,41 @@ function App() {
         </div>
       </aside>
 
+      {/* ── Mobile Tab Bar (<768px) ───────────────────────────────────── */}
+      <TabBar
+        tabs={tabBarTabs}
+        activeTab={overflowTabs.some(t => t.id === activeTab) ? '__more' : activeTab}
+        onTabChange={(id) => {
+          if (id === '__more') {
+            setMoreSheetOpen(true)
+          } else {
+            handleTabChange(id)
+          }
+        }}
+      />
+
+      {/* ── More Sheet ────────────────────────────────────────────────── */}
+      <BottomSheet open={moreSheetOpen} onClose={() => setMoreSheetOpen(false)} title="More">
+        <div className="px-4 py-2 space-y-1">
+          {overflowTabs.map(tab => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { handleTabChange(tab.id); setMoreSheetOpen(false) }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors min-h-[44px]"
+              >
+                <Icon className="h-5 w-5 text-white/35" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      </BottomSheet>
+
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <main className="flex-1 md:ml-64 min-h-screen pt-14 md:pt-0 overflow-x-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 md:ml-[56px] lg:ml-64 min-h-screen overflow-x-hidden">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6 pb-24 md:pb-6">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
