@@ -11,6 +11,7 @@ import { scrapeCompanyData } from '../services/webScraping'
 import CompanyLogo from './CompanyLogo'
 import StrategySection from './StrategySection'
 import DailyQuote from './DailyQuote'
+import LargeTitle from './ui/LargeTitle'
 
 // Helper function to format dates as DD/MM/YYYY
 const formatDateDDMMYYYY = (dateString) => {
@@ -59,7 +60,7 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection, 
   const glowColor = isMaxAchieved ? 'rgba(16, 185, 129, 0.3)' : isMinAchieved ? 'rgba(234, 179, 8, 0.2)' : 'rgba(239, 68, 68, 0.15)'
 
   return (
-    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-4 sm:p-6 group relative overflow-hidden flex flex-col h-full">
+    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-4 sm:p-6 group relative overflow-hidden flex flex-col h-full">
       {/* Background glow pulse */}
       <div
         className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] transition-all duration-700 group-hover:blur-[60px]"
@@ -226,7 +227,7 @@ const MonthlyPerformanceTracker = ({ history, monthlyTarget }) => {
   const currentMonthIdx = new Date().getMonth()
 
   return (
-    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-8 animate-slide-in-up">
+    <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-8 animate-slide-in-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-8">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
@@ -563,18 +564,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
   return (
     <div className="space-y-6">
 
-      {/* Page Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-              <BarChart3 className="h-6 w-6 text-blue-400" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-          </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Your portfolio overview and key metrics.</p>
-        </div>
-      </header>
+      <LargeTitle title="Dashboard" subtitle="Your portfolio overview and key metrics." />
 
       {/* Daily Investor Quote */}
       <DailyQuote />
@@ -590,7 +580,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
             : 0
           const isUp = dashboardStats.portfolioTotal >= deposited
           return (
-            <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${isUp ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
+            <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-2xl p-5 flex flex-col justify-between border ${isUp ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
               <div className="flex items-center space-x-4 mb-3">
                 <div className={`p-3 rounded-2xl border ${isUp ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                   <Briefcase className={`h-6 w-6 ${isUp ? 'text-emerald-400' : 'text-red-400'}`} />
@@ -621,7 +611,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         })()}
 
         {/* Card 2 — Stocks Value */}
-        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.stockPnL >= 0 ? 'border-violet-500/20' : 'border-red-500/20'}`}>
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-2xl p-5 flex flex-col justify-between border ${dashboardStats.stockPnL >= 0 ? 'border-violet-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-3">
             <div className={`p-3 rounded-2xl border ${dashboardStats.stockPnL >= 0 ? 'bg-violet-500/10 border-violet-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
               {dashboardStats.stockPnL >= 0 ? <TrendingUp className="h-6 w-6 text-violet-400" /> : <TrendingDown className="h-6 w-6 text-red-400" />}
@@ -649,7 +639,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         </div>
 
         {/* Card 3 — Available Cash */}
-        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-[20px] p-5 flex flex-col justify-between border ${dashboardStats.availableCash >= 0 ? 'border-sky-500/20' : 'border-red-500/20'}`}>
+        <div className={`bg-white/[0.05] backdrop-blur-2xl rounded-2xl p-5 flex flex-col justify-between border ${dashboardStats.availableCash >= 0 ? 'border-sky-500/20' : 'border-red-500/20'}`}>
           <div className="flex items-center space-x-4 mb-4">
             <div className={`p-3 rounded-2xl border ${dashboardStats.availableCash >= 0 ? 'bg-sky-500/10 border-sky-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
               <DollarSign className={`h-6 w-6 ${dashboardStats.availableCash >= 0 ? 'text-sky-400' : 'text-red-400'}`} />
@@ -667,7 +657,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         </div>
 
         {/* Card 4 — Allocated Capital */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-purple-500/20 rounded-[20px] p-5 flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-purple-500/20 rounded-2xl p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-purple-500/10 rounded-2xl border border-purple-500/20">
               <Target className="h-6 w-6 text-purple-400" />
@@ -683,7 +673,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         </div>
 
         {/* Card 5 — Active Trades */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-500/20 rounded-[20px] p-5 flex flex-col justify-between">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-500/20 rounded-2xl p-5 flex flex-col justify-between">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
               <Calendar className="h-6 w-6 text-orange-400" />
@@ -734,7 +724,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
       {/* Risk Alerts */}
       {dashboardStats.highRiskTrades > 0 && (
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-l-4 border-l-rose-500 border-white/[0.08] rounded-[20px] p-5 animate-slide-in-up">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-l-4 border-l-rose-500 border-white/[0.08] rounded-2xl p-5 animate-slide-in-up">
           <div className="flex items-center space-x-3">
             <AlertCircle className="h-6 w-6 text-red-400" />
             <div>

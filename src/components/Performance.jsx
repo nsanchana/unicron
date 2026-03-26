@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { TrendingUp, TrendingDown, Target, Calendar, Award, Clock, BarChart2, Percent, DollarSign, Activity, Shield, PhoneCall, LineChart } from 'lucide-react'
 import PortfolioChat from './PortfolioChat'
+import LargeTitle from './ui/LargeTitle'
 
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 const YEARS = ['2024', '2025', '2026', 'All Time']
@@ -25,7 +26,7 @@ function fmt$(n, decimals = 0) {
 // ── sub-components ─────────────────────────────────────────────────────────
 function MetricCard({ icon: Icon, label, value, sub, colour = 'text-white/85', border = 'border-white/[0.08]', iconBg = 'bg-white/[0.06]', iconColour = 'text-white/40' }) {
   return (
-    <div className={`bg-white/[0.05] backdrop-blur-2xl border ${border} rounded-[28px] p-5 flex flex-col justify-between`}>
+    <div className={`bg-white/[0.05] backdrop-blur-2xl border ${border} rounded-2xl p-5 flex flex-col justify-between`}>
       <div className="flex items-center gap-2.5 mb-4">
         <div className={`p-2 ${iconBg} rounded-xl`}>
           <Icon className={`h-4 w-4 ${iconColour}`} />
@@ -171,18 +172,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
   return (
     <div className="space-y-6">
 
-      {/* Page Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-              <TrendingUp className="h-6 w-6 text-emerald-400" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Performance</h1>
-          </div>
-          <p className="text-white/40 font-medium text-sm ml-0 sm:ml-[52px]">Track your trading performance and P&L analytics.</p>
-        </div>
-      </header>
+      <LargeTitle title="Performance" subtitle="Track your trading performance and P&L analytics." />
 
       {/* ── Year Selector ────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -267,7 +257,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
       </div>
 
       {/* ── Income Roadmap ────────────────────────────────────────────────── */}
-      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 flex-shrink-0">
@@ -327,7 +317,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* P&L by Symbol */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
               <BarChart2 className="h-4 w-4 text-blue-400" />
@@ -351,7 +341,7 @@ export default function Performance({ tradeData = [], stockData = [], settings =
         </div>
 
         {/* Income Sources Breakdown */}
-        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-6">
+        <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="p-2 bg-amber-500/10 rounded-xl border border-amber-500/20">
               <Target className="h-4 w-4 text-amber-400" />

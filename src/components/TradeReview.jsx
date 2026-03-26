@@ -2,6 +2,7 @@ import { authHeaders } from '../utils/auth.js'
 import { useState, useRef, useEffect } from 'react'
 import { fetchPrice, fetchPrices } from '../services/priceService'
 import { Calculator, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Save, Trash2, Edit, Edit2, MessageCircle, Send, Bot, User, ChevronDown, ChevronUp, Loader, RefreshCw, Sparkles } from 'lucide-react'
+import LargeTitle from './ui/LargeTitle'
 import { calculateOptionGreeks, assessTradeRisk, generateTradeRecommendation } from '../utils/optionsCalculations'
 import { saveToLocalStorage, STORAGE_KEYS } from '../utils/storage'
 import CompanyLogo from './CompanyLogo'
@@ -822,21 +823,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   return (
     <div className="space-y-8 pb-12">
 
-      {/* Page Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-              <TrendingUp className="h-6 w-6 text-amber-400" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Trade Log</h1>
-          </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Log, analyze, and review your options trades.</p>
-        </div>
-      </header>
+      <LargeTitle title="Trade Log" subtitle="Log, analyze, and review your options trades." />
 
       {/* Log Trade Form */}
-      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
@@ -1118,7 +1108,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
       {analysis && (
         <div className="space-y-4">
           {/* Trade Summary */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 border-l-4 border-l-primary-500">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 border-l-4 border-l-primary-500">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold">
@@ -1186,7 +1176,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Risk Assessment */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5">
             <h4 className="text-lg font-semibold mb-4 flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2" />
               Risk Assessment
@@ -1247,7 +1237,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Recommendation */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5">
             <h4 className="text-lg font-semibold mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
               Trade Recommendation
@@ -1343,7 +1333,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
           </div>
 
           {/* Chat Interface */}
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5">
             <button
               onClick={() => setChatOpen(!chatOpen)}
               className="w-full flex items-center justify-between p-4 hover:bg-white/5 rounded-lg transition-colors"
@@ -1358,7 +1348,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
             {chatOpen && (
               <div className="px-4 pb-4">
                 {/* Chat Messages */}
-                <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] p-5 p-4 h-80 overflow-y-auto mb-4">
+                <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5 p-4 h-80 overflow-y-auto mb-4">
                   {chatMessages.length === 0 && (
                     <div className="text-center text-gray-400 py-8">
                       <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -1481,7 +1471,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
         })
 
         return (
-          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+          <div className="bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/[0.06]">

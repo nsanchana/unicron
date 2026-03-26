@@ -3,6 +3,7 @@ import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X } from 'luci
 import CompanyLogo from './CompanyLogo'
 import { fetchPrices } from '../services/priceService'
 import EarningsBadge from "./EarningsBadge"
+import LargeTitle from './ui/LargeTitle'
 import { fetchEarningsDates } from "../services/earningsService"
 
 const STATUS_OPTS = ['All', 'Active', 'Closed']
@@ -166,30 +167,20 @@ function StockPortfolio({ stockData, onUpdate }) {
   return (
     <div className="space-y-5 pb-12">
 
-      {/* Page Header */}
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-white/[0.06]">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-sky-500/10 rounded-2xl border border-sky-500/20">
-              <Briefcase className="h-6 w-6 text-sky-400" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Stock Portfolio</h1>
-          </div>
-          <p className="text-white/40 font-medium text-sm ml-[52px]">Assigned shares &amp; P&amp;L tracking.</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+      <LargeTitle title="Stock Portfolio" subtitle="Assigned shares & P&L tracking.">
+        <div className="flex items-center gap-2 flex-wrap mt-3">
           <button onClick={handleRefreshPrices} disabled={loading}
-            className="flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] text-white/70 hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-all disabled:opacity-50">
+            className="flex items-center gap-2 surface-1 hover:bg-white/[0.10] text-secondary hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-all disabled:opacity-50 min-h-[44px]">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
           <button onClick={handleAddRow}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-all">
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-spring min-h-[44px]">
             <Plus className="h-3.5 w-3.5" />
             Add Stock
           </button>
         </div>
-      </header>
+      </LargeTitle>
 
       {/* Summary bar */}
       {stockData.length > 0 && (
@@ -288,7 +279,7 @@ function StockPortfolio({ stockData, onUpdate }) {
               const pnlPct = calculatePnLPct(item)
               const closed = isClosed(item)
               return (
-                <div key={item.id} className={`bg-white/[0.05] border border-white/[0.08] rounded-[20px] overflow-hidden ${closed ? 'opacity-75' : ''}`}>
+                <div key={item.id} className={`bg-white/[0.05] border border-white/[0.08] rounded-2xl overflow-hidden ${closed ? 'opacity-75' : ''}`}>
                   {/* Accent stripe */}
                   <div className={`h-0.5 ${pnl === null ? 'bg-white/10' : pnl >= 0 ? 'bg-gradient-to-r from-emerald-500 to-transparent' : 'bg-gradient-to-r from-rose-500 to-transparent'}`} />
                   <div className="p-4 space-y-3">
@@ -395,7 +386,7 @@ function StockPortfolio({ stockData, onUpdate }) {
           </div>
 
           {/* ── Desktop table ── */}
-          <div className="hidden md:block bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-[20px] overflow-hidden">
+          <div className="hidden md:block bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
