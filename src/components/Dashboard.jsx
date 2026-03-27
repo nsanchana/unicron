@@ -11,6 +11,7 @@ import { scrapeCompanyData } from '../services/webScraping'
 import CompanyLogo from './CompanyLogo'
 import StrategySection from './StrategySection'
 import DailyQuote from './DailyQuote'
+import DailyInsights from './DailyInsights'
 import LargeTitle from './ui/LargeTitle'
 
 // Helper function to format dates as DD/MM/YYYY
@@ -565,6 +566,15 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     <div className="space-y-6">
 
       <LargeTitle title="Dashboard" subtitle="Your portfolio overview and key metrics." />
+
+      {/* AI Daily Insights */}
+      <DailyInsights
+        tradeData={tradeData}
+        stockData={stockData}
+        settings={settings}
+        weeklyPremium={dashboardStats.weeklyPremium}
+        weeklyTarget={dashboardStats.weeklyTarget}
+      />
 
       {/* Daily Investor Quote */}
       <DailyQuote />
