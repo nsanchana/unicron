@@ -59,11 +59,12 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
     setError(false)
 
     try {
-      const response = await fetch('/api/daily-insights', {
+      const response = await fetch('/api/unicron-ai', {
         method: 'POST',
         headers: authHeaders(),
         credentials: 'include',
         body: JSON.stringify({
+          mode: 'daily-insights',
           trades: activeTrades.map(t => ({
             symbol: t.symbol,
             tradeType: t.tradeType || t.type,
