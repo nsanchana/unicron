@@ -182,8 +182,11 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection, 
           </div>
         </div>
 
-        {/* Status Messaging */}
+        {/* Subtitle + Status Messaging */}
         <div className="mt-4">
+          {subtitle && (
+            <p className="text-center text-[10px] text-white/35 font-mono mb-2 tracking-wide">{subtitle}</p>
+          )}
           {isMaxAchieved ? (
             <div className="flex items-center justify-center space-x-2 text-emerald-400 bg-[#022c22] py-3 px-4 rounded-xl border border-emerald-500/20 shadow-lg">
               <CheckCircle className="h-4 w-4 shrink-0" />
@@ -204,9 +207,6 @@ const PremiumProgressBar = ({ label, current, min, max, icon: Icon, projection, 
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span className="uppercase tracking-widest text-[9px] font-black">Keep pushing to reach that goal</span>
             </div>
-          )}
-          {subtitle && (
-            <p className="text-center text-[10px] text-white/35 font-mono mt-2 tracking-wide">{subtitle}</p>
           )}
         </div>
       </div>
@@ -651,7 +651,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
               ${dashboardStats.availableCash.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
             <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-2">
-              {((dashboardStats.availableCash / dashboardStats.portfolioSize) * 100).toFixed(1)}% of portfolio undeployed
+              {((dashboardStats.availableCash / dashboardStats.portfolioSize) * 100).toFixed(1)}% of portfolio
             </p>
           </div>
         </div>
