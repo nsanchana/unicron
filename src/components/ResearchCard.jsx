@@ -51,7 +51,7 @@ export default function ResearchCard({
   ]
 
   const cardContent = (
-    <div className={`surface-2 rounded-2xl p-4 flex flex-col gap-3 hover:border-white/[0.14] transition-spring ${
+    <div className={`bg-[#0a0a0f] border border-white/[0.08] rounded-2xl p-4 flex flex-col gap-3 hover:border-white/[0.14] transition-spring ${
       sentiment ? sentiment.border : ''
     }`}>
       {/* Header */}
@@ -110,7 +110,7 @@ export default function ResearchCard({
 
       {/* Target + Upside */}
       {fmtTarget && (
-        <div className="flex items-center justify-between px-3 py-2 surface-1 rounded-xl">
+        <div className="flex items-center justify-between px-3 py-2 bg-white/[0.03] rounded-xl">
           <div>
             <div className="overline" style={{ marginBottom: 2 }}>Analyst Target</div>
             <div className="text-sm font-semibold font-mono text-blue-400">{fmtTarget}</div>

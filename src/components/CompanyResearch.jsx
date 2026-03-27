@@ -674,10 +674,10 @@ function CompanyResearch({ researchData, setResearchData, lastRefresh, selectedR
                     <button
                       key={s.key}
                       onClick={() => handleSort(s.key)}
-                      className={`flex-none flex items-center gap-1 px-3 py-1.5 rounded-full text-footnote font-medium transition-all whitespace-nowrap min-h-[44px] ${
+                      className={`flex-none flex items-center gap-1 px-3 py-1.5 rounded-full text-footnote font-medium transition-all whitespace-nowrap ${
                         sortBy === s.key
                           ? 'bg-blue-500 text-white'
-                          : 'surface-1 text-tertiary hover:text-secondary'
+                          : 'bg-white/[0.03] border border-white/[0.06] text-tertiary hover:text-secondary'
                       }`}
                     >
                       {s.label}
