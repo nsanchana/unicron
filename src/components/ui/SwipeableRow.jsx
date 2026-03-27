@@ -34,7 +34,7 @@ export default function SwipeableRow({ children, actions = [], className = '' })
   const close = () => setOffset(0)
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden rounded-2xl ${className}`}>
       <div className="absolute right-0 top-0 bottom-0 flex items-stretch">
         {actions.map((action, i) => (
           <button
