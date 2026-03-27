@@ -90,3 +90,37 @@ export async function bulkSyncPositionsToSupabase(positions) {
     // Fire-and-forget: silently ignore errors
   }
 }
+
+// ── Stock holdings sync ─────────────────────────────────────────────────────
+
+function mapStockToRow(stock) {
+  return {
+    id: String(stock.id),
+    symbol: stock.symbol,
+    shares: stock.shares,
+    purchase_price: stock.purchasePrice,
+    purchase_date: stock.purchaseDate ?? null,
+    current_price: stock.currentPrice ?? null,
+    last_price_update: stock.lastPriceUpdate ?? null,
+    sold_price: stock.soldPrice ?? null,
+    date_sold: stock.dateSold ?? null,
+    stock_pnl: stock.stockPnL ?? null,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * Bulk upsert stock holdings to Supabase. Fire-and-forget.
+ */
+export async function bulkSyncStocksToSupabase(stocks) {
+  if (!supabase) return
+  if (!Array.isArray(stocks) || stocks.length === 0) return
+  try {
+    const rows = stocks.map(mapStockToRow)
+    await supabase
+      .from('unicron_stocks')
+      .upsert(rows, { onConflict: 'id' })
+  } catch (err) {
+    // Fire-and-forget: silently ignore errors
+  }
+}

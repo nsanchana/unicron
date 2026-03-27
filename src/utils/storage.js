@@ -1,5 +1,5 @@
 // Local storage utilities for data persistence
-import { bulkSyncPositionsToSupabase } from './supabase-sync'
+import { bulkSyncPositionsToSupabase, bulkSyncStocksToSupabase } from './supabase-sync'
 
 export const STORAGE_KEYS = {
   PORTFOLIO_SETTINGS: 'optionsTrading_portfolioSettings',
@@ -17,6 +17,9 @@ export function saveToLocalStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data))
     if (key === STORAGE_KEYS.TRADE_DATA) {
       bulkSyncPositionsToSupabase(data).catch(() => {})
+    }
+    if (key === STORAGE_KEYS.STOCK_DATA) {
+      bulkSyncStocksToSupabase(data).catch(() => {})
     }
   } catch (error) {
     console.error(`Error saving ${key}:`, error)

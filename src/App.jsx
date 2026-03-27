@@ -12,7 +12,7 @@ import Performance from './components/Performance'
 import StrategySection from './components/StrategySection'
 import Watchlist from './components/Watchlist'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
-import { bulkSyncPositionsToSupabase } from './utils/supabase-sync'
+import { bulkSyncPositionsToSupabase, bulkSyncStocksToSupabase } from './utils/supabase-sync'
 import { scrapeCompanyData } from './services/webScraping'
 import { fetchPrices } from './services/priceService'
 import { API_BASE_URL } from './config'
@@ -483,6 +483,11 @@ function App() {
     const existingTrades = loadFromLocalStorage(STORAGE_KEYS.TRADE_DATA)
     if (existingTrades && existingTrades.length > 0) {
       bulkSyncPositionsToSupabase(existingTrades).catch(() => {})
+    }
+    // Initial bulk sync of stock holdings to Supabase
+    const existingStocks = loadFromLocalStorage(STORAGE_KEYS.STOCK_DATA)
+    if (existingStocks && existingStocks.length > 0) {
+      bulkSyncStocksToSupabase(existingStocks).catch(() => {})
     }
 
     // Auto-refresh logic
