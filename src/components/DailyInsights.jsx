@@ -335,19 +335,19 @@ export default function DailyInsights({ tradeData, stockData, settings, dashboar
                   {insight.suggestedAction && (
                     <span className="text-emerald-400">
                       <TrendingUp className="h-3 w-3 inline mr-1 -mt-0.5" />
-                      {insight.suggestedAction}
+                      {String(insight.suggestedAction)}
                     </span>
                   )}
                   {insight.risk && (
                     <span className="text-amber-400/80">
                       <ShieldAlert className="h-3 w-3 inline mr-1 -mt-0.5" />
-                      {insight.risk}
+                      {String(insight.risk)}
                     </span>
                   )}
                   {insight.timeframe && (
                     <span className="text-tertiary">
                       <Clock className="h-3 w-3 inline mr-1 -mt-0.5" />
-                      {TIMEFRAME_LABELS[insight.timeframe] || insight.timeframe}
+                      {String(TIMEFRAME_LABELS[insight.timeframe] || insight.timeframe)}
                     </span>
                   )}
                 </div>

@@ -259,8 +259,21 @@ Return this exact JSON structure:
         })
     }
 
+    // Validate all insight fields are strings (Gemini can return objects)
+    const validated = (parsed.insights || []).map(i => ({
+        type: String(i.type || 'opportunity'),
+        priority: String(i.priority || 'low'),
+        symbol: String(i.symbol || ''),
+        title: String(i.title || ''),
+        reasoning: String(i.reasoning || ''),
+        metric: String(i.metric || ''),
+        suggestedAction: String(i.suggestedAction || ''),
+        risk: String(i.risk || ''),
+        timeframe: String(i.timeframe || 'monitor'),
+    }))
+
     return res.status(200).json({
-        insights: parsed.insights || [],
-        summary: parsed.summary || `${(parsed.insights || []).length} insights generated`
+        insights: validated,
+        summary: String(parsed.summary || `${validated.length} insights generated`)
     })
 }
