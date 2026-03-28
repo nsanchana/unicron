@@ -211,11 +211,22 @@ export default function DailyInsights({ tradeData, stockData, settings, dashboar
     if (cached) {
       try {
         const parsed = JSON.parse(cached)
-        setInsights(parsed.insights)
-        setSummary(parsed.summary)
-        setGeneratedAt(new Date(parsed.generatedAt))
-        return
-      } catch { /* fall through to fetch */ }
+        // Validate cached data: summary must be a string, insights must be an array of objects with string fields
+        const validSummary = typeof parsed.summary === 'string' ? parsed.summary : ''
+        const validInsights = Array.isArray(parsed.insights)
+          ? parsed.insights.filter(i => i && typeof i.title === 'string')
+          : []
+        if (validInsights.length > 0) {
+          setInsights(validInsights)
+          setSummary(validSummary)
+          setGeneratedAt(new Date(parsed.generatedAt))
+          return
+        }
+        // Invalid cache — clear and re-fetch
+        localStorage.removeItem(getTodayKey())
+      } catch {
+        localStorage.removeItem(getTodayKey())
+      }
     }
 
     if (hasPositions) {
@@ -281,7 +292,7 @@ export default function DailyInsights({ tradeData, stockData, settings, dashboar
           </div>
           <div>
             <h3 className="text-title-2 text-primary">Daily Insights</h3>
-            <p className="text-footnote text-tertiary">{summary}</p>
+            <p className="text-footnote text-tertiary">{typeof summary === 'string' ? summary : ''}</p>
           </div>
         </div>
         <button onClick={handleRefresh} className="p-2 hover:bg-white/[0.05] rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" title="Refresh insights">
@@ -306,14 +317,14 @@ export default function DailyInsights({ tradeData, stockData, settings, dashboar
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-overline px-1.5 py-0.5 rounded-lg surface-1">{insight.symbol}</span>
-                    <span className="text-body font-semibold text-primary">{insight.title}</span>
+                    <span className="text-overline px-1.5 py-0.5 rounded-lg surface-1">{String(insight.symbol || '')}</span>
+                    <span className="text-body font-semibold text-primary">{String(insight.title || '')}</span>
                   </div>
-                  <p className="text-callout text-secondary">{insight.reasoning}</p>
+                  <p className="text-callout text-secondary">{String(insight.reasoning || '')}</p>
                 </div>
                 {insight.metric && (
                   <span className={`text-footnote font-mono font-semibold whitespace-nowrap flex-shrink-0 ${metricColor}`}>
-                    {insight.metric}
+                    {String(insight.metric)}
                   </span>
                 )}
               </div>
