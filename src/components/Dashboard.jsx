@@ -567,14 +567,6 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
 
       <LargeTitle title="Dashboard" subtitle="Your portfolio overview and key metrics." />
 
-      {/* AI Daily Insights */}
-      <DailyInsights
-        tradeData={tradeData}
-        stockData={stockData}
-        settings={settings}
-        dashboardStats={dashboardStats}
-      />
-
       {/* Daily Investor Quote */}
       <DailyQuote />
 
@@ -745,6 +737,14 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
       )}
+
+      {/* AI Daily Insights */}
+      <DailyInsights
+        tradeData={tradeData}
+        stockData={stockData}
+        settings={settings}
+        dashboardStats={dashboardStats}
+      />
 
       {/* Strategy Board - Moved from Unicron AI */}
       <div className="animate-slide-in-up">
