@@ -1521,6 +1521,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
         }
 
         const filtered = tradeData.filter(filterTrade).sort((a, b) => {
+          // Expired filter: default sort by most recent expiry first (needs action)
+          if (historyFilter === 'expired' && sortBy === 'date') {
+            return new Date(b.expirationDate) - new Date(a.expirationDate)
+          }
           switch (sortBy) {
             case 'symbol': return a.symbol.localeCompare(b.symbol)
             case 'expiry':
