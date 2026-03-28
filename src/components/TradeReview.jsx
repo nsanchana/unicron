@@ -18,7 +18,7 @@ const formatDateDDMMYYYY = (dateString) => {
   return `${day} ${month} ${year}`
 }
 
-function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData }) {
+function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData, stockData, setStockData }) {
   const [selectedSymbol, setSelectedSymbol] = useState('')
   const [strikePrice, setStrikePrice] = useState('')
   const [expirationDate, setExpirationDate] = useState('')
@@ -784,6 +784,8 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
   }
 
   const handleCloseTrade = (tradeId, result) => {
+    const trade = tradeData.find(t => t.id === tradeId)
+
     const updatedTradeData = tradeData.map(t => {
       if (t.id === tradeId) {
         return {
@@ -806,6 +808,68 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
         result: result,
         closedAt: new Date().toISOString()
       })
+    }
+
+    // Handle stock portfolio updates on assignment
+    if (result === 'assigned' && trade && setStockData && stockData) {
+      const optionType = (trade.optionType || trade.tradeType || '').toLowerCase()
+      const isPut = optionType.includes('put')
+      const isCall = optionType.includes('call')
+      const shares = (trade.quantity || 1) * 100
+      const assignDate = trade.expirationDate || new Date().toISOString().split('T')[0]
+
+      if (isPut) {
+        // Put assignment: receive shares at strike price
+        const newStock = {
+          id: Date.now(),
+          dateAssigned: assignDate,
+          symbol: trade.symbol,
+          shares: shares,
+          assignedPrice: trade.strikePrice,
+          dateSold: '',
+          soldPrice: '',
+          currentPrice: trade.currentMarketPrice || '',
+          lastPriceUpdate: trade.lastPriceUpdate || null,
+        }
+        const updated = [newStock, ...stockData]
+        setStockData(updated)
+        alert(`📈 ${shares} shares of ${trade.symbol} added to Stock Portfolio at $${trade.strikePrice} (assigned from put).`)
+      } else if (isCall) {
+        // Call assignment: shares called away at strike price — sell lowest-cost lot first
+        const unsoldLots = stockData
+          .filter(s => s.symbol === trade.symbol && !s.soldPrice && !s.dateSold)
+          .sort((a, b) => (parseFloat(a.assignedPrice) || 0) - (parseFloat(b.assignedPrice) || 0))
+
+        if (unsoldLots.length === 0) {
+          alert(`⚠️ No unsold ${trade.symbol} stock found to sell. Trade closed as assigned but no stock entry was updated.`)
+          return
+        }
+
+        let sharesToSell = shares
+        const updatedStockData = stockData.map(s => {
+          if (sharesToSell <= 0) return s
+          if (s.symbol !== trade.symbol || s.soldPrice || s.dateSold) return s
+          // Check if this is the next cheapest lot
+          if (unsoldLots.find(lot => lot.id === s.id) && sharesToSell > 0) {
+            const lotShares = parseFloat(s.shares) || 0
+            const sellShares = Math.min(lotShares, sharesToSell)
+            sharesToSell -= sellShares
+            const costBasis = parseFloat(s.assignedPrice) || 0
+            const pnl = (trade.strikePrice - costBasis) * sellShares
+            return {
+              ...s,
+              soldPrice: String(trade.strikePrice),
+              dateSold: assignDate,
+              stockPnL: pnl,
+            }
+          }
+          return s
+        })
+
+        setStockData(updatedStockData)
+        const soldCount = shares - sharesToSell
+        alert(`📉 ${soldCount} shares of ${trade.symbol} sold at $${trade.strikePrice} (called away).${sharesToSell > 0 ? ` ⚠️ ${sharesToSell} shares could not be matched to a stock lot.` : ''}`)
+      }
     }
   }
 

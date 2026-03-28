@@ -838,6 +838,11 @@ function App() {
             portfolioSettings={settings}
             researchData={researchData}
             lastRefresh={lastRefresh}
+            stockData={stockData}
+            setStockData={(newData) => {
+              setStockData(newData)
+              saveToLocalStorage(STORAGE_KEYS.STOCK_DATA, newData)
+            }}
           />
         )}
         {activeTab === 'stocks' && (
