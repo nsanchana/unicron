@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Sparkles, RefreshCw, RotateCcw, XCircle, TrendingUp, AlertTriangle, Zap } from 'lucide-react'
+import { Sparkles, RefreshCw, RotateCcw, XCircle, TrendingUp, AlertTriangle, Zap, Clock, ShieldAlert } from 'lucide-react'
 import { authHeaders } from '../utils/auth.js'
 
 const CACHE_PREFIX = 'unicron_daily_insights_'
@@ -26,6 +26,12 @@ const METRIC_COLORS = {
   opportunity: 'text-blue-400',
 }
 
+const TIMEFRAME_LABELS = {
+  today: 'Act today',
+  this_week: 'This week',
+  monitor: 'Monitor',
+}
+
 function getTodayKey() {
   return CACHE_PREFIX + new Date().toISOString().split('T')[0]
 }
@@ -40,7 +46,7 @@ function cleanOldCache() {
   }
 }
 
-export default function DailyInsights({ tradeData, stockData, settings, weeklyPremium, weeklyTarget }) {
+export default function DailyInsights({ tradeData, stockData, settings, dashboardStats }) {
   const [insights, setInsights] = useState(null)
   const [summary, setSummary] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,8 +55,33 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
   const [expanded, setExpanded] = useState(false)
 
   const activeTrades = (tradeData || []).filter(t => t.executed && !t.closed)
+  const closedTrades = (tradeData || []).filter(t => t.executed && t.closed)
   const heldStocks = (stockData || []).filter(s => !s.soldPrice && !s.dateSold)
   const hasPositions = activeTrades.length > 0 || heldStocks.length > 0
+
+  // Compute per-symbol history from closed trades
+  const buildSymbolHistory = () => {
+    const bySymbol = {}
+    closedTrades.forEach(t => {
+      const sym = t.symbol
+      if (!bySymbol[sym]) bySymbol[sym] = { trades: 0, wins: 0, totalNet: 0, avgDTE: 0, dteSum: 0 }
+      bySymbol[sym].trades++
+      const net = t.netPremium != null ? t.netPremium : (t.premium * (t.quantity || 1) * 100)
+      bySymbol[sym].totalNet += net
+      if (t.expiredWorthless || t.closed) bySymbol[sym].wins++
+      if (t.expirationDate && t.timestamp) {
+        const dte = Math.ceil((new Date(t.expirationDate) - new Date(t.timestamp)) / (1000 * 60 * 60 * 24))
+        bySymbol[sym].dteSum += dte
+      }
+    })
+    return Object.entries(bySymbol).map(([sym, d]) => ({
+      symbol: sym,
+      trades: d.trades,
+      winRate: d.trades > 0 ? Math.round((d.wins / d.trades) * 100) : 0,
+      totalNet: Math.round(d.totalNet),
+      avgDTE: d.trades > 0 ? Math.round(d.dteSum / d.trades) : 0,
+    }))
+  }
 
   const fetchInsights = async () => {
     if (!hasPositions) return
@@ -59,33 +90,73 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
     setError(false)
 
     try {
+      const now = new Date()
+      const symbolHistory = buildSymbolHistory()
+
+      // Enrich trades with computed fields
+      const enrichedTrades = activeTrades.map(t => {
+        const exp = new Date(t.expirationDate)
+        const opened = new Date(t.timestamp || t.executionDate || now)
+        const dte = Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
+        const totalDte = Math.ceil((exp - opened) / (1000 * 60 * 60 * 24))
+        const thetaProgress = totalDte > 0 ? Math.round(((totalDte - dte) / totalDte) * 100) : 100
+        const currentPrice = t.currentMarketPrice || t.stockPrice
+        const strikeProximity = currentPrice && t.strikePrice
+          ? ((currentPrice - t.strikePrice) / t.strikePrice * 100).toFixed(1)
+          : null
+        const symHist = symbolHistory.find(s => s.symbol === t.symbol)
+
+        return {
+          symbol: t.symbol,
+          tradeType: t.tradeType || t.type,
+          strikePrice: t.strikePrice,
+          premium: t.premium,
+          netPremium: t.netPremium || t.premium,
+          expirationDate: t.expirationDate,
+          currentMarketPrice: currentPrice,
+          quantity: t.quantity || 1,
+          buybackCost: t.buybackCost || 0,
+          fees: t.fees || 0,
+          dte,
+          thetaProgress,
+          strikeProximityPct: strikeProximity,
+          notes: t.notes,
+          symbolHistory: symHist || null,
+        }
+      })
+
+      // Enrich stocks with computed fields
+      const enrichedStocks = heldStocks.map(s => {
+        const assignedPrice = parseFloat(s.assignedPrice || s.assignedAt) || 0
+        const currentPrice = parseFloat(s.currentPrice) || 0
+        const shares = parseFloat(s.shares) || 0
+        const unrealizedPnL = currentPrice && assignedPrice ? ((currentPrice - assignedPrice) * shares).toFixed(2) : 'N/A'
+        const unrealizedPnLPct = currentPrice && assignedPrice ? (((currentPrice - assignedPrice) / assignedPrice) * 100).toFixed(1) : 'N/A'
+        const daysHeld = s.dateAssigned ? Math.ceil((now - new Date(s.dateAssigned)) / (1000 * 60 * 60 * 24)) : null
+        const symHist = symbolHistory.find(h => h.symbol === s.symbol)
+
+        return {
+          symbol: s.symbol,
+          shares,
+          assignedPrice,
+          currentPrice,
+          unrealizedPnL,
+          unrealizedPnLPct,
+          daysHeld,
+          dateAssigned: s.dateAssigned,
+          symbolHistory: symHist || null,
+        }
+      })
+
       const response = await fetch('/api/unicron-ai', {
         method: 'POST',
         headers: authHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           mode: 'daily-insights',
-          trades: activeTrades.map(t => ({
-            symbol: t.symbol,
-            tradeType: t.tradeType || t.type,
-            strikePrice: t.strikePrice,
-            premium: t.premium,
-            expirationDate: t.expirationDate,
-            stockPrice: t.stockPrice,
-            currentMarketPrice: t.currentMarketPrice,
-            quantity: t.quantity || 1,
-            fees: t.fees || 0,
-            buybackCost: t.buybackCost || 0,
-            netPremium: t.netPremium || t.premium,
-            notes: t.notes,
-          })),
-          stocks: heldStocks.map(s => ({
-            symbol: s.symbol,
-            shares: s.shares,
-            assignedPrice: s.assignedPrice || s.assignedAt,
-            currentPrice: s.currentPrice,
-            dateAssigned: s.dateAssigned,
-          })),
+          trades: enrichedTrades,
+          stocks: enrichedStocks,
+          symbolHistory,
           settings: {
             portfolioSize: settings?.portfolioSize,
             riskTolerance: settings?.riskTolerance,
@@ -93,8 +164,18 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
             tradingRules: settings?.tradingRules,
             maxTradePercentage: settings?.maxTradePercentage,
           },
-          weeklyPremium: weeklyPremium || 0,
-          weeklyTarget: weeklyTarget || { min: 0, max: 0 },
+          portfolio: {
+            availableCash: dashboardStats?.availableCash,
+            totalAllocated: dashboardStats?.totalAllocated,
+            allocationPct: dashboardStats?.allocationPercentage,
+            currentStockValue: dashboardStats?.currentStockValue,
+            totalInvested: dashboardStats?.totalInvested,
+            yearlyPremium: dashboardStats?.yearlyPremium,
+            yearlyProjection: dashboardStats?.yearlyProjection,
+            portfolioTotal: dashboardStats?.portfolioTotal,
+          },
+          weeklyPremium: dashboardStats?.weeklyPremium || 0,
+          weeklyTarget: dashboardStats?.weeklyTarget || { min: 0, max: 0 },
         })
       })
 
@@ -161,11 +242,11 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
       <div className="surface-2 rounded-2xl p-5 space-y-3 animate-pulse">
         <div className="flex items-center gap-3">
           <Sparkles className="h-5 w-5 text-blue-400 animate-spin" />
-          <span className="text-callout text-secondary">Generating daily insights...</span>
+          <span className="text-callout text-secondary">Analyzing positions...</span>
         </div>
         <div className="space-y-2">
-          <div className="h-12 bg-white/[0.03] rounded-xl" />
-          <div className="h-12 bg-white/[0.03] rounded-xl" />
+          <div className="h-16 bg-white/[0.03] rounded-xl" />
+          <div className="h-16 bg-white/[0.03] rounded-xl" />
         </div>
       </div>
     )
@@ -216,22 +297,49 @@ export default function DailyInsights({ tradeData, stockData, settings, weeklyPr
           const metricColor = METRIC_COLORS[insight.type] || 'text-blue-400'
 
           return (
-            <div key={i} className="flex items-start gap-3 p-3 bg-white/[0.03] rounded-xl">
-              <div className="flex items-center gap-2 mt-0.5 flex-shrink-0">
-                <div className={`h-2 w-2 rounded-full ${priorityColor}`} />
-                <Icon className="h-4 w-4 text-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-overline px-1.5 py-0.5 rounded-lg surface-1">{insight.symbol}</span>
-                  <span className="text-body font-semibold text-primary">{insight.title}</span>
+            <div key={i} className="p-3 bg-white/[0.03] rounded-xl space-y-2">
+              {/* Top row: priority dot, icon, symbol, title, metric */}
+              <div className="flex items-start gap-3">
+                <div className="flex items-center gap-2 mt-0.5 flex-shrink-0">
+                  <div className={`h-2 w-2 rounded-full ${priorityColor}`} />
+                  <Icon className="h-4 w-4 text-secondary" />
                 </div>
-                <p className="text-callout text-secondary line-clamp-2">{insight.reasoning}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-overline px-1.5 py-0.5 rounded-lg surface-1">{insight.symbol}</span>
+                    <span className="text-body font-semibold text-primary">{insight.title}</span>
+                  </div>
+                  <p className="text-callout text-secondary">{insight.reasoning}</p>
+                </div>
+                {insight.metric && (
+                  <span className={`text-footnote font-mono font-semibold whitespace-nowrap flex-shrink-0 ${metricColor}`}>
+                    {insight.metric}
+                  </span>
+                )}
               </div>
-              {insight.metric && (
-                <span className={`text-footnote font-mono font-semibold whitespace-nowrap flex-shrink-0 ${metricColor}`}>
-                  {insight.metric}
-                </span>
+
+              {/* Bottom row: suggested action, risk, timeframe */}
+              {(insight.suggestedAction || insight.risk || insight.timeframe) && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-8 text-footnote">
+                  {insight.suggestedAction && (
+                    <span className="text-emerald-400">
+                      <TrendingUp className="h-3 w-3 inline mr-1 -mt-0.5" />
+                      {insight.suggestedAction}
+                    </span>
+                  )}
+                  {insight.risk && (
+                    <span className="text-amber-400/80">
+                      <ShieldAlert className="h-3 w-3 inline mr-1 -mt-0.5" />
+                      {insight.risk}
+                    </span>
+                  )}
+                  {insight.timeframe && (
+                    <span className="text-tertiary">
+                      <Clock className="h-3 w-3 inline mr-1 -mt-0.5" />
+                      {TIMEFRAME_LABELS[insight.timeframe] || insight.timeframe}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           )

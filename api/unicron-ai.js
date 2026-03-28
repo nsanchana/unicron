@@ -129,49 +129,60 @@ INSTRUCTIONS
 }
 
 async function handleDailyInsights(req, res, apiKey) {
-    const { trades, stocks, settings, weeklyPremium, weeklyTarget } = req.body
+    const { trades, stocks, symbolHistory, settings, portfolio, weeklyPremium, weeklyTarget } = req.body
 
-    const now = new Date()
-    const tradesWithDTE = (trades || []).map(t => {
-        const exp = new Date(t.expirationDate)
-        const dte = Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
-        return { ...t, dte }
-    })
-
-    const stocksWithPnL = (stocks || []).map(s => {
-        const pnl = s.currentPrice && s.assignedPrice
-            ? ((s.currentPrice - s.assignedPrice) * s.shares).toFixed(2)
-            : 'N/A'
-        const pnlPct = s.currentPrice && s.assignedPrice
-            ? (((s.currentPrice - s.assignedPrice) / s.assignedPrice) * 100).toFixed(1)
-            : 'N/A'
-        return { ...s, unrealizedPnL: pnl, unrealizedPnLPct: pnlPct }
-    })
-
-    const tradesBlock = tradesWithDTE.length > 0
-        ? tradesWithDTE.map(t =>
-            `  ${t.symbol} ${t.tradeType === 'cashSecuredPut' ? 'CSP' : 'CC'} $${t.strikePrice} strike | Premium $${t.premium}/sh | Net $${t.netPremium || t.premium} | DTE: ${t.dte}d | Current: $${t.currentMarketPrice || 'N/A'}${t.buybackCost ? ` | Buyback: $${t.buybackCost}` : ''}`
-        ).join('\n')
+    const tradesBlock = (trades || []).length > 0
+        ? trades.map(t => {
+            let line = `  ${t.symbol} ${t.tradeType === 'cashSecuredPut' ? 'CSP' : 'CC'} $${t.strikePrice} strike`
+            line += ` | Premium $${t.premium}/sh | Net $${t.netPremium || t.premium}`
+            line += ` | DTE: ${t.dte}d | Theta: ${t.thetaProgress}% through`
+            line += ` | Current: $${t.currentMarketPrice || 'N/A'}`
+            if (t.strikeProximityPct) line += ` | Strike proximity: ${t.strikeProximityPct}%`
+            if (t.buybackCost) line += ` | Buyback: $${t.buybackCost}`
+            if (t.symbolHistory) line += ` | History: ${t.symbolHistory.trades} trades, ${t.symbolHistory.winRate}% win, $${t.symbolHistory.totalNet} net`
+            return line
+        }).join('\n')
         : 'None'
 
-    const stocksBlock = stocksWithPnL.length > 0
-        ? stocksWithPnL.map(s =>
-            `  ${s.symbol} ${s.shares}sh @ $${s.assignedPrice} | Current: $${s.currentPrice || 'N/A'} | P&L: $${s.unrealizedPnL} (${s.unrealizedPnLPct}%)`
-        ).join('\n')
+    const stocksBlock = (stocks || []).length > 0
+        ? stocks.map(s => {
+            let line = `  ${s.symbol} ${s.shares}sh @ $${s.assignedPrice}`
+            line += ` | Current: $${s.currentPrice || 'N/A'}`
+            line += ` | P&L: $${s.unrealizedPnL} (${s.unrealizedPnLPct}%)`
+            if (s.daysHeld) line += ` | Held: ${s.daysHeld}d`
+            if (s.symbolHistory) line += ` | History: ${s.symbolHistory.trades} trades, ${s.symbolHistory.winRate}% win, $${s.symbolHistory.totalNet} net`
+            return line
+        }).join('\n')
         : 'None'
 
-    const systemPrompt = `You are Unicron AI — a sharp options trading analyst. The user trades the Wheel strategy (Cash Secured Puts → assignment → Covered Calls).
+    const historyBlock = (symbolHistory || []).length > 0
+        ? symbolHistory.map(s => `  ${s.symbol}: ${s.trades} closed trades | ${s.winRate}% win rate | $${s.totalNet} total net | avg ${s.avgDTE}d DTE`).join('\n')
+        : 'No closed trade history'
 
-Review the user's current positions and provide DAILY ACTIONABLE INSIGHTS.
+    const systemPrompt = `You are Unicron AI — an expert options trading analyst. The user trades the Wheel strategy (Cash Secured Puts → assignment → Covered Calls).
 
-ACTIVE TRADES (${tradesWithDTE.length}):
+Analyze the user's positions with DEPTH and SPECIFICITY. Every recommendation must reference actual numbers from the data. Do not give generic advice.
+
+═══════════════════════════════════
+ACTIVE TRADES (${(trades || []).length}):
 ${tradesBlock}
 
-HELD STOCKS (${stocksWithPnL.length}):
+HELD STOCKS (${(stocks || []).length}):
 ${stocksBlock}
 
-PORTFOLIO SETTINGS:
+TRADE HISTORY BY SYMBOL:
+${historyBlock}
+
+PORTFOLIO STATE:
   Size: $${settings?.portfolioSize?.toLocaleString() || 'N/A'}
+  Available cash: $${portfolio?.availableCash?.toLocaleString() || 'N/A'}
+  Allocated to CSPs: $${portfolio?.totalAllocated?.toLocaleString() || 'N/A'} (${portfolio?.allocationPct?.toFixed(1) || 0}%)
+  Stock holdings value: $${portfolio?.currentStockValue?.toLocaleString() || 'N/A'}
+  Total invested in stocks: $${portfolio?.totalInvested?.toLocaleString() || 'N/A'}
+  Year-to-date premium: $${portfolio?.yearlyPremium?.toLocaleString() || '0'}
+  Annualized projection: $${portfolio?.yearlyProjection?.toLocaleString() || '0'}
+
+SETTINGS:
   Risk tolerance: ${settings?.riskTolerance || 'moderate'}
   CSP max DTE: ${settings?.tradingRules?.cashSecuredPut?.maxDays || 30} days
   CC max DTE: ${settings?.tradingRules?.coveredCall?.maxDays || 5} days
@@ -180,12 +191,32 @@ PORTFOLIO SETTINGS:
 WEEKLY PROGRESS:
   Premium this week: $${weeklyPremium || 0}
   Target: $${weeklyTarget?.min || 0} - $${weeklyTarget?.max || 0}
+═══════════════════════════════════
+
+ANALYSIS FRAMEWORK — apply these lenses to every position:
+
+1. THETA DECAY: Positions >70% through their DTE have captured most premium. Quantify how much premium has been captured vs. remaining risk exposure. Recommend closing early if >80% captured.
+
+2. STRIKE PROXIMITY: For CSPs, if current price is within 3% of strike, flag assignment risk. For CCs, if price is above strike, flag early assignment. Use the strikeProximityPct field.
+
+3. COVERED CALL OPPORTUNITIES: For every held stock, evaluate whether a CC should be sold. Suggest a specific strike (above cost basis) and DTE range based on the user's CC max DTE setting. Factor in the stock's trade history.
+
+4. ROLL DECISIONS: If a trade is near expiry and the strike is being tested, recommend rolling with a specific direction (out and down for CSPs, out and up for CCs). Explain the net credit/debit.
+
+5. WEEKLY TARGET PROGRESS: Compare premium earned this week to the target. If behind, recommend specific actions to catch up. If ahead, recommend whether to take remaining risk off.
+
+6. CAPITAL EFFICIENCY: Flag if available cash is sitting idle (opportunity cost). Flag if allocation is too concentrated. Reference the actual allocation percentage.
+
+7. SYMBOL TRACK RECORD: Use the trade history to contextualize recommendations. "You've traded AAPL 12 times with 85% win rate — high confidence symbol" vs. "First time trading XYZ — smaller position warranted."
 
 INSTRUCTIONS:
 - Return ONLY valid JSON (no markdown fences, no extra text)
-- Analyze each position and identify actionable insights
-- Prioritize: expiring trades, theta decay opportunities, covered call opportunities on held stocks, risk warnings
-- For each insight, explain WHY concisely
+- Generate 1 insight per position PLUS 1 portfolio-level insight
+- Every insight MUST reference specific numbers from the data above
+- The "reasoning" field should be 2-3 sentences with concrete data points
+- The "suggestedAction" field should be a specific, executable recommendation (e.g. "Sell $150 CC expiring Apr 4 for ~$1.20 premium")
+- The "risk" field should state what happens if the user does NOT act
+- The "timeframe" field indicates urgency
 
 Return this exact JSON structure:
 {
@@ -195,20 +226,23 @@ Return this exact JSON structure:
       "priority": "high" | "medium" | "low",
       "symbol": "TICKER",
       "title": "Short action-oriented title",
-      "reasoning": "1-2 sentence explanation with specific numbers from the data",
-      "metric": "Key number like '$42 premium captured' or '2 DTE remaining'"
+      "reasoning": "2-3 sentences with specific numbers from the data. Reference DTE, premium captured, strike proximity, P&L, and trade history.",
+      "metric": "Key number — e.g. '$42 premium captured' or '2 DTE remaining' or '3.2% from strike'",
+      "suggestedAction": "Specific executable action — e.g. 'Buy back for $0.05 to close, locking in $94.50 net profit' or 'Sell $145 CC exp Apr 4'",
+      "risk": "What happens if no action — e.g. 'Assignment risk at $140 would tie up $14,000 in capital' or 'Remaining $5 premium not worth 8 days of risk'",
+      "timeframe": "today" | "this_week" | "monitor"
     }
   ],
-  "summary": "N actions suggested across M active positions"
+  "summary": "N high-priority actions, M positions reviewed, capital X% deployed"
 }`
 
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-pro',
         systemInstruction: systemPrompt
     })
 
-    const result = await model.generateContent('Generate today\'s daily insights for my portfolio.')
+    const result = await model.generateContent('Generate today\'s daily insights for my portfolio. Be specific and data-driven.')
     const text = result.response.text()
 
     let parsed

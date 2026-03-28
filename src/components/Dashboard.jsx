@@ -572,8 +572,7 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
         tradeData={tradeData}
         stockData={stockData}
         settings={settings}
-        weeklyPremium={dashboardStats.weeklyPremium}
-        weeklyTarget={dashboardStats.weeklyTarget}
+        dashboardStats={dashboardStats}
       />
 
       {/* Daily Investor Quote */}
