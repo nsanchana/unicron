@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search, MoreHorizontal } from 'lucide-react'
-import TabBar from './components/ui/TabBar'
-import BottomSheet from './components/ui/BottomSheet'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -60,8 +58,6 @@ function App() {
     if (searchParams.has('ticker')) return 'research'
     return localStorage.getItem('active_tab') || 'dashboard'
   })
-  const [moreSheetOpen, setMoreSheetOpen] = useState(false)
-
   const handleTabChange = (tab) => {
     setActiveTab(tab)
     localStorage.setItem('active_tab', tab)
@@ -645,16 +641,11 @@ function App() {
 
   const allTabs = [...primaryTabs, ...overflowTabs]
 
-  const tabBarTabs = [
-    ...primaryTabs,
-    { id: '__more', label: 'More', shortLabel: 'More', icon: MoreHorizontal },
-  ]
-
   return (
     <div className="min-h-screen bg-black text-white flex">
 
-      {/* ── Desktop Sidebar (≥768px) ──────────────────────────────────── */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-all duration-enter ease-spring w-[56px] lg:w-64 hover:w-64 group/sidebar">
+      {/* ── Sidebar ──────────────────────────────────────────────────── */}
+      <aside className="flex fixed left-0 top-0 h-full bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-all duration-enter ease-spring w-[56px] lg:w-64 hover:w-64 group/sidebar">
 
         {/* Logo */}
         <div className="px-2 lg:px-4 group-hover/sidebar:px-4 py-5 border-b border-white/[0.06] transition-all">
@@ -748,41 +739,9 @@ function App() {
         </div>
       </aside>
 
-      {/* ── Mobile Tab Bar (<768px) ───────────────────────────────────── */}
-      <TabBar
-        tabs={tabBarTabs}
-        activeTab={overflowTabs.some(t => t.id === activeTab) ? '__more' : activeTab}
-        onTabChange={(id) => {
-          if (id === '__more') {
-            setMoreSheetOpen(true)
-          } else {
-            handleTabChange(id)
-          }
-        }}
-      />
-
-      {/* ── More Sheet ────────────────────────────────────────────────── */}
-      <BottomSheet open={moreSheetOpen} onClose={() => setMoreSheetOpen(false)} title="More">
-        <div className="px-4 py-2 space-y-1">
-          {overflowTabs.map(tab => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => { handleTabChange(tab.id); setMoreSheetOpen(false) }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors min-h-[44px]"
-              >
-                <Icon className="h-5 w-5 text-white/35" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
-      </BottomSheet>
-
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <main className="flex-1 md:ml-[56px] lg:ml-64 min-h-screen overflow-x-hidden">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6 pb-24 md:pb-6">
+      <main className="flex-1 ml-[56px] lg:ml-64 min-h-screen overflow-x-hidden">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
