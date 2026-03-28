@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search, Menu, X } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -58,7 +58,10 @@ function App() {
     if (searchParams.has('ticker')) return 'research'
     return localStorage.getItem('active_tab') || 'dashboard'
   })
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const handleTabChange = (tab) => {
+    setMenuOpen(false)
     setActiveTab(tab)
     localStorage.setItem('active_tab', tab)
   }
@@ -644,104 +647,115 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-white flex">
 
-      {/* ── Sidebar ──────────────────────────────────────────────────── */}
-      <aside className="flex fixed left-0 top-0 h-full bg-[#0a0a0f] border-r border-white/[0.06] flex-col z-50 transition-all duration-enter ease-spring w-[56px] lg:w-64 hover:w-64 group/sidebar">
+      {/* ── Hamburger Button ────────────────────────────────────────── */}
+      <button
+        onClick={() => setMenuOpen(true)}
+        className="fixed top-4 left-4 z-40 p-2.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] rounded-xl text-white/60 hover:text-white transition-all backdrop-blur-xl"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
 
-        {/* Logo */}
-        <div className="px-2 lg:px-4 group-hover/sidebar:px-4 py-5 border-b border-white/[0.06] transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 lg:w-16 lg:h-16 group-hover/sidebar:w-16 group-hover/sidebar:h-16 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0 transition-all">
-              <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
-            </div>
-            <div className="hidden lg:block group-hover/sidebar:block">
-              <div className="text-base font-bold text-white leading-none tracking-tight">Unicron</div>
-              <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Stock Trades</div>
-            </div>
-          </div>
-        </div>
+      {/* ── Slide-out Navigation Drawer ─────────────────────────────── */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50" onClick={() => setMenuOpen(false)}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-        {/* Nav items */}
-        <nav className="flex-1 px-1.5 lg:px-3 group-hover/sidebar:px-3 py-4 space-y-1 overflow-y-auto transition-all">
-          {allTabs.map(tab => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-spring min-h-[44px] ${
-                  isActive
-                    ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
-                    : 'text-white/35 hover:text-white/60 hover:bg-white/[0.05] border border-transparent'
-                }`}
-              >
-                <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-white/35'}`} />
-                <span className="hidden lg:inline group-hover/sidebar:inline transition-opacity">{tab.label}</span>
+          {/* Drawer */}
+          <aside
+            className="absolute left-0 top-0 h-full w-72 bg-[#0a0a0f] border-r border-white/[0.06] flex flex-col animate-slide-in-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header — logo + close */}
+            <div className="px-4 py-5 border-b border-white/[0.06] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-lg flex-shrink-0">
+                  <img src="/unicron-logo.png" alt="Unicron" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-base font-bold text-white leading-none tracking-tight">Unicron</div>
+                  <div className="text-xs text-blue-400/70 mt-0.5 font-medium">Stock Trades</div>
+                </div>
+              </div>
+              <button onClick={() => setMenuOpen(false)} className="p-2 text-white/40 hover:text-white transition-colors">
+                <X className="h-5 w-5" />
               </button>
-            )
-          })}
-        </nav>
+            </div>
 
-        {/* Sidebar footer — sync, market status, refresh, user */}
-        <div className="px-1.5 lg:px-3 group-hover/sidebar:px-3 py-4 border-t border-white/[0.06] space-y-2 transition-all">
+            {/* Nav items */}
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              {allTabs.map(tab => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-spring min-h-[44px] ${
+                      isActive
+                        ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400'
+                        : 'text-white/50 hover:text-white/80 hover:bg-white/[0.05] border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-white/40'}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
+            </nav>
 
-          {/* Sync status */}
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium"
-            title={lastCloudSync ? `Last synced: ${formatDateTime(lastCloudSync)}` : 'Not synced yet'}
-            style={{
-              background: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.06)' :
-                          cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.03)',
-              borderColor: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.2)' :
-                           cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.06)',
-              color: cloudSyncStatus === 'synced' ? '#34d399' :
-                     cloudSyncStatus === 'syncing' ? '#fbbf24' : 'rgba(255,255,255,0.3)',
-            }}
-          >
-            {cloudSyncStatus === 'syncing' ? <RefreshCw className="h-3 w-3 animate-spin" /> :
-             cloudSyncStatus === 'synced'  ? <Cloud className="h-3 w-3" /> :
-                                             <CloudOff className="h-3 w-3" />}
-            <span className="hidden lg:inline group-hover/sidebar:inline">
-              {cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}
-            </span>
-            {isUSTradingHours() && (
-              <span className="ml-auto flex items-center gap-1 text-emerald-400">
-                <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
-                <span className="hidden lg:inline group-hover/sidebar:inline">Live</span>
-              </span>
-            )}
-          </div>
+            {/* Footer — sync, refresh, user */}
+            <div className="px-3 py-4 border-t border-white/[0.06] space-y-2">
+              <div
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium"
+                style={{
+                  background: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.06)' :
+                              cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.03)',
+                  borderColor: cloudSyncStatus === 'synced' ? 'rgba(52,211,153,0.2)' :
+                               cloudSyncStatus === 'syncing' ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.06)',
+                  color: cloudSyncStatus === 'synced' ? '#34d399' :
+                         cloudSyncStatus === 'syncing' ? '#fbbf24' : 'rgba(255,255,255,0.3)',
+                }}
+              >
+                {cloudSyncStatus === 'syncing' ? <RefreshCw className="h-3 w-3 animate-spin" /> :
+                 cloudSyncStatus === 'synced'  ? <Cloud className="h-3 w-3" /> :
+                                                 <CloudOff className="h-3 w-3" />}
+                <span>{cloudSyncStatus === 'synced' ? 'Synced' : cloudSyncStatus === 'syncing' ? 'Syncing…' : 'Offline'}</span>
+                {isUSTradingHours() && (
+                  <span className="ml-auto flex items-center gap-1 text-emerald-400">
+                    <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
+                    <span>Live</span>
+                  </span>
+                )}
+              </div>
 
-          {/* Refresh prices */}
-          <button
-            onClick={() => handleGlobalPriceUpdate()}
-            disabled={refreshingPrices}
-            className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-xs font-medium text-white/50 hover:text-white transition-all disabled:opacity-40 min-h-[44px]"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 flex-shrink-0 ${refreshingPrices ? 'animate-spin' : ''}`} />
-            <span className="hidden lg:inline group-hover/sidebar:inline">
-              {refreshingPrices ? 'Updating prices…' : 'Refresh Prices'}
-            </span>
-          </button>
+              <button
+                onClick={() => { handleGlobalPriceUpdate(); setMenuOpen(false) }}
+                disabled={refreshingPrices}
+                className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-xs font-medium text-white/50 hover:text-white transition-all disabled:opacity-40 min-h-[44px]"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 flex-shrink-0 ${refreshingPrices ? 'animate-spin' : ''}`} />
+                <span>{refreshingPrices ? 'Updating prices…' : 'Refresh Prices'}</span>
+              </button>
 
-          {/* User + logout */}
-          <div className="flex items-center justify-between px-1 pt-1">
-            <span className="text-xs font-semibold text-blue-400 hidden lg:inline group-hover/sidebar:inline">{user.username}</span>
-            <button
-              onClick={handleLogout}
-              className="p-1.5 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.06] hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          </div>
-
+              <div className="flex items-center justify-between px-1 pt-1">
+                <span className="text-xs font-semibold text-blue-400">{user.username}</span>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 bg-white/[0.04] hover:bg-rose-500/15 border border-white/[0.06] hover:border-rose-500/20 text-white/40 hover:text-rose-400 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </aside>
         </div>
-      </aside>
+      )}
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <main className="flex-1 ml-[56px] lg:ml-64 min-h-screen overflow-x-hidden">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6">
+      <main className="flex-1 min-h-screen overflow-x-hidden">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6 pt-16">
         {activeTab === 'dashboard' && (
           <Dashboard
             researchData={researchData}
