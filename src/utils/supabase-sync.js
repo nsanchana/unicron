@@ -94,17 +94,18 @@ export async function bulkSyncPositionsToSupabase(positions) {
 // ── Stock holdings sync ─────────────────────────────────────────────────────
 
 function mapStockToRow(stock) {
+  const parseNum = (v) => { const n = parseFloat(v); return isNaN(n) ? null : n }
   return {
     id: String(stock.id),
     symbol: stock.symbol,
-    shares: stock.shares,
-    purchase_price: stock.assignedPrice ?? stock.purchasePrice ?? null,
-    purchase_date: stock.dateAssigned ?? stock.purchaseDate ?? null,
-    current_price: stock.currentPrice ?? null,
+    shares: parseNum(stock.shares),
+    purchase_price: parseNum(stock.assignedPrice) ?? parseNum(stock.purchasePrice),
+    purchase_date: stock.dateAssigned || stock.purchaseDate || null,
+    current_price: parseNum(stock.currentPrice),
     last_price_update: stock.lastPriceUpdate ?? null,
-    sold_price: stock.soldPrice ?? null,
-    date_sold: stock.dateSold ?? null,
-    stock_pnl: stock.stockPnL ?? null,
+    sold_price: parseNum(stock.soldPrice),
+    date_sold: stock.dateSold || null,
+    stock_pnl: parseNum(stock.stockPnL),
     updated_at: new Date().toISOString(),
   }
 }
