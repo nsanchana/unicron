@@ -1744,7 +1744,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData 
                               {trade.riskAssessment?.factors?.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                   {trade.riskAssessment.factors.slice(0, 3).map((f, i) => (
-                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full text-white/40">{f}</span>
+                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full text-white/40">{typeof f === 'string' ? f : f?.message || ''}</span>
                                   ))}
                                 </div>
                               )}
