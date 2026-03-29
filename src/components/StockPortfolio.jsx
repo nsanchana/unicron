@@ -10,6 +10,16 @@ const STATUS_OPTS = ['All', 'Active', 'Closed']
 const PNL_OPTS    = ['All', 'Winners', 'Losers']
 const YEAR_OPTS   = ['All', '2024', '2025', '2026']
 
+const formatDate = (dateString) => {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return dateString
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = date.toLocaleString('default', { month: 'short' }).toUpperCase()
+  const year = date.getFullYear()
+  return `${day} ${month} ${year}`
+}
+
 function FilterPills({ label, options, value, onChange }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
@@ -428,8 +438,8 @@ function StockPortfolio({ stockData, onUpdate }) {
                         </div>
                         
                         <div className="pt-3 border-t border-white/[0.05] flex justify-between items-center text-[10px] text-white/30">
-                          <span>Assigned {item.dateAssigned}</span>
-                          {closed && <span>Closed {item.dateSold}</span>}
+                          <span>Assigned {formatDate(item.dateAssigned)}</span>
+                          {closed && <span>Closed {formatDate(item.dateSold)}</span>}
                         </div>
                       </div>
                     )}
@@ -533,7 +543,7 @@ function StockPortfolio({ stockData, onUpdate }) {
                           <span className="w-1 h-1 rounded-full bg-white/10" />
                           <span>Assigned at <span className="font-mono text-white/60">${fmt(parseFloat(item.assignedPrice) || 0)}</span></span>
                           <span className="w-1 h-1 rounded-full bg-white/10" />
-                          <span>{item.dateAssigned}</span>
+                          <span>{formatDate(item.dateAssigned)}</span>
                         </div>
                       </div>
                     </div>
