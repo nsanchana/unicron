@@ -42,7 +42,7 @@ function StockPortfolio({ stockData, onUpdate }) {
 
   useEffect(() => {
     const activeSymbols = stockData
-      .filter(s => !s.soldPrice)
+      .filter(s => !isClosed(s))
       .map(s => s.symbol)
       .filter(Boolean)
     if (activeSymbols.length === 0) return
@@ -53,6 +53,8 @@ function StockPortfolio({ stockData, onUpdate }) {
   const handleEditClick = (id) => setEditingRowId(id)
   const handleCancelEdit = () => setEditingRowId(null)
   const handleSaveEdit = () => setEditingRowId(null)
+
+  const isClosed = (item) => !!item.soldPrice && parseFloat(item.soldPrice) > 0
 
   const handleAddRow = () => {
     const id = Date.now()
@@ -321,13 +323,32 @@ function StockPortfolio({ stockData, onUpdate }) {
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">{closed ? 'Exit Price' : 'Market Price'}</label>
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Market Price</label>
                             <div className="relative">
                               <span className="absolute left-3 top-2.5 text-white/20">$</span>
-                              <input type="number" step="0.01" value={closed ? item.soldPrice : item.currentPrice}
-                                onChange={(e) => handleUpdateField(item.id, closed ? 'soldPrice' : 'currentPrice', e.target.value)}
+                              <input type="number" step="0.01" value={item.currentPrice}
+                                onChange={(e) => handleUpdateField(item.id, 'currentPrice', e.target.value)}
                                 className="w-full bg-white/[0.07] border border-white/10 rounded-xl pl-6 pr-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono" />
                             </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Exit Price</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-2.5 text-white/20">$</span>
+                              <input type="number" step="0.01" value={item.soldPrice}
+                                onChange={(e) => handleUpdateField(item.id, 'soldPrice', e.target.value)}
+                                placeholder="—"
+                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl pl-6 pr-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono placeholder:text-white/10" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Date Sold</label>
+                            <input type="date" value={item.dateSold}
+                              onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)}
+                              className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-blue-500/50 transition-colors" />
                           </div>
                         </div>
 
@@ -338,14 +359,6 @@ function StockPortfolio({ stockData, onUpdate }) {
                               onChange={(e) => handleUpdateField(item.id, 'dateAssigned', e.target.value)}
                               className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-blue-500/50 transition-colors" />
                           </div>
-                          {closed && (
-                            <div className="space-y-1">
-                              <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Date Sold</label>
-                              <input type="date" value={item.dateSold}
-                                onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)}
-                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-blue-500/50 transition-colors" />
-                            </div>
-                          )}
                         </div>
 
                         <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-2">
