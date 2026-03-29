@@ -293,7 +293,78 @@ function StockPortfolio({ stockData, onUpdate }) {
                   <div className={`h-0.5 ${pnl === null ? 'bg-white/10' : pnl >= 0 ? 'bg-gradient-to-r from-emerald-500 to-transparent' : 'bg-gradient-to-r from-rose-500 to-transparent'}`} />
                   <div className="p-4">
                     {isEditing ? (
-                      <div className="py-8 text-center text-white/20">Edit Mode Loading...</div>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Symbol</label>
+                            <input type="text" value={item.symbol}
+                              onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())}
+                              placeholder="SYM"
+                              className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors uppercase" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Shares</label>
+                            <input type="number" value={item.shares}
+                              onChange={(e) => handleUpdateField(item.id, 'shares', e.target.value)}
+                              className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Assigned Price</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-2.5 text-white/20">$</span>
+                              <input type="number" step="0.01" value={item.assignedPrice}
+                                onChange={(e) => handleUpdateField(item.id, 'assignedPrice', e.target.value)}
+                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl pl-6 pr-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">{closed ? 'Exit Price' : 'Market Price'}</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-2.5 text-white/20">$</span>
+                              <input type="number" step="0.01" value={closed ? item.soldPrice : item.currentPrice}
+                                onChange={(e) => handleUpdateField(item.id, closed ? 'soldPrice' : 'currentPrice', e.target.value)}
+                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl pl-6 pr-3 py-2.5 text-white focus:outline-none focus:border-blue-500/50 transition-colors font-mono" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Date Assigned</label>
+                            <input type="date" value={item.dateAssigned}
+                              onChange={(e) => handleUpdateField(item.id, 'dateAssigned', e.target.value)}
+                              className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-blue-500/50 transition-colors" />
+                          </div>
+                          {closed && (
+                            <div className="space-y-1">
+                              <label className="text-[10px] text-white/30 uppercase font-medium ml-1">Date Sold</label>
+                              <input type="date" value={item.dateSold}
+                                onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)}
+                                className="w-full bg-white/[0.07] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/70 focus:outline-none focus:border-blue-500/50 transition-colors" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-2">
+                          <button onClick={() => handleDeleteRow(item.id)}
+                            className="flex items-center gap-2 text-rose-400/50 hover:text-rose-400 text-xs font-medium transition-colors px-1">
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                          </button>
+                          <div className="flex gap-2">
+                            <button onClick={handleCancelEdit}
+                              className="px-4 py-2 text-sm font-medium text-white/40 hover:text-white/60 transition-colors">
+                              Cancel
+                            </button>
+                            <button onClick={handleSaveEdit}
+                              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-bold shadow-lg shadow-blue-500/20 transition-all">
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
