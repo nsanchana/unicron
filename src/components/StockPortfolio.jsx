@@ -38,6 +38,7 @@ function StockPortfolio({ stockData, onUpdate }) {
   const [yearFilter, setYearFilter]     = useState('All')
   const [symbolSearch, setSymbolSearch] = useState('')
   const [earningsDates, setEarningsDates] = useState({})
+  const [editingRowId, setEditingRowId] = useState(null)
 
   useEffect(() => {
     const activeSymbols = stockData
@@ -49,9 +50,14 @@ function StockPortfolio({ stockData, onUpdate }) {
     fetchEarningsDates(unique).then(dates => setEarningsDates(dates))
   }, [stockData])
 
+  const handleEditClick = (id) => setEditingRowId(id)
+  const handleCancelEdit = () => setEditingRowId(null)
+  const handleSaveEdit = () => setEditingRowId(null)
+
   const handleAddRow = () => {
+    const id = Date.now()
     const newStock = {
-      id: Date.now(),
+      id,
       dateAssigned: new Date().toISOString().split('T')[0],
       symbol: '',
       shares: 100,
@@ -62,6 +68,7 @@ function StockPortfolio({ stockData, onUpdate }) {
       lastPriceUpdate: null
     }
     onUpdate([newStock, ...stockData])
+    setEditingRowId(id)
   }
 
   const handleDeleteRow = (id) => {
