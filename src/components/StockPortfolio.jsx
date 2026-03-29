@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X, Edit2 } from 'lucide-react'
+import { Plus, Trash2, RefreshCw, Briefcase, Search, X, Edit2 } from 'lucide-react'
 import CompanyLogo from './CompanyLogo'
 import { fetchPrices } from '../services/priceService'
 import EarningsBadge from "./EarningsBadge"
@@ -71,6 +71,12 @@ function StockPortfolio({ stockData, onUpdate }) {
     }
     onUpdate([newStock, ...stockData])
     setEditingRowId(id)
+    
+    // Clear filters to ensure the new row is visible
+    setStatusFilter('All')
+    setPnlFilter('All')
+    setYearFilter('All')
+    setSymbolSearch('')
   }
 
   const handleDeleteRow = (id) => {
@@ -126,8 +132,6 @@ function StockPortfolio({ stockData, onUpdate }) {
     if (hrs < 24) return `${hrs}h ago`
     return `${Math.floor(hrs / 24)}d ago`
   }
-
-  const isClosed = (item) => !!item.soldPrice && parseFloat(item.soldPrice) > 0
 
   const activeStocks = stockData.filter(s => !isClosed(s))
   const closedStocks = stockData.filter(s => isClosed(s))
@@ -435,169 +439,152 @@ function StockPortfolio({ stockData, onUpdate }) {
             })}
           </div>
 
-          {/* ── Desktop table ── */}
-          <div className="hidden md:block bg-white/[0.05] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-white/[0.03] border-b border-white/[0.06]">
-                    <th className="w-1 px-3 py-3" />
-                    {['Stock', 'Shares', 'Cost Basis', 'Market Price', 'P&L', 'Assigned', 'Exit Price', ''].map((h, i) => (
-                      <th key={i} className={`text-[11px] font-medium text-white/40 px-4 py-3 whitespace-nowrap ${i >= 1 ? 'text-right' : 'text-left'}`}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.04]">
-                  {visibleData.length === 0 && (
-                    <tr><td colSpan="9" className="text-center py-12 text-white/30 text-sm">No positions match the current filters.</td></tr>
-                  )}
-                  {visibleData.map((item) => {
-                    const pnl = calculatePnL(item)
-                    const pnlPct = calculatePnLPct(item)
-                    const totalCost = (parseFloat(item.shares) || 0) * (parseFloat(item.assignedPrice) || 0)
-                    const closed = isClosed(item)
-                    return (
-                      <tr key={item.id} className={`group hover:bg-white/[0.03] transition-colors ${closed ? 'opacity-70' : ''}`}>
+          {/* ── Desktop cards ── */}
+          <div className="hidden md:block max-w-4xl mx-auto space-y-4">
+            {visibleData.length === 0 && (
+              <div className="text-center py-24 bg-white/[0.02] border border-white/[0.05] rounded-3xl">
+                <p className="text-white/30 text-sm">No positions match the current filters.</p>
+              </div>
+            )}
+            {visibleData.map((item) => {
+              const pnl = calculatePnL(item)
+              const pnlPct = calculatePnLPct(item)
+              const closed = isClosed(item)
+              const isEditing = editingRowId === item.id
 
-                        {/* Colour stripe */}
-                        <td className="pl-3 pr-0 py-4 w-1">
-                          <div className={`w-1 h-7 rounded-full ${pnl === null ? 'bg-white/10' : pnl >= 0 ? 'bg-emerald-500/60' : 'bg-rose-500/60'}`} />
-                        </td>
-
-                        {/* Symbol */}
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2.5">
-                            <CompanyLogo symbol={item.symbol} className="w-8 h-8" textSize="text-[10px]" />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <input type="text" value={item.symbol}
-                                  onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())}
-                                  placeholder="SYM"
-                                  className="bg-transparent text-sm font-semibold text-white/90 focus:outline-none w-14 uppercase placeholder:text-white/25" />
-                                <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} compact />
-                                {closed
-                                  ? <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-1.5 py-0.5 rounded-full"><CheckCircle className="h-2.5 w-2.5" />Closed</span>
-                                  : <span className="flex items-center gap-1 text-[9px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded-full"><span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse inline-block" />Active</span>
-                                }
-                              </div>
-                              <div className="text-[10px] text-white/30 mt-0.5 font-mono">${fmt(totalCost)} invested</div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Shares */}
-                        <td className="px-4 py-4 text-right">
-                          <input type="number" value={item.shares}
-                            onChange={(e) => handleUpdateField(item.id, 'shares', e.target.value)}
-                            className="bg-transparent text-sm text-white/75 font-mono focus:outline-none w-16 text-right" />
-                        </td>
-
-                        {/* Cost Basis */}
-                        <td className="px-4 py-4 text-right">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <span className="text-white/25 text-xs">$</span>
-                            <input type="number" step="0.01" value={item.assignedPrice}
-                              onChange={(e) => handleUpdateField(item.id, 'assignedPrice', e.target.value)}
-                              className="bg-transparent text-sm font-semibold font-mono text-white/85 focus:outline-none w-20 text-right" />
-                          </div>
-                        </td>
-
-                        {/* Market / Exit Price */}
-                        <td className="px-4 py-4 text-right">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <span className={`text-xs ${closed ? 'text-emerald-400/50' : 'text-blue-400/60'}`}>$</span>
-                            <input type="number" step="0.01" value={item.currentPrice}
-                              onChange={(e) => handleUpdateField(item.id, 'currentPrice', e.target.value)}
-                              className={`bg-transparent text-sm font-semibold font-mono focus:outline-none w-20 text-right ${closed ? 'text-emerald-400' : 'text-blue-400'}`} />
-                          </div>
-                          {item.lastPriceUpdate && !closed && (
-                            <div className="text-[9px] text-white/25 text-right mt-0.5">{formatRelativeTime(item.lastPriceUpdate)}</div>
-                          )}
-                        </td>
-
-                        {/* P&L — hero cell */}
-                        <td className="px-4 py-4 text-right">
-                          {pnl !== null && pnlPct !== null ? (
-                            <>
-                              <div className={`text-base font-semibold font-mono ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
-                              </div>
-                              <div className={`text-[11px] font-mono ${pnl >= 0 ? 'text-emerald-400/60' : 'text-rose-400/60'}`}>
-                                {pnl >= 0 ? '+' : '-'}${fmt(Math.abs(pnl))}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="text-white/20">—</span>
-                          )}
-                        </td>
-
-                        {/* Assigned Date */}
-                        <td className="px-4 py-4 text-right">
-                          <input type="date" value={item.dateAssigned}
-                            onChange={(e) => handleUpdateField(item.id, 'dateAssigned', e.target.value)}
-                            className="bg-transparent text-xs text-white/45 font-mono focus:outline-none" />
-                        </td>
-
-                        {/* Exit Price (or sold date if closed) */}
-                        <td className="px-4 py-4 text-right">
-                          {closed ? (
-                            <div>
-                              <div className="flex items-center justify-end gap-0.5">
-                                <span className="text-emerald-400/50 text-xs">$</span>
-                                <input type="number" step="0.01" value={item.soldPrice}
-                                  onChange={(e) => handleUpdateField(item.id, 'soldPrice', e.target.value)}
-                                  className="bg-transparent text-sm font-semibold font-mono text-emerald-400 focus:outline-none w-20 text-right" />
-                              </div>
-                              <input type="date" value={item.dateSold}
-                                onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)}
-                                className="bg-transparent text-[9px] text-white/30 font-mono focus:outline-none text-right" />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-0.5">
-                              <span className="text-white/20 text-xs">$</span>
-                              <input type="number" step="0.01" value={item.soldPrice}
-                                onChange={(e) => handleUpdateField(item.id, 'soldPrice', e.target.value)}
-                                placeholder="—"
-                                className="bg-transparent text-sm font-mono text-white/40 focus:outline-none w-20 text-right placeholder:text-white/15" />
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Delete */}
-                        <td className="px-3 py-4">
-                          <button onClick={() => handleDeleteRow(item.id)}
-                            className="p-1.5 hover:bg-rose-500/15 text-white/20 hover:text-rose-400 rounded-lg transition-all opacity-0 group-hover:opacity-100">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-white/[0.08] bg-white/[0.02]">
-                    <td colSpan="2" className="px-4 py-3">
-                      <span className="text-[11px] text-white/30">{visibleData.length} of {stockData.length} position{stockData.length !== 1 ? 's' : ''}</span>
-                    </td>
-                    <td />
-                    <td className="px-4 py-3 text-right">
-                      <div className="text-[10px] text-white/30 mb-0.5">Total Invested</div>
-                      <div className="text-sm font-semibold font-mono text-white/80">
-                        ${fmt(stockData.reduce((s, i) => s + ((parseFloat(i.shares) || 0) * (parseFloat(i.assignedPrice) || 0)), 0))}
+              if (isEditing) {
+                return (
+                  <div key={item.id} className="bg-white/[0.04] border border-blue-500/30 rounded-3xl overflow-hidden p-8 space-y-8 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="grid grid-cols-4 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Symbol</label>
+                        <input type="text" value={item.symbol} onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all uppercase font-bold" />
                       </div>
-                    </td>
-                    <td />
-                    <td className="px-4 py-3 text-right">
-                      <div className="text-[10px] text-white/30 mb-0.5">Total P&amp;L</div>
-                      <div className={`text-lg font-semibold font-mono ${totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {totalPnL >= 0 ? '+' : '-'}${fmt(Math.abs(totalPnL))}
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Shares</label>
+                        <input type="number" value={item.shares} onChange={(e) => handleUpdateField(item.id, 'shares', e.target.value)} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono" />
                       </div>
-                    </td>
-                    <td colSpan="3" />
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Assigned Price</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-3.5 text-white/20">$</span>
+                          <input type="number" step="0.01" value={item.assignedPrice} onChange={(e) => handleUpdateField(item.id, 'assignedPrice', e.target.value)} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl pl-8 pr-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Market Price</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-3.5 text-white/20">$</span>
+                          <input type="number" step="0.01" value={item.currentPrice} onChange={(e) => handleUpdateField(item.id, 'currentPrice', e.target.value)} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl pl-8 pr-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Exit Price</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-3.5 text-white/20">$</span>
+                          <input type="number" step="0.01" value={item.soldPrice} onChange={(e) => handleUpdateField(item.id, 'soldPrice', e.target.value)} placeholder="—" className="w-full bg-white/[0.05] border border-white/10 rounded-2xl pl-8 pr-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono placeholder:text-white/10" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Date Sold</label>
+                        <input type="date" value={item.dateSold} onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] text-white/40 uppercase font-bold tracking-wider ml-1">Date Assigned</label>
+                        <input type="date" value={item.dateAssigned} onChange={(e) => handleUpdateField(item.id, 'dateAssigned', e.target.value)} className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500/50 transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                      <button onClick={() => handleDeleteRow(item.id)} className="flex items-center gap-2 text-rose-400/40 hover:text-rose-400 text-xs font-bold uppercase tracking-widest transition-colors">
+                        <Trash2 className="h-4 w-4" /> Delete Position
+                      </button>
+                      <div className="flex gap-4">
+                        <button onClick={handleCancelEdit} className="px-8 py-3 text-sm font-bold text-white/30 hover:text-white/70 transition-colors uppercase tracking-widest">Cancel</button>
+                        <button onClick={handleSaveEdit} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-sm font-black shadow-xl shadow-blue-500/20 transition-all uppercase tracking-widest">Save Changes</button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <div key={item.id} className={`group bg-white/[0.05] border border-white/[0.08] rounded-2xl overflow-hidden transition-all hover:bg-white/[0.08] hover:border-white/15 ${closed ? 'opacity-80' : ''}`}>
+                  <div className="flex items-center justify-between p-5">
+                    {/* Left side: CompanyLogo, Symbol (large), EarningsBadge, Status Badge, Shares, Assigned Price, Assigned Date */}
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <CompanyLogo symbol={item.symbol} className="w-14 h-14 rounded-xl shadow-2xl" textSize="text-xs" />
+                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0f1117] ${closed ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl font-black text-white tracking-tight">{item.symbol || 'SYM'}</span>
+                          <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} />
+                          {closed 
+                            ? <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">Closed</span>
+                            : <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">Active</span>
+                          }
+                        </div>
+                        <div className="flex items-center gap-3 text-[13px] text-white/40">
+                          <span className="font-medium text-white/60">{item.shares} Shares</span>
+                          <span className="w-1 h-1 rounded-full bg-white/10" />
+                          <span>Assigned at <span className="font-mono text-white/60">${fmt(parseFloat(item.assignedPrice) || 0)}</span></span>
+                          <span className="w-1 h-1 rounded-full bg-white/10" />
+                          <span>{item.dateAssigned}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side: Market Performance section with Market Price, Relative Time, and large P&L Percentage */}
+                    <div className="flex items-center gap-10">
+                      <div className="text-right">
+                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">Market Price</p>
+                        <p className="text-xl font-bold text-white font-mono">${fmt(parseFloat(closed ? item.soldPrice : (item.currentPrice || 0)))}</p>
+                        {item.lastPriceUpdate && !closed && (
+                          <p className="text-[10px] text-white/20 mt-1 font-medium">{formatRelativeTime(item.lastPriceUpdate)}</p>
+                        )}
+                      </div>
+
+                      <div className="text-right min-w-[140px]">
+                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">P&L Percentage</p>
+                        <p className={`text-4xl font-black font-mono leading-none ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {pnlPct !== null ? `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%` : '—'}
+                        </p>
+                      </div>
+
+                      <button onClick={() => handleEditClick(item.id)} className="p-3 hover:bg-white/10 rounded-xl text-white/20 hover:text-white/80 transition-all">
+                        <Edit2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Desktop Summary Footer */}
+            {stockData.length > 0 && (
+              <div className="mt-10 p-8 bg-white/[0.02] border border-white/[0.05] rounded-3xl flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/20 font-medium">Portfolio Overview</p>
+                  <p className="text-white/40 text-xs mt-1">Showing {visibleData.length} active and closed positions</p>
+                </div>
+                <div className="flex gap-16">
+                  <div className="text-right">
+                    <p className="text-[11px] text-white/30 uppercase font-extrabold tracking-[0.2em] mb-2">Total Invested</p>
+                    <p className="text-3xl font-bold text-white/90 font-mono tracking-tighter">${fmt(totalInvested)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-white/30 uppercase font-extrabold tracking-[0.2em] mb-2">Total P&L</p>
+                    <p className={`text-3xl font-bold font-mono tracking-tighter ${totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {totalPnL >= 0 ? '+' : '-'}${fmt(Math.abs(totalPnL))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
