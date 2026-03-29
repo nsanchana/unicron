@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X } from 'lucide-react'
+import { Plus, Trash2, RefreshCw, Briefcase, CheckCircle, Search, X, Edit2 } from 'lucide-react'
 import CompanyLogo from './CompanyLogo'
 import { fetchPrices } from '../services/priceService'
 import EarningsBadge from "./EarningsBadge"
@@ -285,107 +285,66 @@ function StockPortfolio({ stockData, onUpdate }) {
               const pnl = calculatePnL(item)
               const pnlPct = calculatePnLPct(item)
               const closed = isClosed(item)
+              const isEditing = editingRowId === item.id
+
               return (
-                <div key={item.id} className={`bg-white/[0.05] border border-white/[0.08] rounded-2xl overflow-hidden ${closed ? 'opacity-75' : ''}`}>
+                <div key={item.id} className={`bg-white/[0.05] border border-white/[0.08] rounded-2xl overflow-hidden transition-all duration-300 ${closed && !isEditing ? 'opacity-75' : ''} ${isEditing ? 'ring-2 ring-blue-500/50 bg-blue-500/[0.02]' : ''}`}>
                   {/* Accent stripe */}
                   <div className={`h-0.5 ${pnl === null ? 'bg-white/10' : pnl >= 0 ? 'bg-gradient-to-r from-emerald-500 to-transparent' : 'bg-gradient-to-r from-rose-500 to-transparent'}`} />
-                  <div className="p-4 space-y-3">
-
-                    {/* Row 1: symbol + status + delete */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <CompanyLogo symbol={item.symbol} className="w-9 h-9" textSize="text-[9px]" />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <input type="text" value={item.symbol}
-                              onChange={(e) => handleUpdateField(item.id, 'symbol', e.target.value.toUpperCase())}
-                              placeholder="SYM"
-                              className="bg-transparent text-base font-semibold text-white/90 focus:outline-none w-16 uppercase placeholder:text-white/25" />
-                            <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} compact />
-                            {closed
-                              ? <span className="flex items-center gap-1 text-[9px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-1.5 py-0.5 rounded-full"><CheckCircle className="h-2.5 w-2.5" />Closed</span>
-                              : <span className="flex items-center gap-1 text-[9px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded-full"><span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse inline-block" />Active</span>
-                            }
-                          </div>
-                          <div className="text-[10px] text-white/30 mt-0.5">
-                            <input type="number" value={item.shares}
-                              onChange={(e) => handleUpdateField(item.id, 'shares', e.target.value)}
-                              className="bg-transparent text-[10px] text-white/30 font-mono focus:outline-none w-10 inline" />
-                            &nbsp;shares
-                          </div>
-                        </div>
-                      </div>
-                      <button onClick={() => handleDeleteRow(item.id)}
-                        className="p-1.5 hover:bg-rose-500/15 text-white/20 hover:text-rose-400 rounded-lg transition-all">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Row 2: Cost Basis | Market/Exit Price | P&L */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <div className="text-[10px] text-white/30 mb-0.5">Cost Basis</div>
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-white/25 text-xs">$</span>
-                          <input type="number" step="0.01" value={item.assignedPrice}
-                            onChange={(e) => handleUpdateField(item.id, 'assignedPrice', e.target.value)}
-                            className="bg-transparent text-sm font-semibold font-mono text-white/85 focus:outline-none w-full" />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-white/30 mb-0.5">{closed ? 'Exit Price' : 'Market Price'}</div>
-                        <div className="flex items-center gap-0.5">
-                          <span className={`text-xs ${closed ? 'text-emerald-400/50' : 'text-blue-400/60'}`}>$</span>
-                          <input type="number" step="0.01" value={closed ? item.soldPrice : item.currentPrice}
-                            onChange={(e) => handleUpdateField(item.id, closed ? 'soldPrice' : 'currentPrice', e.target.value)}
-                            className={`bg-transparent text-sm font-semibold font-mono focus:outline-none w-full ${closed ? 'text-emerald-400' : 'text-blue-400'}`} />
-                        </div>
-                        {item.lastPriceUpdate && !closed && (
-                          <div className="text-[9px] text-white/25 mt-0.5">{formatRelativeTime(item.lastPriceUpdate)}</div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-white/30 mb-0.5">P&amp;L</div>
-                        {pnl !== null && pnlPct !== null ? (
-                          <>
-                            <div className={`text-base font-semibold font-mono ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
+                  <div className="p-4">
+                    {isEditing ? (
+                      <div className="py-8 text-center text-white/20">Edit Mode Loading...</div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <CompanyLogo symbol={item.symbol} className="w-10 h-10" textSize="text-[10px]" />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold text-white/90">{item.symbol || 'SYM'}</span>
+                                <EarningsBadge earningsTs={earningsDates[item.symbol?.toUpperCase()]} compact />
+                                {closed 
+                                  ? <span className="text-[9px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-1.5 py-0.5 rounded-full">Closed</span>
+                                  : <span className="text-[9px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded-full">Active</span>
+                                }
+                              </div>
+                              <div className="text-xs text-white/30">{item.shares} shares</div>
                             </div>
-                            <div className={`text-[10px] font-mono ${pnl >= 0 ? 'text-emerald-400/60' : 'text-rose-400/60'}`}>
-                              {pnl >= 0 ? '+' : '-'}${fmt(Math.abs(pnl))}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-white/20 text-sm">—</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Row 3: dates */}
-                    <div className="flex items-center gap-4 pt-2.5 border-t border-white/[0.05] flex-wrap">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-white/30">Assigned</span>
-                        <input type="date" value={item.dateAssigned}
-                          onChange={(e) => handleUpdateField(item.id, 'dateAssigned', e.target.value)}
-                          className="bg-transparent text-[10px] text-white/45 font-mono focus:outline-none" />
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-white/30">{closed ? 'Closed' : 'Exit price'}</span>
-                        {closed ? (
-                          <input type="date" value={item.dateSold}
-                            onChange={(e) => handleUpdateField(item.id, 'dateSold', e.target.value)}
-                            className="bg-transparent text-[10px] text-white/45 font-mono focus:outline-none" />
-                        ) : (
-                          <div className="flex items-center gap-0.5">
-                            <span className="text-white/20 text-xs">$</span>
-                            <input type="number" step="0.01" value={item.soldPrice}
-                              onChange={(e) => handleUpdateField(item.id, 'soldPrice', e.target.value)}
-                              placeholder="—"
-                              className="bg-transparent text-[10px] text-white/45 font-mono focus:outline-none w-14 placeholder:text-white/15" />
                           </div>
-                        )}
+                          <button onClick={() => handleEditClick(item.id)} className="p-2 hover:bg-white/5 rounded-full text-white/20 hover:text-white/60 transition-colors">
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <div className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">Cost Basis</div>
+                            <div className="text-sm font-medium text-white/70">
+                              ${fmt(parseFloat(item.assignedPrice) || 0)} <span className="text-[10px] text-white/30">avg</span>
+                            </div>
+                            <div className="text-[10px] text-white/20 mt-0.5 font-mono">
+                              ${fmt((parseFloat(item.shares) || 0) * (parseFloat(item.assignedPrice) || 0))} total
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-xl font-bold font-mono ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {pnlPct !== null ? `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%` : '—'}
+                            </div>
+                            <div className="text-sm font-medium text-white/50">
+                              ${fmt(parseFloat(closed ? item.soldPrice : (item.currentPrice || 0)))}
+                            </div>
+                            {item.lastPriceUpdate && !closed && (
+                              <div className="text-[9px] text-white/20 mt-0.5">{formatRelativeTime(item.lastPriceUpdate)}</div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="pt-3 border-t border-white/[0.05] flex justify-between items-center text-[10px] text-white/30">
+                          <span>Assigned {item.dateAssigned}</span>
+                          {closed && <span>Closed {item.dateSold}</span>}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )
