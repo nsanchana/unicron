@@ -450,7 +450,7 @@ function StockPortfolio({ stockData, onUpdate }) {
           </div>
 
           {/* ── Desktop cards ── */}
-          <div className="hidden md:block max-w-4xl mx-auto space-y-4">
+          <div className="hidden md:block max-w-[1200px] mx-auto space-y-4">
             {visibleData.length === 0 && (
               <div className="text-center py-24 bg-white/[0.02] border border-white/[0.05] rounded-3xl">
                 <p className="text-white/30 text-sm">No positions match the current filters.</p>
@@ -520,9 +520,9 @@ function StockPortfolio({ stockData, onUpdate }) {
               }
 
               return (
-                <div key={item.id} className={`group bg-white/[0.05] border border-white/[0.08] rounded-2xl overflow-hidden transition-all hover:bg-white/[0.08] hover:border-white/15 ${closed ? 'opacity-80' : ''}`}>
+                <div key={item.id} className={`group bg-white/[0.05] border border-white/[0.08] ${pnl === null ? 'border-l-white/10' : pnl >= 0 ? 'border-l-emerald-400' : 'border-l-rose-400'} border-l-4 rounded-2xl overflow-hidden transition-all hover:bg-white/[0.08] hover:border-white/15 ${closed ? 'opacity-80' : ''}`}>
                   <div className="flex items-center justify-between p-5">
-                    {/* Left side: CompanyLogo, Symbol (large), EarningsBadge, Status Badge, Shares, Assigned Price, Assigned Date */}
+                    {/* Left side: CompanyLogo, Symbol (large), EarningsBadge, Status Badge, Shares, Assigned Date */}
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <CompanyLogo symbol={item.symbol} className="w-14 h-14 rounded-xl shadow-2xl" textSize="text-xs" />
@@ -541,30 +541,31 @@ function StockPortfolio({ stockData, onUpdate }) {
                         <div className="flex items-center gap-3 text-[13px] text-white/40">
                           <span className="font-medium text-white/60">{item.shares} Shares</span>
                           <span className="w-1 h-1 rounded-full bg-white/10" />
-                          <span>Assigned at <span className="font-mono text-white/60">${fmt(parseFloat(item.assignedPrice) || 0)}</span></span>
-                          <span className="w-1 h-1 rounded-full bg-white/10" />
-                          <span>{formatDate(item.dateAssigned)}</span>
+                          <span className="uppercase text-[10px] font-bold tracking-wider">{formatDate(item.dateAssigned)}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right side: Market Performance section with Market Price, Relative Time, and large P&L Percentage */}
-                    <div className="flex items-center gap-10">
+                    {/* Metrics Row (3-column grid) */}
+                    <div className="flex-1 grid grid-cols-3 gap-8 ml-12">
                       <div className="text-right">
-                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">Market Price</p>
-                        <p className="text-xl font-bold text-white font-mono">${fmt(parseFloat(closed ? item.soldPrice : (item.currentPrice || 0)))}</p>
-                        {item.lastPriceUpdate && !closed && (
-                          <p className="text-[10px] text-white/20 mt-1 font-medium">{formatRelativeTime(item.lastPriceUpdate)}</p>
-                        )}
+                        <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Assigned</p>
+                        <p className="text-2xl font-black text-white/90 font-mono tracking-tighter">${fmt(parseFloat(item.assignedPrice) || 0)}</p>
                       </div>
-
-                      <div className="text-right min-w-[140px]">
-                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">P&L Percentage</p>
-                        <p className={`text-4xl font-black font-mono leading-none ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <div className="text-right">
+                        <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">{closed ? 'Sell Price' : 'Market Price'}</p>
+                        <p className="text-2xl font-black text-white/90 font-mono tracking-tighter">${fmt(parseFloat(closed ? item.soldPrice : (item.currentPrice || 0)))}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">P&L</p>
+                        <p className={`text-3xl font-black font-mono leading-none ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {pnlPct !== null ? `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%` : '—'}
                         </p>
                       </div>
+                    </div>
 
+                    {/* Edit button */}
+                    <div className="ml-10">
                       <button onClick={() => handleEditClick(item.id)} className="p-3 hover:bg-white/10 rounded-xl text-white/20 hover:text-white/80 transition-all">
                         <Edit2 className="h-5 w-5" />
                       </button>
