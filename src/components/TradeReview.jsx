@@ -313,11 +313,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
     }
 
     // Create/Update trade record
-    // If we are rolling an active position (editingId matches rolledFromId), we treat it as a new trade creation
-    // that also handles closing the source trade in the "else" block.
-    const isRollingActive = isRoll && editingId && String(rolledFromId) === String(editingId)
+    // If we are rolling an active position (editingId matches rolledFromId), we treat it as closing the source trade
+    const isClosingToRoll = isRoll && editingId && String(rolledFromId) === String(editingId)
 
-    if (editingId && !isRollingActive) {
+    if (editingId && !isClosingToRoll) {
       const updatedTradeData = tradeData.map(trade => {
         if (trade.id === editingId) {
           return {
@@ -360,6 +359,27 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
       saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
       setEditingId(null)
       alert(`Trade for ${selectedSymbol} updated successfully!`)
+    } else if (isClosingToRoll) {
+      const updatedTradeData = tradeData.map(trade => {
+        if (trade.id === editingId) {
+          return {
+            ...trade,
+            closed: true,
+            result: 'rolled',
+            closedAt: new Date().toISOString(),
+            buybackCost: bbCost,
+            buybackFees: bbFees,
+            netPremium,
+            notes: notes.trim() || null,
+          }
+        }
+        return trade
+      })
+
+      setTradeData(updatedTradeData)
+      saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, updatedTradeData)
+      setEditingId(null)
+      alert(`Position for ${selectedSymbol} closed and marked as rolled. You can now log the new leg.`)
     } else {
       const quickTrade = {
         id: Date.now(),
@@ -683,6 +703,13 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
   const handleSaveTrade = (tradeStatus) => {
     if (!analysis) return
 
+    const bbCost = isRoll ? (parseFloat(buybackCost) || 0) : 0
+    const bbFees = isRoll ? (parseFloat(buybackFees) || 0) : 0
+    const prem = parseFloat(analysis.premium) || 0
+    const qty = parseInt(analysis.quantity) || 1
+    const tradeFees = parseFloat(fees) || 0
+    const netPremium = (prem * qty * 100) - tradeFees - (bbCost * qty * 100) - bbFees
+
     // Mark the trade with appropriate status
     const savedTrade = {
       ...analysis,
@@ -693,6 +720,10 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
       executionDate: tradeStatus === 'executed' ? analysis.timestamp : null,
       notes: analysis.notes ?? (notes.trim() || null),
       rolledFromId: analysis.rolledFromId ?? (isRoll && rolledFromId ? rolledFromId : null),
+      fees: analysis.fees ?? tradeFees,
+      buybackCost: analysis.buybackCost ?? (isRoll ? bbCost : null),
+      buybackFees: analysis.buybackFees ?? (isRoll ? bbFees : null),
+      netPremium: analysis.netPremium ?? netPremium,
     }
 
     // Update the current analysis
@@ -707,7 +738,16 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
     if (savedTrade.rolledFromId) {
       updatedTradeData = updatedTradeData.map(t =>
         String(t.id) === String(savedTrade.rolledFromId) && !t.closed
-          ? { ...t, closed: true, closedAt: new Date().toISOString(), closedReason: 'Rolled', result: 'rolled' }
+          ? { 
+              ...t, 
+              closed: true, 
+              closedAt: new Date().toISOString(), 
+              closedReason: 'Rolled', 
+              result: 'rolled',
+              buybackCost: bbCost,
+              buybackFees: bbFees,
+              netPremium
+            }
           : t
       )
     }
