@@ -755,6 +755,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleRollTrade = (trade) => {
+    handleEditTrade(trade)
+    setIsRoll(true)
+    setRolledFromId(String(trade.id))
+    setExpirationDate(new Date().toISOString().split('T')[0])
+
+    // Focus the buyback input after a short timeout
+    setTimeout(() => {
+      const input = document.querySelector('input[placeholder="e.g. 0.15"]')
+      if (input) input.focus()
+    }, 100)
+  }
+
   const handleConvertToExecuted = (trade) => {
     if (!confirm('Convert this planned trade to executed? This will mark it as executed on the original trade date.')) return
 
@@ -1680,11 +1693,18 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
                         {/* Actions */}
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {!trade.closed && (
-                            <button onClick={() => handleEditTrade(trade)}
-                              className={`p-2 rounded-xl transition-all ${editingId === trade.id ? 'bg-blue-500 text-white' : 'hover:bg-blue-500/10 text-white/30 hover:text-blue-400'}`}
-                              title="Edit">
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
+                            <>
+                              <button onClick={() => handleEditTrade(trade)}
+                                className={`p-2 rounded-xl transition-all ${editingId === trade.id ? 'bg-blue-500 text-white' : 'hover:bg-blue-500/10 text-white/30 hover:text-blue-400'}`}
+                                title="Edit">
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              <button onClick={() => handleRollTrade(trade)}
+                                className="p-2 hover:bg-cyan-500/15 text-white/30 hover:text-cyan-400 rounded-xl transition-all"
+                                title="Roll Position">
+                                <RefreshCw className="h-3.5 w-3.5" />
+                              </button>
+                            </>
                           )}
                           {trade.status === 'planned' && !trade.closed && (
                             <button onClick={() => handleConvertToExecuted(trade)}
