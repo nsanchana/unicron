@@ -313,7 +313,11 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
     }
 
     // Create/Update trade record
-    if (editingId) {
+    // If we are rolling an active position (editingId matches rolledFromId), we treat it as a new trade creation
+    // that also handles closing the source trade in the "else" block.
+    const isRollingActive = isRoll && editingId && String(rolledFromId) === String(editingId)
+
+    if (editingId && !isRollingActive) {
       const updatedTradeData = tradeData.map(trade => {
         if (trade.id === editingId) {
           return {
@@ -339,7 +343,14 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
             riskMetrics: {
               ...trade.riskMetrics,
               maxLoss: maxLoss
-            }
+            },
+            // Update roll state if we're reconciling
+            notes: notes.trim() || null,
+            rolledFromId: isRoll && rolledFromId ? rolledFromId : null,
+            fees: tradeFees,
+            buybackCost: bbCost,
+            buybackFees: bbFees,
+            netPremium,
           }
         }
         return trade
@@ -395,6 +406,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
 
       setTradeData([quickTrade, ...baseData])
       saveToLocalStorage(STORAGE_KEYS.TRADE_DATA, [quickTrade, ...baseData])
+      setEditingId(null)
       alert(tradeStatus === 'executed' ? `${selectedSymbol} trade saved as EXECUTED!` : `${selectedSymbol} trade saved as PLANNED!`)
     }
 
@@ -687,9 +699,19 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
     setAnalysis(savedTrade)
 
     // Update tradeData array - replace the current analysis with saved version
-    const updatedTradeData = tradeData.map(trade =>
+    let updatedTradeData = tradeData.map(trade =>
       trade.id === analysis.id ? savedTrade : trade
     )
+
+    // If this is a roll, ensure the source trade is closed
+    if (savedTrade.rolledFromId) {
+      updatedTradeData = updatedTradeData.map(t =>
+        String(t.id) === String(savedTrade.rolledFromId) && !t.closed
+          ? { ...t, closed: true, closedAt: new Date().toISOString(), closedReason: 'Rolled', result: 'rolled' }
+          : t
+      )
+    }
+
     setTradeData(updatedTradeData)
 
     // Persist to localStorage
@@ -698,7 +720,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
 
     // Show success message
     const message = tradeStatus === 'executed'
-      ? `Trade for ${analysis.symbol} saved as EXECUTED!`
+      ? (isRoll ? `Trade for ${analysis.symbol} closed and rolled successfully!` : `Trade for ${analysis.symbol} saved as EXECUTED!`)
       : `Trade for ${analysis.symbol} saved as PLANNED!`
     alert(message)
   }
@@ -1067,18 +1089,24 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
             </div>
             {isRoll && (
               <div className="space-y-3">
-                <select
-                  value={rolledFromId}
-                  onChange={e => setRolledFromId(e.target.value)}
-                  className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/30 transition-all w-full max-w-md dark:[color-scheme:dark]"
-                >
-                  <option value="">— Select position being rolled —</option>
-                  {tradeData.filter(t => t.executed && !t.closed).map(t => (
-                    <option key={t.id} value={String(t.id)}>
-                      {t.symbol} — ${t.strikePrice?.toFixed(2)} — {t.expirationDate}
-                    </option>
-                  ))}
-                </select>
+                {editingId ? (
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-sm text-cyan-400">
+                    <span>🔄 Reconciling current position for a roll</span>
+                  </div>
+                ) : (
+                  <select
+                    value={rolledFromId}
+                    onChange={e => setRolledFromId(e.target.value)}
+                    className="bg-white/[0.06] border border-white/[0.10] rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/30 transition-all w-full max-w-md dark:[color-scheme:dark]"
+                  >
+                    <option value="">— Select position being rolled —</option>
+                    {tradeData.filter(t => t.executed && !t.closed).map(t => (
+                      <option key={t.id} value={String(t.id)}>
+                        {t.symbol} — ${t.strikePrice?.toFixed(2)} — {t.expirationDate}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {/* Buyback cost fields */}
                 <div className="grid grid-cols-2 gap-3 max-w-md">
                   <div className="space-y-1.5">
@@ -1167,7 +1195,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
             className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <CheckCircle className="h-4 w-4" />
-            Save Executed
+            {editingId && isRoll ? 'Close & Roll Position' : 'Save Executed'}
           </button>
 
           {editingId && (
@@ -1215,7 +1243,7 @@ function TradeReview({ tradeData, setTradeData, portfolioSettings, researchData,
                       className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-5 py-2 font-semibold text-sm transition-all flex items-center space-x-2"
                     >
                       <CheckCircle className="h-4 w-4" />
-                      <span>Save as Executed</span>
+                      <span>{isRoll ? 'Close & Roll Position' : 'Save as Executed'}</span>
                     </button>
                   </>
                 )}
