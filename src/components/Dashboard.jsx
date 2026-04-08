@@ -11,7 +11,6 @@ import { scrapeCompanyData } from '../services/webScraping'
 import CompanyLogo from './CompanyLogo'
 import StrategySection from './StrategySection'
 import DailyQuote from './DailyQuote'
-import DailyInsights from './DailyInsights'
 import LargeTitle from './ui/LargeTitle'
 
 // Helper function to format dates as DD/MM/YYYY
@@ -455,13 +454,30 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
     // Calculate premiums
     // Calculate premiums + Realized Stock P&L
     const calculatePremium = (interval) => {
-      const optionPremium = executedTrades
-        .filter(t => isWithinInterval(new Date(t.timestamp), interval))
-        .reduce((sum, t) => {
-          // Use netPremium (fees + buyback deducted) if available; fall back to gross for old trades
-          const net = t.netPremium != null ? t.netPremium : (t.premium * (t.quantity || 1) * 100)
-          return sum + net
-        }, 0)
+      const optionPremium = executedTrades.reduce((sum, t) => {
+        let tradeContribution = 0
+
+        // 1. Opening premium income (at opening timestamp)
+        if (isWithinInterval(new Date(t.timestamp), interval)) {
+          tradeContribution += (t.premium * (t.quantity || 1) * 100) - (t.fees || 0)
+        }
+
+        // 2. Buyback costs / Roll deductions (at closing date)
+        // If the trade is closed and has a buyback, attribute that cost to the closing period
+        if (t.closed && isWithinInterval(new Date(t.closedAt || t.timestamp), interval)) {
+          const gross = (t.premium * (t.quantity || 1) * 100) - (t.fees || 0)
+          // If netPremium is provided, the total deduction is the difference between net and gross
+          // Otherwise, we calculate it from buybackCost and buybackFees
+          const net = t.netPremium != null ? t.netPremium : (gross - (t.buybackCost * (t.quantity || 1) * 100 || 0) - (t.buybackFees || 0))
+          const deduction = net - gross
+          
+          if (deduction !== 0) {
+            tradeContribution += deduction
+          }
+        }
+
+        return sum + tradeContribution
+      }, 0)
 
       const stockPnL = (stockData || [])
         .filter(s => s.dateSold && s.soldPrice && isWithinInterval(new Date(s.dateSold), interval))
@@ -737,14 +753,6 @@ const Dashboard = ({ researchData, setResearchData, tradeData, setTradeData, set
           </div>
         </div>
       )}
-
-      {/* AI Daily Insights */}
-      <DailyInsights
-        tradeData={tradeData}
-        stockData={stockData}
-        settings={settings}
-        dashboardStats={dashboardStats}
-      />
 
       {/* Strategy Board - Moved from Unicron AI */}
       <div className="animate-slide-in-up">
