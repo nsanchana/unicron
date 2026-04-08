@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { TrendingUp, TrendingDown, Target, Calendar, Award, Clock, BarChart2, Percent, DollarSign, Activity, Shield, PhoneCall, LineChart } from 'lucide-react'
-import PortfolioChat from './PortfolioChat'
 import LargeTitle from './ui/LargeTitle'
 
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
@@ -67,7 +66,7 @@ function MonthBar({ label, value, maxValue, isFuture, isCurrentMonth, isYearView
 }
 
 // ── main component ─────────────────────────────────────────────────────────
-export default function Performance({ tradeData = [], stockData = [], settings = {}, chatHistory = [], onUpdateHistory }) {
+export default function Performance({ tradeData = [], stockData = [], settings = {} }) {
   const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()))
   const currentMonth = new Date().getMonth()
   const currentYear  = String(new Date().getFullYear())
@@ -462,14 +461,6 @@ export default function Performance({ tradeData = [], stockData = [], settings =
         />
       </div>
 
-      {/* ── Unicron AI Chat ───────────────────────────────────────────────── */}
-      <PortfolioChat
-        tradeData={tradeData}
-        stockData={stockData}
-        settings={settings}
-        chatHistory={chatHistory}
-        onUpdateHistory={onUpdateHistory}
-      />
 
     </div>
   )
