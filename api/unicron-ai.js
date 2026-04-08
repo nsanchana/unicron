@@ -1,5 +1,29 @@
-import { GoogleGenerativeAI }    from '@google/generative-ai'
 import { requireAuth, setCors } from './_auth.js'
+
+const MODEL = 'openclaw/unicron'
+
+async function chatRequest(messages) {
+    const resp = await fetch(process.env.JARVIS_BASE_URL + '/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + process.env.JARVIS_AUTH_TOKEN
+        },
+        body: JSON.stringify({
+            model: MODEL,
+            messages
+        })
+    })
+
+    if (!resp.ok) {
+        const errText = await resp.text()
+        throw new Error(`API error ${resp.status}: ${errText}`)
+    }
+
+    const data = await resp.json()
+    const text = data.choices?.[0]?.message?.content || ''
+    return text
+}
 
 export default async function handler(req, res) {
     setCors(req, res)
@@ -12,9 +36,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' })
     }
 
-    const apiKey = process.env.GEMINI_API_KEY
-
-    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    if (!process.env.JARVIS_AUTH_TOKEN) {
         return res.status(500).json({ error: 'API key not configured' })
     }
 
@@ -23,12 +45,10 @@ export default async function handler(req, res) {
 
         // Daily Insights mode — structured JSON portfolio analysis
         if (mode === 'daily-insights') {
-            return handleDailyInsights(req, res, apiKey)
+            return handleDailyInsights(req, res)
         }
 
         const { message, userContext, history } = req.body
-
-        const genAI = new GoogleGenerativeAI(apiKey)
 
         // Build rich system prompt from the structured context sent by PortfolioChat
         const ctx = userContext || {}
@@ -36,16 +56,33 @@ export default async function handler(req, res) {
             ? 'TONE: Detailed mode — provide comprehensive analysis with full reasoning, tables where useful, and thorough explanations.'
             : 'TONE: Brief mode — be concise and direct. Lead with the key insight or recommendation. Use bullet points. Keep responses under 200 words unless the question demands more.'
 
-        let systemPrompt = `You are Unicron AI — a sharp, data-driven trading assistant embedded in the user's personal options trading dashboard.
-You trade the Wheel strategy: Cash Secured Puts (CSP) to acquire stocks, then Covered Calls (CC) to generate income or exit.
+        const isOracle = ctx.personality === 'oracle'
 
-${toneInstruction}
+        const identityBlock = isOracle
+            ? `You are The Oracle — a wise, patient trading advisor channeling Warren Buffett's investment philosophy.
+You speak with folksy wisdom, use memorable analogies, and always emphasize long-term value, margin of safety, and disciplined risk management.
+You occasionally quote Buffett and Munger. You are direct but warm, and you never rush to action — you'd rather do nothing than do something foolish.
+You trade the Wheel strategy: Cash Secured Puts (CSP) to acquire stocks, then Covered Calls (CC) to generate income or exit.`
+            : `You are Unicron AI — a sharp, data-driven trading assistant embedded in the user's personal options trading dashboard.
+You trade the Wheel strategy: Cash Secured Puts (CSP) to acquire stocks, then Covered Calls (CC) to generate income or exit.`
 
-PERSONALITY:
+        const personalityBlock = isOracle
+            ? `PERSONALITY:
+- Wise, folksy, and patient like Warren Buffett. Use homespun analogies and occasional Buffett/Munger quotes.
+- Always cite the user's actual data when making a point.
+- Proactively flag risks — but frame them as "margin of safety" concerns.
+- Use Markdown: bold key figures, tables for comparisons, bullets for lists.`
+            : `PERSONALITY:
 - Confident, professional, slightly futuristic. Direct answers, no fluff.
 - Always cite the user's actual data when making a point (e.g. "Your LULU win rate is 80% across 20 trades").
 - Proactively flag risks you spot in the data — don't wait to be asked.
-- Use Markdown: bold key figures, tables for comparisons, bullets for lists.
+- Use Markdown: bold key figures, tables for comparisons, bullets for lists.`
+
+        let systemPrompt = `${identityBlock}
+
+${toneInstruction}
+
+${personalityBlock}
 
 ═══════════════════════════════════
 PORTFOLIO SNAPSHOT (live data)
@@ -87,36 +124,27 @@ INSTRUCTIONS
 - Charts: if asked for a technical chart, embed: ![Chart](https://charts2.finviz.com/chart.ashx?t=SYMBOL&ty=c&ta=1&p=d&s=l)
 `
 
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.0-flash',
-            tools: [{ googleSearch: {} }],
-            systemInstruction: systemPrompt
-        })
+        // Build messages array with system prompt, history, and current message
+        const messages = [{ role: 'system', content: systemPrompt }]
 
-        // Prepare chat history
-        // filter out system messages if any, ensure roles are 'user' or 'model'
         const formattedHistory = (history || [])
             .map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
+                role: msg.role === 'assistant' ? 'assistant' : 'user',
+                content: msg.content
             }))
-            .filter((msg, index, array) => {
-                // Gemini requires history to start with 'user'
-                if (index === 0 && msg.role === 'model') return false;
-                return true;
+            .filter((msg, index) => {
+                if (index === 0 && msg.role === 'assistant') return false
+                return true
             })
 
-        const chat = model.startChat({
-            history: formattedHistory
-        })
+        messages.push(...formattedHistory)
+        messages.push({ role: 'user', content: message })
 
-        const result = await chat.sendMessage(message)
-        const response = await result.response
-        const text = response.text()
+        const text = await chatRequest(messages)
 
         return res.status(200).json({
             response: text,
-            model: 'gemini-2.0-flash'
+            model: MODEL
         })
 
     } catch (error) {
@@ -128,7 +156,7 @@ INSTRUCTIONS
     }
 }
 
-async function handleDailyInsights(req, res, apiKey) {
+async function handleDailyInsights(req, res) {
     const { trades, stocks, symbolHistory, settings, portfolio, weeklyPremium, weeklyTarget } = req.body
 
     const tradesBlock = (trades || []).length > 0
@@ -236,14 +264,12 @@ Return this exact JSON structure:
   "summary": "N high-priority actions, M positions reviewed, capital X% deployed"
 }`
 
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-pro',
-        systemInstruction: systemPrompt
-    })
+    const messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Generate today\'s daily insights for my portfolio. Be specific and data-driven.' }
+    ]
 
-    const result = await model.generateContent('Generate today\'s daily insights for my portfolio. Be specific and data-driven.')
-    const text = result.response.text()
+    const text = await chatRequest(messages)
 
     let parsed
     try {
