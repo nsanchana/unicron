@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search, Menu, X } from 'lucide-react'
+import { TrendingUp, BarChart3, Settings, Download, RefreshCw, LogOut, Cloud, CloudOff, Briefcase, Bookmark, Search, Menu, X, Brain } from 'lucide-react'
 import CompanyResearch from './components/CompanyResearch'
 import TradeReview from './components/TradeReview'
 import Dashboard from './components/Dashboard'
@@ -9,6 +9,7 @@ import Login from './components/Login'
 import Performance from './components/Performance'
 import StrategySection from './components/StrategySection'
 import Watchlist from './components/Watchlist'
+import TheOracle from './components/TheOracle'
 import { saveToLocalStorage, loadFromLocalStorage, exportToCSV, STORAGE_KEYS } from './utils/storage'
 import { bulkSyncPositionsToSupabase, bulkSyncStocksToSupabase } from './utils/supabase-sync'
 import { scrapeCompanyData } from './services/webScraping'
@@ -74,7 +75,6 @@ function App() {
     maxTradePercentage: 50
   })
   const [strategyNotes, setStrategyNotes] = useState('')
-  const [chatHistory, setChatHistory] = useState([])
   const [lastRefresh, setLastRefresh] = useState(new Date())
   const [theme, setTheme] = useState('dark')
   const [cloudSyncStatus, setCloudSyncStatus] = useState('idle') // 'idle', 'syncing', 'synced', 'error'
@@ -269,7 +269,6 @@ function App() {
             settings,
             stockData: updatedStockData,
             strategyNotes,
-            chatHistory
           })
         }
 
@@ -301,7 +300,6 @@ function App() {
         settings: newSettings,
         stockData,
         strategyNotes,
-        chatHistory
       })
     }
   }
@@ -313,25 +311,6 @@ function App() {
   }
 
   const [initialCloudLoadComplete, setInitialCloudLoadComplete] = useState(false)
-
-  // Migration helper for chat history
-  const migrateChatHistory = useCallback((history) => {
-    if (!history || !Array.isArray(history)) return []
-    if (history.length === 0) return []
-
-    // If first item has no 'messages' property but has 'role', it's the old format
-    const isOldFormat = history[0] && !history[0].messages && history[0].role
-
-    if (isOldFormat) {
-      return [{
-        id: `session-${Date.now()}`,
-        title: 'Imported Chat',
-        messages: history,
-        lastModified: new Date().toISOString()
-      }]
-    }
-    return history
-  }, [])
 
   // Load data from cloud
   const forceRelogin = useCallback(() => {
@@ -378,11 +357,6 @@ function App() {
       if (cloudData.strategyNotes !== undefined) {
         setStrategyNotes(cloudData.strategyNotes)
         saveToLocalStorage(STORAGE_KEYS.STRATEGY_NOTES, cloudData.strategyNotes)
-      }
-      if (cloudData.chatHistory !== undefined) {
-        const migratedChat = migrateChatHistory(cloudData.chatHistory)
-        setChatHistory(migratedChat)
-        saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, migratedChat)
       }
 
       setLastCloudSync(cloudData.lastSynced ? new Date(cloudData.lastSynced) : null)
@@ -472,8 +446,6 @@ function App() {
     if (savedStocks) setStockData(savedStocks)
     const savedNotes = loadFromLocalStorage(STORAGE_KEYS.STRATEGY_NOTES)
     if (savedNotes) setStrategyNotes(savedNotes)
-    const savedChat = loadFromLocalStorage(STORAGE_KEYS.CHAT_HISTORY)
-    if (savedChat) setChatHistory(migrateChatHistory(savedChat))
 
     // Then sync from cloud (will override local data if cloud has data)
     loadFromCloud(user.username)
@@ -511,7 +483,6 @@ function App() {
     const hasData = researchData.length > 0 ||
       tradeData.length > 0 ||
       stockData.length > 0 ||
-      (chatHistory && chatHistory.length > 0) ||
       (strategyNotes && strategyNotes.trim().length > 0)
 
     if (hasData) {
@@ -521,7 +492,6 @@ function App() {
         settings,
         stockData,
         strategyNotes,
-        chatHistory
       })
     }
 
@@ -531,7 +501,7 @@ function App() {
         clearTimeout(saveTimeoutRef.current)
       }
     }
-  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData, strategyNotes, chatHistory])
+  }, [user, researchData, tradeData, settings, debouncedSaveToCloud, stockData, strategyNotes])
 
   // Handle full data import
   const handleImportData = (importedData) => {
@@ -545,7 +515,6 @@ function App() {
         localStorage.setItem('settings', JSON.stringify(importedData.settings))
       }
       if (importedData.strategyNotes) setStrategyNotes(importedData.strategyNotes)
-      if (importedData.chatHistory) setChatHistory(importedData.chatHistory)
 
       // Force a save to cloud if user is logged in
       if (user) {
@@ -555,7 +524,6 @@ function App() {
           stockData: importedData.stockData || stockData,
           settings: importedData.settings || settings,
           strategyNotes: importedData.strategyNotes || strategyNotes,
-          chatHistory: importedData.chatHistory || chatHistory
         })
       }
       return true
@@ -639,6 +607,7 @@ function App() {
 
   const overflowTabs = [
     { id: 'stocks',      label: 'Stock Portfolio', icon: Briefcase  },
+    { id: 'oracle',      label: 'The Oracle',      icon: Brain      },
     { id: 'settings',    label: 'Settings',        icon: Settings   },
   ]
 
@@ -839,6 +808,13 @@ function App() {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main className="flex-1 min-h-screen lg:pl-72 overflow-x-hidden">
+      {activeTab === 'oracle' ? (
+        <TheOracle
+          tradeData={tradeData}
+          stockData={stockData}
+          settings={settings}
+        />
+      ) : (
       <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-6 lg:pt-6 pt-16">
         {activeTab === 'dashboard' && (
           <Dashboard
@@ -858,7 +834,7 @@ function App() {
               if (user) {
                 saveToCloud(user.username, {
                   researchData, tradeData, settings, stockData,
-                  strategyNotes: notes, chatHistory
+                  strategyNotes: notes,
                 })
               }
             }}
@@ -869,11 +845,6 @@ function App() {
             tradeData={tradeData}
             stockData={stockData}
             settings={settings}
-            chatHistory={chatHistory}
-            onUpdateHistory={(history) => {
-              setChatHistory(history)
-              saveToLocalStorage(STORAGE_KEYS.CHAT_HISTORY, history)
-            }}
           />
         )}
         {activeTab === 'research' && (
@@ -925,6 +896,7 @@ function App() {
           />
         )}
       </div>
+      )}
       </main>
 
 
