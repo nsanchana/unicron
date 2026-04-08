@@ -19,7 +19,7 @@ Self-contained page component following existing codebase patterns. Owns layout,
 
 ### Layout
 
-Two-panel design, dark theme with gold accents:
+Two-panel design, dark theme with gold accents. TheOracle renders outside the normal `max-w-[1200px]` main wrapper — it gets its own full-width container so the two-panel layout isn't constrained.
 
 **Left panel (~280px) — Session sidebar:**
 - "New Chat" button at top (gold accent)
@@ -39,7 +39,30 @@ Two-panel design, dark theme with gold accents:
   - Roll candidates, Assignment risk, Strategy insights, Expiring soon
 - Input bar at bottom:
   - Text input with send button
-  - Tone toggle (Brief / Detailed)
+  - Tone toggle (Brief / Detailed) next to the send button
+
+**Empty state (no sessions or new chat):**
+- Centered "The Oracle" branding with Buffett-themed welcome message
+- Quick prompt buttons displayed prominently as conversation starters
+- Brief description: "Your personal Warren Buffett-style trading advisor"
+
+### Personality
+
+The frontend prepends a personality instruction to the system prompt context. When sending messages, TheOracle includes a `personality` field in `userContext`:
+
+```js
+userContext: {
+  personality: 'oracle', // signals Buffett mode
+  tone: 'brief' | 'detailed',
+  // ...portfolio fields when context-requiring prompts are used
+}
+```
+
+The API (`api/unicron-ai.js`) checks for `userContext.personality === 'oracle'` and swaps the system prompt personality block from "Unicron AI — confident, professional, slightly futuristic" to:
+
+> "You are The Oracle — a wise, patient trading advisor channeling Warren Buffett's investment philosophy. You speak with folksy wisdom, use memorable analogies, and always emphasize long-term value, margin of safety, and disciplined risk management. You occasionally quote Buffett and Munger. You are direct but warm, and you never rush to action — you'd rather do nothing than do something foolish."
+
+This is a small, backward-compatible API change — existing callers without `personality: 'oracle'` get the current Unicron AI persona unchanged.
 
 ### Session Management
 
@@ -49,7 +72,7 @@ Storage: localStorage key `oracle_sessions`
 {
   "sessions": [
     {
-      "id": "uuid",
+      "id": "oracle-1712345678901",
       "title": "First message truncated to 40 chars",
       "messages": [
         { "role": "user", "content": "..." },
@@ -59,9 +82,11 @@ Storage: localStorage key `oracle_sessions`
       "updatedAt": "ISO timestamp"
     }
   ],
-  "activeSessionId": "uuid"
+  "activeSessionId": "oracle-1712345678901"
 }
 ```
+
+Session IDs use `oracle-${Date.now()}` pattern, consistent with existing `pc-${Date.now()}` pattern in the codebase. No new dependencies needed.
 
 Behavior:
 - Page load: restore last active session, or show empty state
@@ -69,6 +94,7 @@ Behavior:
 - Auto-title: first user message becomes session title (truncated to ~40 chars)
 - Switching sessions: save current, load selected
 - Delete: remove from storage, switch to most recent remaining or empty state
+- Max 50 sessions stored. When exceeding, oldest session is pruned automatically.
 
 ### Context Behavior
 
@@ -84,17 +110,18 @@ TheOracle receives: `tradeData`, `stockData`, `settings` — used only by `build
 ## Navigation Changes
 
 In `App.jsx`:
-- Add `oracle` tab to the tab system
-- Position in sidebar: just above Settings
-- Icon: suitable Lucide icon (e.g., `Brain`, `Sparkles`, or `MessageCircle`)
+- Add `oracle` tab to `overflowTabs` array, positioned between `stocks` and `settings`
+- Icon: `Brain` from Lucide React
 - Label: "The Oracle"
-- Add to mobile TabBar and hamburger menu
+- Add to mobile hamburger menu drawer
+- Do NOT add to mobile bottom TabBar (full-page layout doesn't suit the small tab bar)
 
 ## Removals
 
 1. **Dashboard.jsx**: Remove `DailyInsights` import and rendering
 2. **Performance.jsx**: Remove `PortfolioChat` import and rendering
-3. **Delete files**:
+3. **App.jsx**: Remove `chatHistory` state, `handleUpdateChatHistory`, and related `saveToCloud` calls for chat history (TheOracle manages its own sessions in localStorage)
+4. **Delete files**:
    - `src/components/UnicronAI.jsx` (unused)
    - `src/components/DailyInsights.jsx` (replaced by Oracle)
    - `src/components/PortfolioChat.jsx` (replaced by Oracle)
@@ -106,18 +133,25 @@ In `App.jsx`:
 - Quick prompt buttons scroll horizontally
 - Input bar fixed at bottom
 
-## API
+## API Changes
 
-No API changes needed. The Oracle uses the existing `POST /api/unicron-ai` endpoint with the same request/response format.
+Small backward-compatible change to `api/unicron-ai.js`:
+- Check `userContext.personality === 'oracle'` in the main chat handler
+- If true, replace the personality section of the system prompt with the Buffett persona
+- Default behavior (no personality field) remains unchanged for any other callers
+
+Server-side cleanup (optional, low priority):
+- The `mode: 'daily-insights'` handler in `api/unicron-ai.js` becomes dead code after removing DailyInsights. Can be removed or left for later.
 
 ## Dependencies
 
 - `react-markdown` + `remark-gfm` (already in project)
 - `lucide-react` icons (already in project)
-- `uuid` or `crypto.randomUUID()` for session IDs
+- No new dependencies needed
 
 ## Out of Scope
 
 - Server-side session persistence (stays in localStorage)
 - Streaming responses
 - Voice input (can be added later)
+- Cloud sync of Oracle sessions (existing cloud sync for old chatHistory will be removed)
