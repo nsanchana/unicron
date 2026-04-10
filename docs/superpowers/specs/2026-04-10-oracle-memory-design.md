@@ -39,6 +39,8 @@ KeyFact        = { fact: string, sessionId: string, createdAt: string, category:
 - Full sessions stored separately to avoid loading all messages for sidebar render
 - Summaries stored per session, updated every ~4 exchanges
 - Key facts are global per user, capped at 50 entries
+- Max 200 messages per session (older messages pruned from storage, preserved in summary)
+- The existing `chatHistory` field in `api/user-data.js` is for older company research chat — left as-is, not related to Oracle sessions
 
 ### Module Structure
 
@@ -52,8 +54,16 @@ api/oracle-sessions.js      — CRUD endpoint for session sync
 **Modified files:**
 
 ```
-api/unicron-ai.js           — add retrieval step before model call, memory update after
+api/unicron-ai.js           — capture requireAuth return value as userId, add sessionId to destructured body,
+                               add retrieval step before model call, memory update after via waitUntil()
 src/components/TheOracle.jsx — sync sessions to/from KV, include sessionId in API calls
+```
+
+**Implementation note:** `unicron-ai.js` currently discards the `requireAuth()` return value. Must change to `const userId = requireAuth(req, res)` to pass userId into memory functions.
+
+**Request body change:** `TheOracle.jsx` `send()` will add `sessionId` to the existing body shape:
+```
+{ message, history, userContext, sessionId }
 ```
 
 ### oracle-memory.js — Public API
@@ -77,7 +87,7 @@ POST /api/oracle-sessions  { userId, session }         → { success: true }
 DELETE /api/oracle-sessions?userId=X&sessionId=Y       → { success: true }
 ```
 
-All endpoints require auth. userId must match authenticated user.
+All endpoints require auth. userId must match authenticated user. Auth check must handle `req.query.userId` for GET/DELETE and `req.body.userId` for POST.
 
 ### Retrieval Decision
 
@@ -86,6 +96,8 @@ All endpoints require auth. userId must match authenticated user.
 1. **Pattern match:** Message contains phrases like "what did we decide", "earlier", "last time", "continue", "previous", "remember", "you said", "we discussed", references to prior plans/facts/numbers
 2. **New session with history:** Current session has 0 messages but user has prior sessions (seed context)
 3. **Default:** false — most messages don't need historical context
+
+**Known limitation (v1):** This heuristic is intentionally conservative. It will miss implicit references like "what about that AAPL play?" (referring to a prior session) or "and the second position?" (continuing a cross-session thread). Acceptable tradeoff — false negatives cost a less-informed response, false positives cost unnecessary KV reads and context tokens. Can be improved with embeddings in a future version.
 
 ### Retrieval Flow
 
@@ -124,7 +136,8 @@ After generating the Oracle response, if the session has 4+ new messages since t
 
 1. Make a secondary model call with recent messages → produce updated summary + extract new key facts
 2. Write summary and facts to KV
-3. Fire-and-forget — does not block the response to the user
+3. Use `waitUntil()` (Vercel runtime) to extend function lifetime for the background model call. Log failures but do not retry — next threshold crossing will trigger a fresh update.
+4. Fact extraction prompt includes existing facts list with instruction "Do not repeat facts already known" for deduplication.
 
 **Summary prompt:** "Summarize this conversation in 2-3 sentences. Focus on decisions, plans, and actionable conclusions."
 
@@ -143,6 +156,8 @@ After generating the Oracle response, if the session has 4+ new messages since t
 - **KV latency:** Session save is fire-and-forget. Retrieval adds one round-trip before model call — acceptable since model inference dominates latency.
 - **Stale summaries:** Tracked by `messageCountAtUpdate`. Regenerated when session has grown. If extraction fails, stale summary used.
 - **Max facts:** Capped at 50. Oldest pruned on insert.
+- **Session index race:** Two tabs creating sessions simultaneously could lose an index entry (read-modify-write without locking). Low risk — single-user app, last-write-wins is acceptable.
+- **Max messages per session:** Capped at 200. Older messages pruned from KV storage but preserved via rolling summary. Frontend can keep full history in localStorage for current session display.
 
 ### Logging
 
@@ -181,5 +196,6 @@ Visible in Vercel function logs.
 | Summary update interval | Every 4 exchanges | `oracle-memory.js` |
 | Max key facts per user | 50 | `oracle-memory.js` |
 | Max raw snippets returned | 5 | `oracle-memory.js` |
+| Max messages per session (KV) | 200 | `oracle-memory.js` |
 | Max sessions per user | 50 | `TheOracle.jsx` (unchanged) |
 | History sent to model | Last 20 messages | `TheOracle.jsx` (unchanged) |
