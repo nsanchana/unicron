@@ -73,8 +73,8 @@ saveSession(userId, session)                    → void
 loadSession(userId, sessionId)                  → Session | null
 loadSessionIndex(userId)                        → SessionIndex[]
 deleteSession(userId, sessionId)                → void
-needsRetrieval(message, sessionMessages)        → boolean
-retrieveContext(userId, sessionId, message)      → string (context block)
+needsRetrieval(message, sessionMessageCount)     → string|false ('pattern_match', 'new_session', or false)
+retrieveContext(userId, sessionId, message)      → { context: string|null, sources: string[], tokenEstimate: number }
 updateMemoryArtifacts(userId, sessionId, msgs)   → void (fire-and-forget)
 ```
 
