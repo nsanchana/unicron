@@ -5,9 +5,11 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
 // ── KV sync helpers ──────────────────────────────────────────────────────────
+const KV_BASE = '/api/user-data?type=oracle-sessions'
+
 async function kvFetchIndex() {
   try {
-    const resp = await fetch('/api/oracle-sessions', { headers: authHeaders() })
+    const resp = await fetch(KV_BASE, { headers: authHeaders() })
     if (!resp.ok) return null
     return await resp.json()
   } catch { return null }
@@ -15,7 +17,7 @@ async function kvFetchIndex() {
 
 async function kvFetchSession(sessionId) {
   try {
-    const resp = await fetch(`/api/oracle-sessions?sessionId=${sessionId}`, { headers: authHeaders() })
+    const resp = await fetch(`${KV_BASE}&sessionId=${sessionId}`, { headers: authHeaders() })
     if (!resp.ok) return null
     return await resp.json()
   } catch { return null }
@@ -23,7 +25,7 @@ async function kvFetchSession(sessionId) {
 
 async function kvSaveSession(session) {
   try {
-    await fetch('/api/oracle-sessions', {
+    await fetch(KV_BASE, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ session }),
@@ -33,7 +35,7 @@ async function kvSaveSession(session) {
 
 async function kvDeleteSession(sessionId) {
   try {
-    await fetch(`/api/oracle-sessions?sessionId=${sessionId}`, {
+    await fetch(`${KV_BASE}&sessionId=${sessionId}`, {
       method: 'DELETE',
       headers: authHeaders(),
     })

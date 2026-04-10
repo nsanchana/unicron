@@ -1,5 +1,6 @@
 import { kv }                    from '@vercel/kv'
 import { requireAuth, setCors }  from './_auth.js'
+import { loadSessionIndex, loadSession, saveSession, deleteSession } from './lib/oracle-memory.js'
 
 export default async function handler(req, res) {
   setCors(req, res)
@@ -8,6 +9,11 @@ export default async function handler(req, res) {
   // ── Auth gate ─────────────────────────────────────────────────────────────
   const authUsername = requireAuth(req, res)
   if (!authUsername) return // requireAuth already sent 401
+
+  // ── Oracle sessions sub-route ─────────────────────────────────────────────
+  if (req.query.type === 'oracle-sessions') {
+    return handleOracleSessions(req, res, authUsername)
+  }
 
   // userId must match the authenticated user — prevents accessing other users' data
   const { userId } = req.query
@@ -60,5 +66,38 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('User data error:', error)
     return res.status(500).json({ error: 'Failed to process user data', details: error.message })
+  }
+}
+
+// ── Oracle sessions handler ───────────────────────────────────────────────────
+async function handleOracleSessions(req, res, userId) {
+  try {
+    if (req.method === 'GET') {
+      const { sessionId } = req.query
+      if (sessionId) {
+        const session = await loadSession(userId, sessionId)
+        return res.status(200).json(session || { messages: [] })
+      }
+      return res.status(200).json(await loadSessionIndex(userId))
+    }
+
+    if (req.method === 'POST') {
+      const { session } = req.body
+      if (!session?.id) return res.status(400).json({ error: 'session.id required' })
+      await saveSession(userId, session)
+      return res.status(200).json({ success: true })
+    }
+
+    if (req.method === 'DELETE') {
+      const { sessionId } = req.query
+      if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
+      await deleteSession(userId, sessionId)
+      return res.status(200).json({ success: true })
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' })
+  } catch (error) {
+    console.error('Oracle sessions error:', error)
+    return res.status(500).json({ error: 'Failed to process request', details: error.message })
   }
 }

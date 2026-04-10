@@ -1095,6 +1095,22 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 
 // User Data Sync Routes
 app.get('/api/user-data', requireAuth, async (req, res) => {
+  // Oracle sessions sub-route
+  if (req.query.type === 'oracle-sessions') {
+    try {
+      const uid = req.session?.username || 'dev'
+      const { sessionId } = req.query
+      if (sessionId) {
+        const session = await loadSession(uid, sessionId)
+        return res.json(session || { messages: [] })
+      }
+      return res.json(await loadSessionIndex(uid))
+    } catch (err) {
+      console.error('Oracle sessions GET error:', err)
+      return res.json([])
+    }
+  }
+
   try {
     const { userId } = req.query
     if (!userId) return res.status(400).json({ error: 'User ID is required' })
@@ -1117,6 +1133,20 @@ app.get('/api/user-data', requireAuth, async (req, res) => {
 })
 
 app.post('/api/user-data', requireAuth, async (req, res) => {
+  // Oracle sessions sub-route
+  if (req.query.type === 'oracle-sessions') {
+    try {
+      const uid = req.session?.username || 'dev'
+      const { session } = req.body
+      if (!session?.id) return res.status(400).json({ error: 'session.id required' })
+      await saveSession(uid, session)
+      return res.json({ success: true })
+    } catch (err) {
+      console.error('Oracle sessions POST error:', err)
+      return res.json({ success: false })
+    }
+  }
+
   try {
     const { userId } = req.query
     const data = req.body
@@ -1147,6 +1177,22 @@ app.post('/api/user-data', requireAuth, async (req, res) => {
     console.error('Error saving user data:', error)
     res.status(500).json({ error: 'Failed to save user data' })
   }
+})
+
+app.delete('/api/user-data', requireAuth, async (req, res) => {
+  if (req.query.type === 'oracle-sessions') {
+    try {
+      const uid = req.session?.username || 'dev'
+      const { sessionId } = req.query
+      if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
+      await delSession(uid, sessionId)
+      return res.json({ success: true })
+    } catch (err) {
+      console.error('Oracle sessions DELETE error:', err)
+      return res.json({ success: false })
+    }
+  }
+  res.status(405).json({ error: 'Method not allowed' })
 })
 
 // Protected API Routes (require authentication)
@@ -1738,49 +1784,6 @@ INSTRUCTIONS:
       error: 'Failed to generate response',
       details: error.message
     })
-  }
-})
-
-// ── Oracle session sync (dev server) ────────────────────────────────────────
-app.get('/api/oracle-sessions', requireAuth, async (req, res) => {
-  try {
-    const userId = req.session?.username || 'dev'
-    const { sessionId } = req.query
-    if (sessionId) {
-      const session = await loadSession(userId, sessionId)
-      return res.json(session || { messages: [] })
-    }
-    const index = await loadSessionIndex(userId)
-    return res.json(index)
-  } catch (err) {
-    console.error('Oracle sessions GET error:', err)
-    res.json([])
-  }
-})
-
-app.post('/api/oracle-sessions', requireAuth, async (req, res) => {
-  try {
-    const userId = req.session?.username || 'dev'
-    const { session } = req.body
-    if (!session?.id) return res.status(400).json({ error: 'session.id required' })
-    await saveSession(userId, session)
-    res.json({ success: true })
-  } catch (err) {
-    console.error('Oracle sessions POST error:', err)
-    res.json({ success: false })
-  }
-})
-
-app.delete('/api/oracle-sessions', requireAuth, async (req, res) => {
-  try {
-    const userId = req.session?.username || 'dev'
-    const { sessionId } = req.query
-    if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
-    await delSession(userId, sessionId)
-    res.json({ success: true })
-  } catch (err) {
-    console.error('Oracle sessions DELETE error:', err)
-    res.json({ success: false })
   }
 })
 
