@@ -4,6 +4,42 @@ import { Send, Sparkles, Trash2, MessageSquare, Plus, Brain, ChevronLeft, AlignL
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
+// ── KV sync helpers ──────────────────────────────────────────────────────────
+async function kvFetchIndex() {
+  try {
+    const resp = await fetch('/api/oracle-sessions', { headers: authHeaders() })
+    if (!resp.ok) return null
+    return await resp.json()
+  } catch { return null }
+}
+
+async function kvFetchSession(sessionId) {
+  try {
+    const resp = await fetch(`/api/oracle-sessions?sessionId=${sessionId}`, { headers: authHeaders() })
+    if (!resp.ok) return null
+    return await resp.json()
+  } catch { return null }
+}
+
+async function kvSaveSession(session) {
+  try {
+    await fetch('/api/oracle-sessions', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ session }),
+    })
+  } catch { /* fire-and-forget */ }
+}
+
+async function kvDeleteSession(sessionId) {
+  try {
+    await fetch(`/api/oracle-sessions?sessionId=${sessionId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    })
+  } catch { /* fire-and-forget */ }
+}
+
 // ── Quick prompts ──────────────────────────────────────────────────────────
 const QUICK_PROMPTS = [
   { emoji: '📊', label: 'Portfolio health',  prompt: 'Give me a full health check of my current portfolio — allocation, risk exposure, cash position, and any red flags.', needsContext: true },
@@ -162,15 +198,47 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
 
   // ── Load sessions on mount ─────────────────────────────────────────────
   useEffect(() => {
-    const data = loadSessions()
-    setSessions(data.sessions)
-    if (data.activeSessionId) {
-      const found = data.sessions.find(s => s.id === data.activeSessionId)
-      if (found) {
-        setActiveSessionId(found.id)
-        setMessages(found.messages || [])
+    let cancelled = false
+    async function init() {
+      const kvIndex = await kvFetchIndex()
+      if (cancelled) return
+
+      if (kvIndex && kvIndex.length > 0) {
+        const kvSessions = kvIndex.map(s => ({
+          id: s.id, title: s.title, messages: [],
+          updatedAt: s.updatedAt, createdAt: s.createdAt, _kvLoaded: false,
+        }))
+        setSessions(kvSessions)
+
+        const localData = loadSessions()
+        if (localData.activeSessionId) {
+          const match = kvSessions.find(s => s.id === localData.activeSessionId)
+          if (match) {
+            const full = await kvFetchSession(match.id)
+            if (cancelled) return
+            if (full?.messages) {
+              match.messages = full.messages
+              match._kvLoaded = true
+              setActiveSessionId(match.id)
+              setMessages(full.messages)
+              setSessions([...kvSessions])
+            }
+          }
+        }
+      } else {
+        const data = loadSessions()
+        setSessions(data.sessions)
+        if (data.activeSessionId) {
+          const found = data.sessions.find(s => s.id === data.activeSessionId)
+          if (found) {
+            setActiveSessionId(found.id)
+            setMessages(found.messages || [])
+          }
+        }
       }
     }
+    init()
+    return () => { cancelled = true }
   }, [])
 
   // ── Save sessions when messages change ─────────────────────────────────
@@ -183,6 +251,12 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
     )
     setSessions(updated)
     saveSessions({ sessions: updated, activeSessionId })
+
+    // Sync to KV in background
+    const current = updated.find(s => s.id === activeSessionId)
+    if (current && messages.length > 0) {
+      kvSaveSession(current)
+    }
   }, [messages])
 
   // ── Auto-scroll ────────────────────────────────────────────────────────
@@ -198,12 +272,25 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
   }, [])
 
   // ── Switch session ─────────────────────────────────────────────────────
-  const switchSession = useCallback((id) => {
+  const switchSession = useCallback(async (id) => {
     const found = sessions.find(s => s.id === id)
     if (!found) return
     setActiveSessionId(id)
-    setMessages(found.messages || [])
-    // Close sidebar on mobile
+
+    if (!found._kvLoaded && found.messages.length === 0) {
+      const full = await kvFetchSession(id)
+      if (full?.messages) {
+        found.messages = full.messages
+        found._kvLoaded = true
+        setMessages(full.messages)
+        setSessions([...sessions])
+      } else {
+        setMessages(found.messages || [])
+      }
+    } else {
+      setMessages(found.messages || [])
+    }
+
     if (window.innerWidth < 768) setSidebarOpen(false)
   }, [sessions])
 
@@ -223,6 +310,7 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
       }
     }
     saveSessions({ sessions: remaining, activeSessionId: id === activeSessionId ? (remaining[0]?.id || null) : activeSessionId })
+    kvDeleteSession(id)
   }, [sessions, activeSessionId])
 
   // ── Send message ───────────────────────────────────────────────────────
@@ -252,6 +340,7 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
     try {
       const body = {
         message: msg,
+        sessionId: currentSessionId,
         history: messages.slice(-20).map(m => ({ role: m.role, content: m.content })),
         userContext: withContext
           ? buildContext(tradeData, stockData, settings, tone)
