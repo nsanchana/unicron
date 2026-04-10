@@ -10,6 +10,7 @@ import {
   AICache,
   UserData
 } from './auth.js'
+import { loadSessionIndex, loadSession, saveSession, deleteSession as delSession } from './api/lib/oracle-memory.js'
 
 // Load environment variables
 dotenv.config()
@@ -35,7 +36,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 
 // Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '', { baseUrl: 'https://river-variations-identifies-bull.trycloudflare.com/v1' })
 
 // Simple in-memory cache with SQLite persistence
 const cache = {
@@ -1737,6 +1738,49 @@ INSTRUCTIONS:
       error: 'Failed to generate response',
       details: error.message
     })
+  }
+})
+
+// ── Oracle session sync (dev server) ────────────────────────────────────────
+app.get('/api/oracle-sessions', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session?.userId?.toString() || 'dev'
+    const { sessionId } = req.query
+    if (sessionId) {
+      const session = await loadSession(userId, sessionId)
+      return res.json(session || { messages: [] })
+    }
+    const index = await loadSessionIndex(userId)
+    return res.json(index)
+  } catch (err) {
+    console.error('Oracle sessions GET error:', err)
+    res.json([])
+  }
+})
+
+app.post('/api/oracle-sessions', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session?.userId?.toString() || 'dev'
+    const { session } = req.body
+    if (!session?.id) return res.status(400).json({ error: 'session.id required' })
+    await saveSession(userId, session)
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Oracle sessions POST error:', err)
+    res.json({ success: false })
+  }
+})
+
+app.delete('/api/oracle-sessions', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session?.userId?.toString() || 'dev'
+    const { sessionId } = req.query
+    if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
+    await delSession(userId, sessionId)
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Oracle sessions DELETE error:', err)
+    res.json({ success: false })
   }
 })
 
