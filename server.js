@@ -10,7 +10,7 @@ import {
   AICache,
   UserData
 } from './auth.js'
-import { loadSessionIndex, loadSession, saveSession, deleteSession as delSession } from './api/lib/oracle-memory.js'
+import { loadSessionIndex, loadSession, saveSession, deleteSession as delSession } from './lib/oracle-memory.js'
 
 // Load environment variables
 dotenv.config()

@@ -1,5 +1,5 @@
 import { requireAuth, setCors } from './_auth.js'
-import { needsRetrieval, retrieveContext, updateMemoryArtifacts } from './lib/oracle-memory.js'
+import { needsRetrieval, retrieveContext, updateMemoryArtifacts } from '../lib/oracle-memory.js'
 
 const MODEL = 'openclaw/unicron'
 

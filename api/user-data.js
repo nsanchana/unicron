@@ -1,6 +1,6 @@
 import { kv }                    from '@vercel/kv'
 import { requireAuth, setCors }  from './_auth.js'
-import { loadSessionIndex, loadSession, saveSession, deleteSession } from './lib/oracle-memory.js'
+import { loadSessionIndex, loadSession, saveSession, deleteSession } from '../lib/oracle-memory.js'
 
 export default async function handler(req, res) {
   setCors(req, res)
