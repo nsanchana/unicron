@@ -129,6 +129,7 @@ const RETRIEVAL_PATTERNS = [
  * @returns {'new_session' | 'pattern_match' | false}
  */
 export function needsRetrieval(message, sessionMessageCount) {
+    // New session hint — retrieveContext handles empty KV gracefully (returns null)
     if (sessionMessageCount === 0) return 'new_session'
 
     for (const pattern of RETRIEVAL_PATTERNS) {
@@ -272,7 +273,7 @@ export async function retrieveContext(userId, sessionId, message) {
 
     // 3. Other session summaries (scored, top 2)
     const index = await loadSessionIndex(userId)
-    const otherSessions = index.filter(s => s.id !== sessionId)
+    const otherSessions = index.filter(s => s.id !== sessionId).slice(0, 10)
 
     const scoredSummaries = []
     for (const meta of otherSessions) {
@@ -352,6 +353,7 @@ export async function updateMemoryArtifacts(userId, sessionId, messages, chatReq
         // Build a summarisation prompt
         const conversationText = messages
             .filter(m => m.role !== 'system')
+            .slice(-20) // limit to recent messages to avoid exceeding model context
             .map(m => `${m.role === 'assistant' ? 'Oracle' : 'User'}: ${m.content}`)
             .join('\n\n')
 
