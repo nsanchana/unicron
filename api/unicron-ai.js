@@ -1,4 +1,5 @@
 import { requireAuth, setCors } from './_auth.js'
+import { needsRetrieval, retrieveContext, updateMemoryArtifacts } from './lib/oracle-memory.js'
 
 const MODEL = 'openclaw/unicron'
 
@@ -30,7 +31,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end()
 
-    if (!requireAuth(req, res)) return
+    const userId = requireAuth(req, res)
+    if (!userId) return
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' })
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
             return handleDailyInsights(req, res)
         }
 
-        const { message, userContext, history } = req.body
+        const { message, userContext, history, sessionId } = req.body
 
         // Build rich system prompt from the structured context sent by PortfolioChat
         const ctx = userContext || {}
@@ -124,6 +126,24 @@ INSTRUCTIONS
 - Charts: if asked for a technical chart, embed: ![Chart](https://charts2.finviz.com/chart.ashx?t=SYMBOL&ty=c&ta=1&p=d&s=l)
 `
 
+        // ── On-demand memory retrieval ──────────────────────────────────
+        // isOracle is already declared above — reuse it
+        let memoryLog = { retrievalTriggered: false, sourcesUsed: [], contextTokensApprox: 0 }
+
+        if (isOracle && sessionId) {
+            const reason = needsRetrieval(message, (history || []).length)
+            if (reason) {
+                memoryLog.retrievalTriggered = true
+                const { context: priorContext, sources, tokenEstimate } = await retrieveContext(userId, sessionId, message)
+                memoryLog.sourcesUsed = sources
+                memoryLog.contextTokensApprox = tokenEstimate
+                if (priorContext) {
+                    systemPrompt += '\n\n' + priorContext
+                }
+            }
+        }
+        console.log('[oracle-memory]', memoryLog)
+
         // Build messages array with system prompt, history, and current message
         const messages = [{ role: 'system', content: systemPrompt }]
 
@@ -141,6 +161,20 @@ INSTRUCTIONS
         messages.push({ role: 'user', content: message })
 
         const text = await chatRequest(messages)
+
+        // ── Background memory update ────────────────────────────────────
+        if (isOracle && sessionId) {
+            const allMessages = [
+                ...(history || []),
+                { role: 'user', content: message },
+                { role: 'assistant', content: text },
+            ]
+            const memoryWork = updateMemoryArtifacts(userId, sessionId, allMessages, chatRequest)
+                .catch(err => console.error('[oracle-memory] background update failed:', err.message))
+            if (typeof globalThis.waitUntil === 'function') {
+                globalThis.waitUntil(memoryWork)
+            }
+        }
 
         return res.status(200).json({
             response: text,
