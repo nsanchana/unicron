@@ -280,10 +280,10 @@ export default function TheOracle({ tradeData = [], stockData = [], settings = {
     if (!found._kvLoaded && found.messages.length === 0) {
       const full = await kvFetchSession(id)
       if (full?.messages) {
-        found.messages = full.messages
-        found._kvLoaded = true
         setMessages(full.messages)
-        setSessions([...sessions])
+        setSessions(prev => prev.map(s =>
+          s.id === id ? { ...s, messages: full.messages, _kvLoaded: true } : s
+        ))
       } else {
         setMessages(found.messages || [])
       }

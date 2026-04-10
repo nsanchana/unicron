@@ -162,24 +162,31 @@ INSTRUCTIONS
 
         const text = await chatRequest(messages)
 
-        // ── Background memory update ────────────────────────────────────
+        // Send response first — don't block user on memory work
+        res.status(200).json({
+            response: text,
+            model: MODEL
+        })
+
+        // ── Background memory update (runs after response is sent) ──────
+        // Vercel keeps the function alive briefly after res.json().
+        // updateMemoryArtifacts checks the threshold internally and skips
+        // if not enough new messages. If the function terminates early,
+        // the next threshold crossing will catch up.
         if (isOracle && sessionId) {
             const allMessages = [
                 ...(history || []),
                 { role: 'user', content: message },
                 { role: 'assistant', content: text },
             ]
-            const memoryWork = updateMemoryArtifacts(userId, sessionId, allMessages, chatRequest)
-                .catch(err => console.error('[oracle-memory] background update failed:', err.message))
-            if (typeof globalThis.waitUntil === 'function') {
-                globalThis.waitUntil(memoryWork)
+            try {
+                await updateMemoryArtifacts(userId, sessionId, allMessages, chatRequest)
+            } catch (err) {
+                console.error('[oracle-memory] background update failed:', err.message)
             }
         }
 
-        return res.status(200).json({
-            response: text,
-            model: MODEL
-        })
+        return
 
     } catch (error) {
         console.error('Unicron AI Chat error:', error)

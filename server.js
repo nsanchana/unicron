@@ -1744,7 +1744,7 @@ INSTRUCTIONS:
 // ── Oracle session sync (dev server) ────────────────────────────────────────
 app.get('/api/oracle-sessions', requireAuth, async (req, res) => {
   try {
-    const userId = req.session?.userId?.toString() || 'dev'
+    const userId = req.session?.username || 'dev'
     const { sessionId } = req.query
     if (sessionId) {
       const session = await loadSession(userId, sessionId)
@@ -1760,7 +1760,7 @@ app.get('/api/oracle-sessions', requireAuth, async (req, res) => {
 
 app.post('/api/oracle-sessions', requireAuth, async (req, res) => {
   try {
-    const userId = req.session?.userId?.toString() || 'dev'
+    const userId = req.session?.username || 'dev'
     const { session } = req.body
     if (!session?.id) return res.status(400).json({ error: 'session.id required' })
     await saveSession(userId, session)
@@ -1773,7 +1773,7 @@ app.post('/api/oracle-sessions', requireAuth, async (req, res) => {
 
 app.delete('/api/oracle-sessions', requireAuth, async (req, res) => {
   try {
-    const userId = req.session?.userId?.toString() || 'dev'
+    const userId = req.session?.username || 'dev'
     const { sessionId } = req.query
     if (!sessionId) return res.status(400).json({ error: 'sessionId required' })
     await delSession(userId, sessionId)
